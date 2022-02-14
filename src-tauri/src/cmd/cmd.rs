@@ -32,7 +32,6 @@ pub fn open_smov_win() {}
 //查找所有未被检索的数据
 #[command]
 pub fn query_unretrieved() -> Response<Option<Vec<SmovFile>>> {
-    println!("aaa");
     match SmovFile::query_db_file_id() {
         Ok(e) => return Response::new(200, Some(e), "success"),//return serde_json::to_string(&e).expect("序列化出现错误"),
         Err(err) => return Response::new(300, None, format!("{}", err).as_str()),

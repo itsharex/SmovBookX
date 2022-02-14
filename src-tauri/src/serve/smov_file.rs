@@ -13,36 +13,39 @@ pub fn smov_file() -> String {
 
   let folders = Folder::query_folder().unwrap();
 
-  let mut smov_size = 0;
+  let db_smov: HashSet<SmovFile> = SmovFile::query_db_file_unid()
+    .unwrap()
+    .into_iter()
+    .collect();
+
+  let mut file_smov = Vec::new();
 
   for folder in folders {
     let main_path = folder.path;
 
-    let loa_smov: HashSet<SmovFile> = retrieve_all(&main_path).into_iter().collect();
+    let mut loa_smov = retrieve_all(&main_path);
     // for y in loa_smov.iter() {
     //     smov_file::insert_file_data(y);
     // }
 
-    let db_smov: HashSet<SmovFile> = SmovFile::query_db_file_unid()
-      .unwrap()
-      .into_iter()
-      .collect();
-
-    let smov = loa_smov.difference(&db_smov).collect::<Vec<&SmovFile>>();
-
-    smov_size = smov_size + &smov.len();
+    file_smov.append(&mut loa_smov);
 
     // for y in &smov {
     //     smov_file::insert_file_data(y).unwrap();
     // }
-    SmovFile::insert_file_data(&smov).unwrap();
   }
+
+  let file_smov: HashSet<SmovFile> = file_smov.into_iter().collect();
+
+  let smov = file_smov.difference(&db_smov).collect::<Vec<&SmovFile>>();
+
+  SmovFile::insert_file_data(&smov).unwrap();
 
   let end = timestamp(SystemTime::now());
   format!(
     "扫描全部文件用时:{:?}ms，共扫描到{}个差异视频文件",
     end - begin,
-    &smov_size
+    &smov.len()
   )
 }
 
@@ -91,13 +94,13 @@ fn retrieve_all(path: &String) -> Vec<SmovFile> {
             let res = SmovFile {
               id: 0,
               realname: String::from(&name),
-              seekname: String::from(&name),
+              seekname: String::from(""),
               path: String::from(path), //对path多次引用 所以方法传入链接而不是 原始参数 在这里新建一个String 传入构造 链接就是前面带&
               len: mat.len(),
               created: timestamp(mat.created().expect("文件创建日期读取错误")),
               modified: timestamp(mat.modified().expect("文件修改日期读取错误")),
               extension,
-              format,
+              format: String::from(""),
             };
             smovs.push(res);
           }

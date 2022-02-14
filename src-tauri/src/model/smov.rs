@@ -343,9 +343,10 @@ impl SmovFile {
         let tx = conn.transaction()?;
 
         for y in smov_file {
+            let format = crate::util::smov_format::SmovName::format_smov_name(&y.realname);
             tx.execute(
             "insert into smov(realname, path, len, created, modified, extension, format,seekname) select ?1,?2,?3,?4,?5,?6,?7,?8 where not exists(select * from smov where realname = ?9 and path = ?10)",
-            params![y.realname,y.path,y.len,y.created,y.modified,y.extension,y.format,y.realname,y.realname,y.path],
+            params![y.realname,y.path,y.len,y.created,y.modified,y.extension,format,y.realname,y.realname,y.path],
             ).expect("插入smov表出现错误");
         }
 
@@ -362,13 +363,13 @@ impl SmovFile {
             Ok(SmovFile {
                 id : 0,
                 realname: row.get(0)?,  //当前的实际名称
-                seekname: row.get(1)?,  //当前的实际名称
+                seekname: String::from(""),  //当前的实际名称
                 path: row.get(2)?,      //路径
                 len: row.get(3)?,       //大小
                 created: row.get(4)?,   //本地创建时间
                 modified: row.get(5)?,  //本地修改时间
                 extension: row.get(6)?, //拓展名
-                format: row.get(7)?,    //格式化后名称
+                format: String::from(""),    //格式化后名称
             })
         })?;
 
