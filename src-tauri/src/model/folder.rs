@@ -28,7 +28,7 @@ pub struct Folder {
 impl Folder {
     pub fn insert_folder(path:String) -> i32 {
         
-        
+        1
     } 
     
 }

@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::process::Command;
 
 use tauri::command;
 
@@ -27,4 +28,13 @@ pub fn log_operation(event: String, payload: Option<String>) {
 pub fn perform_request(endpoint: String, body: RequestBody) -> String {
     println!("{} {:?}", endpoint, body);
     "message response".into()
+}
+
+//在资源管理器中打开
+#[command]
+pub fn open_in_explorer(path: String) {
+    Command::new( "explorer" )
+        .arg( "." ) // <- Specify the directory you'd like to open.
+        .spawn( )
+        .unwrap( );
 }
