@@ -1,3 +1,4 @@
+use crate::model::folder::Folder;
 use crate::model::smov::SmovFile;
 use crate::serve::smov;
 use crate::serve::smov_file;
@@ -45,4 +46,20 @@ pub fn update_seekname(id:i32,seek_name: String)->Response<Option<usize>>{
         Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
     };
     
+}
+
+#[command]
+pub fn insert_folder(path:String) ->Response<Option<i32>>{
+    match Folder::insert_folder(path){
+        Ok(e) => return Response::new(200, Some(e), "success"),
+        Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+    } 
+}
+
+#[command]
+pub fn query_folder() ->Response<Option<Vec<Folder>>>{
+    match Folder::query_folder(){
+        Ok(e) => return Response::new(200, Some(e), "success"),
+        Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+    } 
 }

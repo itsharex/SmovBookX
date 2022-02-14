@@ -5,6 +5,9 @@
   <el-button type="danger" @click="router.push({
         path: '/test',
       });">跳转至测试</el-button>
+    <el-button type="danger" @click="router.push({
+        path: '/setting',
+      });">跳转至设置</el-button>
 </template>
 
 <script lang="ts">

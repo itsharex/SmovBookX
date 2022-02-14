@@ -56,7 +56,10 @@ async fn main() {
              cmd::tauri_cmd::perform_request,
              cmd::cmd::query_unretrieved,
              cmd::cmd::query_new_file_todb,
-             cmd::cmd::update_seekname
+             cmd::cmd::update_seekname,
+             cmd::cmd::insert_folder,
+             cmd::cmd::query_folder,
+             cmd::tauri_cmd::open_folder_select
      ])
          .run(tauri::generate_context!())
          .expect("error while running tauri application")

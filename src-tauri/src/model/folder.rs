@@ -1,11 +1,20 @@
-use rusqlite::Connection;
+use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use std::{path::PathBuf, result::Result::Ok};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Folder {
-    pub id: i64,
-    pub path:String
+  pub id: i64,
+  pub path: String,
+}
+
+fn get_conn() -> Connection {
+  let conn = Connection::open("SmovBook.db");
+  if conn.is_ok() {
+  } else {
+    println!("连接失败:{:?}", conn.as_ref().err().unwrap().to_string());
+  }
+  conn.unwrap()
 }
 
 // /// 创建数据库连接
@@ -26,9 +35,41 @@ pub struct Folder {
 // }
 
 impl Folder {
-    pub fn insert_folder(path:String) -> i32 {
-        
-        1
-    } 
-    
+  pub fn insert_folder(path: String) -> Result<i32, rusqlite::Error> {
+    let mut conn = get_conn();
+    conn.execute(
+            "insert into sys_folder(path) select ?1 where not exists(select * from sys_folder where path = ?2)",
+            params![path,path],
+            ).expect("插入smov表出现错误");
+
+    let folder_id: i32 = conn
+      .query_row_and_then(
+        "SELECT id from sys_folder where path = ?1",
+        params![path],
+        |row| row.get(0),
+      )
+      .expect("查询出现错误");
+
+    Ok(folder_id)
+  }
+  
+  pub fn query_folder() -> Result<Vec<Folder>, rusqlite::Error> {
+    let mut conn = get_conn();
+    let mut stmt = conn.prepare("SELECT id,path FROM sys_folder")?;
+    let folder_iter = stmt.query_map([], |row| {
+      Ok(Folder {
+        id: row.get(0)?,
+        path: row.get(1)?,
+      })
+    })?;
+
+    let mut res: Vec<Folder> = Vec::new();
+
+    for smov_file in folder_iter {
+      let s = smov_file.unwrap();
+      res.push(s);
+    }
+
+    Ok(res)
+  }
 }
