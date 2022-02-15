@@ -18,7 +18,7 @@ use tauri::Manager;
 
 #[tokio::main]
 async fn main() {
-    model::smov::SMOVBOOK::init();
+    model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
     let hide = CustomMenuItem::new("hide".to_string(), "隐藏界面");
     let quit = CustomMenuItem::new("quit".to_string(), "退出软件");
     let tray_menu = SystemTrayMenu::new()

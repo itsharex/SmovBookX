@@ -172,7 +172,7 @@ export default defineComponent({
         console.log(res);
       });
     }
-
+    
     onMounted(() => {
       initFn();
     });

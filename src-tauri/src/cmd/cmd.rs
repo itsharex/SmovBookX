@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::model::folder::Folder;
 use crate::model::smov::SmovFile;
 use crate::response::response::Response;
@@ -6,8 +8,8 @@ use crate::serve::smov_file;
 use crate::util::smov_format::SmovName;
 use tauri::command;
 
-use std::thread;
-use std::time::Duration;
+// use std::thread;
+// use std::time::Duration;
 
 //检索新文件到数据库
 #[command]
@@ -15,44 +17,35 @@ pub fn query_new_file_todb() -> Response<String> {
   Response::ok(smov_file::smov_file(), "检索成功")
 }
 
-pub fn query_smov() {}
-
-pub fn query_smov_list() {}
-
 #[command]
 pub async fn retrieve_data(seek_name: String, smov_id: i64) -> Response<Option<i32>> {
-  //更新数据库的seekname
   let format = SmovName::format_smov_name(&seek_name);
-
+  println!("{}", "开始了一个线程检索");
   let handle = std::thread::spawn(move || {
-    let s = tauri::async_runtime::block_on(async move {
-      let a: Result<bool, anyhow::Error> = smov::get_test(format, smov_id).await;
-      // InvokeResolver::new(window, String::from("123"), String::from("123"));
-      //println!("{}", "线程检索结束");
-
-      // Ok((1))
-      //异步回调难以实现
+    let s:bool = tauri::async_runtime::block_on(async move {
+      let a = smov::get_test(format, smov_id).await.unwrap();
+      println!("{}", "线程检索结束");
+      return a;
     });
+    return s;
   })
   .join();
-  // let s = handle.join().unwrap(); //等待子线程结束
 
-  //   let _: tauri::async_runtime::JoinHandle<anyhow::Result<(), anyhow::Error>> =
-  //     tauri::async_runtime::spawn(async move {
-  //        let _: Result<bool, anyhow::Error> = smov::get_test(format, smov_id).await;
-  //       Ok(())
-  //   });
+  match handle{
+    Ok(e) => match e{
+      true => Response::new(200, Some(1), "success"),
+      false => Response::new(404, Some(1), "not found")
+    },
+    Err(e) => Response::err(Some(1), "出现错误")
+  }
 
-  //再来一个查询看看有没有查成功 直接返回的以后再说
-
-  Response::new(200, Some(1), "success")
 }
 
-#[command]
-pub async fn open_smov_win() -> i64 {
-  thread::sleep(Duration::from_millis(10));
-  1
-}
+// #[command]
+// pub async fn open_smov_win() -> i64 {
+//   thread::sleep(Duration::from_millis(10));
+//   1
+// }
 
 //查找所有未被检索的数据
 #[command]
