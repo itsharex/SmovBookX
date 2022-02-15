@@ -74,7 +74,12 @@
     <div class="SmovFileNav"></div>
 
     <div class="navBottom">
-      <el-input size="small" style="width: 200px" v-model="search" v-if="false" />
+      <el-input
+        size="small"
+        style="width: 200px"
+        v-model="search"
+        v-if="false"
+      />
       <!-- <el-button size="small" @click="initFn">检索全部</el-button>
 
       <el-button size="small" @click="SearchFile">db数据检索</el-button>-->
@@ -83,11 +88,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch, computed, h, reactive } from "vue";
-import { VXETable, VxeTableInstance, VxeTableEvents } from 'vxe-table';
+import {
+  defineComponent,
+  ref,
+  onMounted,
+  watch,
+  computed,
+  h,
+  reactive,
+} from "vue";
+import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import SmovList from "../components/SmovList.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { ElNotification } from 'element-plus';
+import { ElNotification } from "element-plus";
 
 export default defineComponent({
   components: { SmovList },
@@ -100,32 +113,32 @@ export default defineComponent({
     const centerDialogVisible = ref(false);
 
     const table = reactive({
-      loading: false
-    })
+      loading: false,
+    });
 
     const xTable = ref({} as VxeTableInstance);
 
     const mockList = (size: number) => {
-      const list: any[] = []
+      const list: any[] = [];
       for (let index = 0; index < size; index++) {
         list.push({
           checked: false,
           realname: `名称${index}`,
-          sex: '0',
+          sex: "0",
           num: 123,
           age: 18,
           num2: 234,
           rate: 3,
-          address: 'shenzhen'
-        })
+          address: "shenzhen",
+        });
       }
-      return list
-    }
+      return list;
+    };
 
     const findList = () => {
-      table.loading = true
+      table.loading = true;
       console.log(FileData);
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         setTimeout(() => {
           const data = FileData;
           // 阻断 vue 对大数组的监听，避免 vue 绑定大数据造成短暂的卡顿
@@ -133,27 +146,31 @@ export default defineComponent({
           if ($table) {
             $table.loadData(data);
           }
-          resolve(null)
+          resolve(null);
           table.loading = false;
-        }, 300)
-      })
-    }
+        }, 300);
+      });
+    };
 
     const getSelectEvent = () => {
-      const $table = xTable.value
-      const selectRecords = $table.getCheckboxRecords()
+      const $table = xTable.value;
+      const selectRecords = $table.getCheckboxRecords();
       // const allRecords = $table.getTableData().fullData;//获取全部数据
-      
+
       // VXETable.modal.alert(`${selectRecords.length}条数据`)
 
       for (let select of selectRecords) {
-         console.log(select)
-         invoke("retrieve_data",{seekName : select.seekname , smovId:select.id }).then(
-           res => {
-             console.log(res);
-           }
-         );
+        retrieveData(select.seekname, select.id);  //await 关键词 等待完成
       }
+    };
+
+    async function retrieveData(seekName, id) {
+      invoke("retrieve_data", {
+        seekName: seekName,
+        smovId: id,
+      }).then((res) => {
+        console.log(res);
+      });
     }
 
     onMounted(() => {
@@ -161,74 +178,73 @@ export default defineComponent({
     });
 
     const initFn = () => {
-      invoke("query_unretrieved").then(res => {
+      invoke("query_unretrieved").then((res) => {
         let data: any = res;
         if (data.code == 200) {
           FileData = data.data;
           findList();
         }
       });
-
     };
 
     const ParenStatus = (index, status) => {
-      FileData[index].status = status
+      FileData[index].status = status;
     };
 
     const changeName = (index, name) => {
-      console.log(name)
-      FileData[index].formatCode = name
+      console.log(name);
+      FileData[index].formatCode = name;
     };
     const filter = () => {
-      return FileData.filter(item => item.name.indexOf(search) < 0)
+      return FileData.filter((item) => item.name.indexOf(search) < 0);
     };
 
     //局部保存 直接修改元数据
     const editClosedEvent: VxeTableEvents.EditClosed = ({ row, column }) => {
-      const $table = xTable.value
-      const field = column.property
-      const cellValue = row[field]
+      const $table = xTable.value;
+      const field = column.property;
+      const cellValue = row[field];
 
       //更新数据库中的数据
-      invoke("update_seekname", { id: row.id, seekName: row.seekname }).then(res => {
-        let data: any = res;
-        if (data.code == 200) {
-          if ($table.isUpdateByRow(row, field)) {
-            setTimeout(() => {
-              VXETable.modal.message({
-                content: `局部保存成功！ ${field}=${cellValue}`,
-                status: 'success'
-              })
-              // 局部更新单元格为已保存状态
-              $table.reloadRow(row, null, field)
-            }, 300)
+      invoke("update_seekname", { id: row.id, seekName: row.seekname }).then(
+        (res) => {
+          let data: any = res;
+          if (data.code == 200) {
+            if ($table.isUpdateByRow(row, field)) {
+              setTimeout(() => {
+                VXETable.modal.message({
+                  content: `局部保存成功！ ${field}=${cellValue}`,
+                  status: "success",
+                });
+                // 局部更新单元格为已保存状态
+                $table.reloadRow(row, null, field);
+              }, 300);
+            }
           }
         }
-      });
+      );
       // 判断单元格值是否被修改
-    }
+    };
 
     const handleEdit = (index, row) => {
-
       const data = {
         index: index,
-        data: row
-      }
+        data: row,
+      };
 
       singleData.value = data;
 
       centerDialogVisible.value = true;
 
       ElNotification({
-        title: 'Title',
-        message: h('i', { style: 'color: teal' }, 'This is a reminder'),
-      })
-    }
+        title: "Title",
+        message: h("i", { style: "color: teal" }, "This is a reminder"),
+      });
+    };
 
     const dialogFinish = () => {
-
       centerDialogVisible.value = false;
-    }
+    };
 
     return {
       skeleton,
@@ -246,7 +262,7 @@ export default defineComponent({
       findList,
       xTable,
       editClosedEvent,
-      getSelectEvent
+      getSelectEvent,
     };
   },
 });
