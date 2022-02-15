@@ -24,6 +24,7 @@ lazy_static = "*"
 rusqlite = "*"
 rand = "0.8.4"
 regex = "*"
+anyhow = "1.0.44"
 
 
 [features]

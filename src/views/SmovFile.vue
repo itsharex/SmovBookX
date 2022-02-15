@@ -29,7 +29,9 @@
     </el-table>-->
 
     <vxe-toolbar export :refresh="{ query: findList }">
-      <template #buttons></template>
+      <template #buttons>
+        <vxe-button @click="getSelectEvent">获取选中</vxe-button>
+      </template>
     </vxe-toolbar>
 
     <vxe-table
@@ -137,6 +139,23 @@ export default defineComponent({
       })
     }
 
+    const getSelectEvent = () => {
+      const $table = xTable.value
+      const selectRecords = $table.getCheckboxRecords()
+      // const allRecords = $table.getTableData().fullData;//获取全部数据
+      
+      // VXETable.modal.alert(`${selectRecords.length}条数据`)
+
+      for (let select of selectRecords) {
+         console.log(select)
+         invoke("retrieve_data",{seekName : select.seekname , smovId:select.id }).then(
+           res => {
+             console.log(res);
+           }
+         );
+      }
+    }
+
     onMounted(() => {
       initFn();
     });
@@ -169,9 +188,9 @@ export default defineComponent({
       const $table = xTable.value
       const field = column.property
       const cellValue = row[field]
-   
+
       //更新数据库中的数据
-      invoke("update_seekname",{id:row.id,seekName:row.seekname}).then(res => {
+      invoke("update_seekname", { id: row.id, seekName: row.seekname }).then(res => {
         let data: any = res;
         if (data.code == 200) {
           if ($table.isUpdateByRow(row, field)) {
@@ -226,7 +245,8 @@ export default defineComponent({
       table,
       findList,
       xTable,
-      editClosedEvent
+      editClosedEvent,
+      getSelectEvent
     };
   },
 });

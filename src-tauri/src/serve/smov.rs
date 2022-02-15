@@ -11,8 +11,6 @@ use std::{
     fs::File,
     io::{Read, Write},
 };
-
-
 lazy_static! {
     static ref VEC: Vec<u8> = vec![0x18u8, 0x11u8];
     static ref HEADER: HeaderMap = {
@@ -27,12 +25,12 @@ lazy_static! {
         );
         headers
     };
-    static ref MAIN_URL: String = String::from("https://javdb.com");
+    static ref MAIN_URL: String = String::from("https://javdb36.com");
 }
 
 pub async fn smov_file_bat(smov_list: &Vec<SmovFile>) {}
 
-pub async fn get_test(format: String,id:i64) -> Result<(bool), Box<dyn std::error::Error>> {
+pub async fn get_test(format: String,id:i64) -> Result<bool, anyhow::Error> {
     let mut headers = HeaderMap::new();
     headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());
     headers.insert("cookie", "theme=auto; locale=zh; _ym_uid=1643076534203711663; _ym_d=1643076534; _ym_isad=1; over18=1; _jdb_session=u9TcLXlGGbtvm9gGwZYEpinDW9hp8wUpxrV1z88%2Bu6v7DTLIvBn9rUCQBt7O33JtmzPizK4a67uE8E75PJ56YhJQaocudrRi%2B4Ly025mTYamqzR%2FLDSfG5E%2FI32MC05KRngYkB04O%2Blli1jEvGzLLjH7GMDjERWejUQqwWtYVKEOhf2tfP7%2FPk%2BFo8Rg86S1Tai7Zg7Gc1rB0JwUqIMETFc%2BIToWoZ0jNTXWliRGSlhXpvO4Akn%2FuaBu771kG1uiSK0gQPCDTG9hheuFAjjfI0p%2FFV4b4usCkPiZZH3I2vWCM7S%2B4u6uk%2BXs--YVqvN%2Byh43AE6xyR--J5NZMl5Ko12LNJRzk%2Fzbpw%3D%3D".parse().unwrap());
@@ -83,7 +81,7 @@ pub async fn get_test(format: String,id:i64) -> Result<(bool), Box<dyn std::erro
                 if let Ok(res) = sava_pic(
                     &thumbs_url,
                     &(format!("thumbs_{}.jpg", name)),
-                    &"E:/Pictures".to_string(),
+                    &"C:/Users/Leri/Desktop/新建文件夹".to_string(),
                 )
                 .await
                 {};
@@ -100,6 +98,7 @@ pub async fn get_test(format: String,id:i64) -> Result<(bool), Box<dyn std::erro
 
                 let document = kuchiki::parse_html().one(res);
 
+                //这里的错误需要修改 未找到要提前返回
                 let video_meta_panel = document
                     .select(".video-meta-panel")
                     .unwrap()
@@ -122,7 +121,7 @@ pub async fn get_test(format: String,id:i64) -> Result<(bool), Box<dyn std::erro
                 println!("{}",smov_img);
 
                 sava_pic(
-                    &smov_img,&(format!("MAIN_{}.jpg", name)),&"E:/Pictures".to_string(),)
+                    &smov_img,&(format!("MAIN_{}.jpg", name)),&"C:/Users/Leri/Desktop/新建文件夹".to_string(),)
                 .await.unwrap();
 
                 let details = video_meta_panel.select(".panel-block").unwrap();
@@ -243,7 +242,7 @@ pub async fn get_test(format: String,id:i64) -> Result<(bool), Box<dyn std::erro
             }
         }
     }
-    Ok((flag))
+    Ok(flag)
 }
 
 async fn sava_pic(
@@ -252,6 +251,7 @@ async fn sava_pic(
     path: &String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let pic_path = format!("{}/{}", path, name);
+    println!("{}",pic_path);
     let path = Path::new(&pic_path);
     let client = reqwest::Client::new();
 

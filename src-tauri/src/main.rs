@@ -59,6 +59,7 @@ async fn main() {
              cmd::cmd::update_seekname,
              cmd::cmd::insert_folder,
              cmd::cmd::query_folder,
+             cmd::cmd::retrieve_data,
              cmd::tauri_cmd::open_folder_select
      ])
          .run(tauri::generate_context!())

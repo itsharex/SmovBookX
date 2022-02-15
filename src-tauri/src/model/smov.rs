@@ -404,6 +404,34 @@ impl SmovFile {
         Ok(res)
     }
 
+    pub fn query_db_file_id_unseek() -> Result<Vec<SmovFile>, rusqlite::Error> {
+        let mut conn = get_conn();
+        let mut stmt =
+            conn.prepare("SELECT id,realname,seekname,path,len,created,modified,extension,format FROM smov where is_retrieve = 0")?;
+        let smov_file_iter = stmt.query_map([], |row| {
+            Ok(SmovFile {
+                id : row.get(0)?,
+                realname: row.get(1)?,  //当前的实际名称
+                seekname: row.get(2)?,  //当前的实际名称
+                path: row.get(3)?,      //路径
+                len: row.get(4)?,       //大小
+                created: row.get(5)?,   //本地创建时间
+                modified: row.get(6)?,  //本地修改时间
+                extension: row.get(7)?, //拓展名
+                format: row.get(8)?,    //格式化后名称
+            })
+        })?;
+
+        let mut res: Vec<SmovFile> = Vec::new();
+
+        for smov_file in smov_file_iter {
+            let s = smov_file.unwrap();
+            res.push(s);
+        }
+
+        Ok(res)
+    }
+
     pub fn query_db_file_id() -> Result<Vec<SmovFile>, rusqlite::Error> {
         let mut conn = get_conn();
         let mut stmt =
