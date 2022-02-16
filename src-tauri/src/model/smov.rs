@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 use rusqlite::{params, Connection, Result};
 use serde::{Deserialize, Serialize};
-use tauri::{api::path::app_dir, Config};
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
 pub struct Smov {
@@ -72,7 +71,7 @@ impl PartialEq for SmovFile {
 impl Eq for SmovFile {}
 
 pub struct SMOVBOOK {
-  v: u64,
+  _v: u64,
 }
 
 fn create_sqlite_connection() -> Result<Connection> {
@@ -91,24 +90,25 @@ where
   }
 }
 
-fn get_conn() -> Connection {
-  let path = app_dir(&Config::default())
-    .expect("Could not get app path")
-    .into_os_string()
-    .into_string()
-    .expect("Could not get app path");
+//弃用的连接获取
+// fn get_conn() -> Connection {
+//   let path = app_dir(&Config::default())
+//     .expect("Could not get app path")
+//     .into_os_string()
+//     .into_string()
+//     .expect("Could not get app path");
 
-  let conn = Connection::open(format!("{}SmovBook\\SmovBook.db", path));
-  if conn.is_ok() {
-  } else {
-    println!("连接失败:{:?}", conn.as_ref().err().unwrap().to_string());
-  }
-  conn.unwrap()
-}
+//   let conn = Connection::open(format!("{}SmovBook\\SmovBook.db", path));
+//   if conn.is_ok() {
+//   } else {
+//     println!("连接失败:{:?}", conn.as_ref().err().unwrap().to_string());
+//   }
+//   conn.unwrap()
+// }
 
 impl Smov {
-  pub fn insert_all(smov: Smov) -> Result<()> {
-    let mut conn = get_conn();
+  pub fn _insert_all(smov: Smov) -> Result<()> {
+    exec(|conn| { 
     let tx = conn.transaction()?;
 
     tx.execute(
@@ -236,12 +236,13 @@ impl Smov {
     tx.commit().unwrap();
 
     Ok(())
+  })
   }
 }
 
 impl SmovSeek {
   pub fn insert_by_path_name(smov: SmovSeek) -> Result<()> {
-    let mut conn = get_conn();
+    exec(|conn| { 
     let tx = conn.transaction()?;
     tx.execute(
       "insert into maker(name) select ?1 where not exists (select * from maker where name= ?2)",
@@ -361,12 +362,13 @@ impl SmovSeek {
     tx.commit().unwrap();
 
     Ok(())
+  })
   }
 }
 
 impl SmovFile {
   pub fn insert_file_data(smov_file: &Vec<&SmovFile>) -> Result<()> {
-    let mut conn = get_conn();
+    exec(|conn| { 
     let tx = conn.transaction()?;
 
     for y in smov_file {
@@ -380,10 +382,11 @@ impl SmovFile {
     tx.commit().unwrap();
 
     Ok(())
+  })
   }
 
   pub fn query_db_file_unid() -> Result<Vec<SmovFile>, rusqlite::Error> {
-    let mut conn = get_conn();
+    exec(|conn| { 
     let mut stmt = conn
       .prepare("SELECT realname,seekname,path,len,created,modified,extension,format FROM smov")?;
     let smov_file_iter = stmt.query_map([], |row| {
@@ -408,10 +411,11 @@ impl SmovFile {
     }
 
     Ok(res)
+  })
   }
 
-  pub fn query_unseek_db_file() -> Result<Vec<SmovFileSeek>, rusqlite::Error> {
-    let mut conn = get_conn();
+  pub fn _query_unseek_db_file() -> Result<Vec<SmovFileSeek>, rusqlite::Error> {
+    exec(|conn| { 
     let mut stmt =
       conn.prepare("SELECT id,realname,path,extension,format FROM smov where is_retrieve = 0")?;
     let smov_file_iter = stmt.query_map([], |row| {
@@ -429,10 +433,11 @@ impl SmovFile {
       res.push(smov_file.unwrap());
     }
     Ok(res)
+  })
   }
 
   pub fn query_db_file_id_unseek() -> Result<Vec<SmovFile>, rusqlite::Error> {
-    let mut conn = get_conn();
+    exec(|conn| { 
     let mut stmt =
             conn.prepare("SELECT id,realname,seekname,path,len,created,modified,extension,format FROM smov where is_retrieve = 0")?;
     let smov_file_iter = stmt.query_map([], |row| {
@@ -457,10 +462,11 @@ impl SmovFile {
     }
 
     Ok(res)
+  })
   }
 
-  pub fn query_db_file_id() -> Result<Vec<SmovFile>, rusqlite::Error> {
-    let mut conn = get_conn();
+  pub fn _query_db_file_id() -> Result<Vec<SmovFile>, rusqlite::Error> {
+    exec(|conn| { 
     let mut stmt = conn.prepare(
       "SELECT id,realname,seekname,path,len,created,modified,extension,format FROM smov",
     )?;
@@ -486,10 +492,11 @@ impl SmovFile {
     }
 
     Ok(res)
+  })
   }
 
   pub fn update_seekname(id: i32, seek_name: String) -> Result<usize, rusqlite::Error> {
-    let mut conn = get_conn();
+    exec(|conn| { 
     let format = crate::util::smov_format::SmovName::format_smov_name(&seek_name);
     let update_size = conn
       .execute(
@@ -499,13 +506,13 @@ impl SmovFile {
       .expect("更新出现错误");
 
     Ok(update_size)
+  })
   }
 }
 
 impl SMOVBOOK {
   pub fn init() -> Result<()> {
-    //let conn = Connection::open_in_memory().unwrap();
-    let res = exec(|conn| {
+    exec(|conn| {
       conn
         .execute(
           "create table if not exists smov
@@ -634,17 +641,16 @@ impl SMOVBOOK {
         )
         .unwrap();
       Ok(())
-    });
-
-    Ok(())
+    })
   }
 }
 
 impl SmovFileSeek {
-  pub fn seek2db(smov_seek: &SmovSeek, smov_file_seek: &SmovFileSeek) -> Result<()> {
-    let mut conn = get_conn();
+  pub fn _seek2db(_smov_seek: &SmovSeek, _smov_file_seek: &SmovFileSeek) -> Result<()> {
+    exec(|conn| { 
     let tx = conn.transaction()?;
     tx.commit().unwrap();
     Ok(())
+  })
   }
 }

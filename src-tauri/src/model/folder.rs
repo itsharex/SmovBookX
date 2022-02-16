@@ -35,8 +35,7 @@ where
 
 impl Folder {
   pub fn insert_folder(path: String) -> Result<i32, rusqlite::Error> {
-
-    let res = exec(|conn| { 
+   exec(|conn| { 
     conn.execute(
             "insert into sys_folder(path) select ?1 where not exists(select * from sys_folder where path = ?2)",
             params![path,path],
@@ -51,13 +50,11 @@ impl Folder {
       .expect("查询出现错误");
 
       Ok(folder_id)
-    }).unwrap();
-
-    Ok(res)
+    })
   }
   
   pub fn query_folder() -> Result<Vec<Folder>, rusqlite::Error> {
-    let mut conn = get_conn();
+   exec(|conn| { 
     let mut stmt = conn.prepare("SELECT id,path FROM sys_folder")?;
     let folder_iter = stmt.query_map([], |row| {
       Ok(Folder {
@@ -72,7 +69,7 @@ impl Folder {
       let s = smov_file.unwrap();
       res.push(s);
     }
-
     Ok(res)
+  })
   }
 }
