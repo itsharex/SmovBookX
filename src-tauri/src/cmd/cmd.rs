@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::model::folder::Folder;
 use crate::model::smov::SmovFile;
 use crate::response::response::Response;
