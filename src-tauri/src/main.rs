@@ -81,7 +81,8 @@ async fn main() {
       cmd::cmd::insert_folder,
       cmd::cmd::query_folder,
       cmd::cmd::retrieve_data,
-      cmd::tauri_cmd::open_folder_select
+      cmd::tauri_cmd::open_folder_select,
+      app::update_config
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

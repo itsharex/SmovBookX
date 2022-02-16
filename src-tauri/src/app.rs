@@ -34,14 +34,16 @@ use winreg::enums::*;
 use winreg::RegKey;
 #[cfg(target_os = "windows")]
 use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_OK};
+extern crate rand;
+use rand::prelude::*;
 lazy_static! {
     pub static ref APP: Mutex<App> = Mutex::new(App::new());
+    pub static ref TEST:Mutex<Test> = Mutex::new(Test::new());
 }
 
 ///初始化app文件夹
 pub fn init_app_dir() -> bool {
     if !Path::new(&crate::app::APP.lock().app_dir).exists() {
-        println!("{:?}",&crate::app::APP.lock().app_dir);
         if let Ok(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
             return true;
         }
@@ -50,9 +52,31 @@ pub fn init_app_dir() -> bool {
     true
 }
 
+/// app配置文件toml配置
+ 
+
+/// 尝试更新lazy_staic的值 ok
+#[command]
+pub fn update_config(){
+    println!("{}",&crate::app::TEST.lock().test);
+    let mut ss = TEST.lock();
+    ss.test=2;
+}
+
 /// app配置map
 pub struct App {
     pub app_dir: PathBuf,
+    // pub app_conf:PathBuf,
+}
+
+pub struct Test {
+    pub test:i64
+}
+
+impl Test {
+    pub fn new() -> Test {
+      Test { test: (random::<i64>()) }
+    }
 }
 
 impl App {
@@ -63,7 +87,7 @@ impl App {
                 app_dir: PathBuf::new(),
             },
             Some(p) => App {
-                app_dir: p.join("SmovBook"),
+                app_dir: p.join("smovbook"),
             },
         }
     }

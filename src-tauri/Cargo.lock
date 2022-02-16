@@ -64,10 +64,12 @@ dependencies = [
  "reqwest",
  "rusqlite",
  "serde",
+ "serde_derive",
  "serde_json",
  "tauri",
  "tauri-build",
  "tokio",
+ "toml",
  "windows",
  "winreg 0.10.1",
 ]

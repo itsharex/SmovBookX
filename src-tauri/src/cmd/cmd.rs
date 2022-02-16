@@ -6,9 +6,6 @@ use crate::serve::smov_file;
 use crate::util::smov_format::SmovName;
 use tauri::command;
 
-// use std::thread;
-// use std::time::Duration;
-
 //检索新文件到数据库
 #[command]
 pub fn query_new_file_todb() -> Response<String> {
@@ -34,22 +31,15 @@ pub async fn retrieve_data(seek_name: String, smov_id: i64) -> Response<Option<i
       true => Response::new(200, Some(1), "success"),
       false => Response::new(404, Some(1), "not found")
     },
-    Err(e) => Response::err(Some(1), "出现错误")
+    Err(_e) => Response::err(Some(1), "出现未知错误")
   }
-
 }
-
-// #[command]
-// pub async fn open_smov_win() -> i64 {
-//   thread::sleep(Duration::from_millis(10));
-//   1
-// }
 
 //查找所有未被检索的数据
 #[command]
 pub fn query_unretrieved() -> Response<Option<Vec<SmovFile>>> {
   match SmovFile::query_db_file_id_unseek() {
-    Ok(e) => return Response::new(200, Some(e), "success"), //return serde_json::to_string(&e).expect("序列化出现错误"),
+    Ok(e) => return Response::new(200, Some(e), "success"), 
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
   };
 }
