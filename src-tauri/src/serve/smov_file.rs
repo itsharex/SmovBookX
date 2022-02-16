@@ -89,7 +89,7 @@ fn retrieve_all(path: &String) -> Vec<SmovFile> {
             .to_os_string()
             .into_string()
             .expect("读取文件时发生错误");
-          let format = name.to_uppercase().replace("-C", "").replace("-", "");
+          let _format = name.to_uppercase().replace("-C", "").replace("-", "");
           if is_mov_type(&extension) {
             let res = SmovFile {
               id: 0,

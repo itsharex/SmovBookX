@@ -90,22 +90,6 @@ where
   }
 }
 
-//弃用的连接获取
-// fn get_conn() -> Connection {
-//   let path = app_dir(&Config::default())
-//     .expect("Could not get app path")
-//     .into_os_string()
-//     .into_string()
-//     .expect("Could not get app path");
-
-//   let conn = Connection::open(format!("{}SmovBook\\SmovBook.db", path));
-//   if conn.is_ok() {
-//   } else {
-//     println!("连接失败:{:?}", conn.as_ref().err().unwrap().to_string());
-//   }
-//   conn.unwrap()
-// }
-
 impl Smov {
   pub fn _insert_all(smov: Smov) -> Result<()> {
     exec(|conn| { 

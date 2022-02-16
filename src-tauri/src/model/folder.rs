@@ -8,14 +8,14 @@ pub struct Folder {
   pub path: String,
 }
 
-fn get_conn() -> Connection {
-  let conn = Connection::open("SmovBook.db");
-  if conn.is_ok() {
-  } else {
-    println!("连接失败:{:?}", conn.as_ref().err().unwrap().to_string());
-  }
-  conn.unwrap()
-}
+// fn get_conn() -> Connection {
+//   let conn = Connection::open("SmovBook.db");
+//   if conn.is_ok() {
+//   } else {
+//     println!("连接失败:{:?}", conn.as_ref().err().unwrap().to_string());
+//   }
+//   conn.unwrap()
+// }
 
 fn create_sqlite_connection() -> Result<Connection> {
   let database = PathBuf::from(&crate::app::APP.lock().app_dir).join("SmovBook.db");

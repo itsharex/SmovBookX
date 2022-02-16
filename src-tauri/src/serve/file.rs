@@ -1,7 +1,7 @@
 use std::fs;
 use tauri::{api::path::app_dir, Config};
 
-pub fn init_environment(){
+pub fn _init_environment(){
     let path = app_dir(&Config::default())
     .expect("Could not get app path")
     .into_os_string()

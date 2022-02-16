@@ -1,12 +1,28 @@
 <template>
   <div class="app">
+    <el-button type="primary" :icon="ArrowLeftBold" @click="back" circle></el-button>
     <router-view />
   </div>
 </template>
 
-<script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
+<script lang="ts">
+import { ArrowLeftBold } from '@element-plus/icons-vue';
+import { defineComponent, ref, onMounted, inject, watch, computed } from "vue";
+import { useRouter, useRoute } from 'vue-router';
+
+export default defineComponent({ 
+  setup(){
+     const router = useRouter();
+     const back = () =>{
+        router.back();
+     }
+
+      return {
+        ArrowLeftBold,
+        back
+      }
+  }
+});
 
 </script>
 
