@@ -1,6 +1,7 @@
 <template>
   <el-button type="danger" @click="setSeekFolder">添加检索文件夹</el-button>
   <el-button type="danger" @click="setTidyFolder">设置整理文件夹</el-button>
+  <el-button type="danger" @click="test">ces</el-button>
 </template>
 
 <script>
@@ -22,13 +23,20 @@ export default defineComponent({
     };
 
     const setTidyFolder = () => {
-      // invoke("update_config");
+      invoke("open_folder_select").then((res) => {
+        if (res.code == 200) {
+          invoke("update_tidy_folder", { path: res.data });
+        }
+      });
+    };
+    const test = () => {
       invoke("test");
     };
 
     return {
       setSeekFolder,
-      setTidyFolder
+      setTidyFolder,
+      test
     };
   },
 });

@@ -69,7 +69,7 @@ fn is_mov_type(extension: &String) -> bool {
   flag
 }
 
-fn retrieve_all(path: &String) -> Vec<SmovFile> {
+pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
   let mut smovs: Vec<SmovFile> = Vec::new();
 
   if let Ok(entries) = fs::read_dir(&path) {

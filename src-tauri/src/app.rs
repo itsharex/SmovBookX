@@ -45,7 +45,7 @@ lazy_static! {
 pub fn init_app_dir() -> bool {
     println!("init");
   if !Path::new(&crate::app::APP.lock().app_dir).exists() {
-    if let Ok(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
+    if let Ok(_) = create_dir_all::<_>(&crate::app::APP.lock().app_dir) {
       return true;
     }
     return false;
@@ -68,15 +68,6 @@ pub fn init_app_conf() -> bool {
     return false;
   }
   true
-}
-
-/// app配置文件toml配置
-
-/// 尝试更新lazy_staic的值 ok
-#[command]
-pub fn update_config() {
-  // let mut ss = CONF.lock();
-  // ss.test=2;
 }
 
 /// app配置map

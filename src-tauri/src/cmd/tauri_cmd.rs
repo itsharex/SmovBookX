@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::mpsc::channel;
@@ -6,7 +7,10 @@ use std::sync::mpsc::channel;
 use tauri::api::dialog;
 use tauri::command;
 
+extern crate toml;
+use crate::app::Conf;
 use crate::response::response::Response;
+use crate::serve::file;
 
 #[derive(Deserialize)]
 #[serde(tag = "cmd", rename_all = "camelCase")]
@@ -79,10 +83,38 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 //测试
 #[command]
 pub fn test() -> String {
-  let s = &crate::app::CONF.lock().tidy_folder.to_str().unwrap().to_string();
-  println!("{}",s);
-  s.clone()
+  // let s = &crate::app::CONF
+  //   .lock()
+  //   .tidy_folder
+  //   .to_str()
+  //   .unwrap()
+  //   .to_string();
+  // println!("{}", s);
+  // s.clone()
+  let s = file::tidy_smov{
+    id : &4,
+    name: &String::from("测试1")
+  };
+  s.tidy();
+
+  String::from("测试")
+
 }
 
+///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据
+#[command]
+pub fn update_tidy_folder(path: String) {
+  let mut conf = crate::app::CONF.lock();
+  conf.tidy_folder = PathBuf::from(&path);
+  let to_path = &crate::app::APP.lock().app_dir.join("conf.toml");
+  let a = Conf {
+    tidy_folder: PathBuf::from(&path),
+  };
+  if let Ok(_) = File::create(to_path) {
+    //写入一个数据
+    let c = toml::to_string(&a).unwrap();
+    write(to_path, c).unwrap();
+  }
+}
 
 pub type MaybeString = Option<String>;

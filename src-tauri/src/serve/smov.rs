@@ -4,6 +4,7 @@ extern crate reqwest;
 
 use crate::model::smov::SmovFile;
 use crate::model::smov::SmovSeek;
+use crate::serve::file::tidy_smov;
 use kuchiki::traits::*;
 use reqwest::header::HeaderMap;
 use std::path::Path;
@@ -76,6 +77,10 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
         //在这里直接对数据进行整理 ，能到这里说明数据真实存在
         //smov_file新建一个方法 ，需要对数据更改位置及更新数据库数据，主要目的为修改位置信息,初始化文件夹，需要回传一个path
         //传入的数据应该为 name 和 id ，就能确定 哪条数据和初始化文件夹的名称
+        let s = tidy_smov{
+          id: &id,
+          name: &name
+        };
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
         let img = video_item.select("img").unwrap().next_back().unwrap();
