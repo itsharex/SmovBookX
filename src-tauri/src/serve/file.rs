@@ -21,9 +21,11 @@ impl tidy_smov<'_> {
   pub fn tidy(self: &Self) -> Result<PathBuf>{
     let tidy_path = &crate::app::CONF.lock().tidy_folder.clone();
     let smov_file = SmovFile::query_by_id(self.id).expect("查询数据库信息出现错误");
-    let file_name = format!("{}.{}", &smov_file.realname, &smov_file.extension);
+
+    let file_name = format!("{}.{}", &smov_file.realname, &smov_file.extension); //假设存在-C 保留-C
     let file_folder_path = PathBuf::from(&smov_file.path);
     let file_file_path = file_folder_path.join(&file_name);
+
     let tidy_folder_path = tidy_path.join(self.name);
     let tidy_name = format!("{}.{}", &self.name, &smov_file.extension);
     let tidy_file_path = &tidy_folder_path.join(&tidy_name);
