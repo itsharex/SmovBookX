@@ -22,7 +22,8 @@ export default defineComponent({
     };
 
     const setTidyFolder = () => {
-      invoke("update_config");
+      // invoke("update_config");
+      invoke("test");
     };
 
     return {

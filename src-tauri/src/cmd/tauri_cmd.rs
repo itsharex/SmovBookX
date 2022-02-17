@@ -76,4 +76,13 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
   pathbuf.to_str().map(|st| String::from(st))
 }
 
+//测试
+#[command]
+pub fn test() -> String {
+  let s = &crate::app::CONF.lock().tidy_folder.to_str().unwrap().to_string();
+  println!("{}",s);
+  s.clone()
+}
+
+
 pub type MaybeString = Option<String>;

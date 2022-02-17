@@ -7,10 +7,7 @@
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
-#[macro_use]
-extern crate rusqlite;
-#[macro_use]
-extern crate anyhow;
+
 
 mod app;
 mod cmd;
@@ -45,6 +42,9 @@ async fn main() {
       }
       if !app::init_app_dir() {
         panic!("工作目录初始化失败！");
+      }
+      if !app::init_app_conf() {
+        panic!("配置文件初始化失败！");
       }
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())
@@ -82,6 +82,8 @@ async fn main() {
       cmd::cmd::query_folder,
       cmd::cmd::retrieve_data,
       cmd::tauri_cmd::open_folder_select,
+      cmd::tauri_cmd::test,
+      cmd::tauri_cmd::open_in_explorer,
       app::update_config
     ])
     .run(tauri::generate_context!())
