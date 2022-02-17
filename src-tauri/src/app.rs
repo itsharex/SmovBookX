@@ -45,7 +45,7 @@ lazy_static! {
 pub fn init_app_dir() -> bool {
     println!("init");
   if !Path::new(&crate::app::APP.lock().app_dir).exists() {
-    if let Ok(_) = create_dir_all::<_>(&crate::app::APP.lock().app_dir) {
+    if let Ok(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
       return true;
     }
     return false;
@@ -69,6 +69,9 @@ pub fn init_app_conf() -> bool {
   }
   true
 }
+
+/// app配置文件toml配置
+
 
 /// app配置map
 pub struct App {
@@ -341,10 +344,10 @@ pub fn webview2_is_installed() {
 pub async fn listen_single(window: Window) {
   let _: tauri::async_runtime::JoinHandle<anyhow::Result<(), anyhow::Error>> =
     tauri::async_runtime::spawn(async move {
-      let socket = UdpSocket::bind("127.0.0.1:24254").await?;
+      let socket = UdpSocket::bind("127.0.0.1:24254").await.expect("连接失败");
       loop {
         let mut buf = [0; 32];
-        let (size, _) = socket.recv_from(&mut buf).await?;
+        let (size, _) = socket.recv_from(&mut buf).await.expect("出现错误");
         if size != 16 {
           return Ok(());
         };

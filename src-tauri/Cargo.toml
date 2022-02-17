@@ -26,7 +26,7 @@ lazy_static = "*"
 rusqlite = "*"
 rand = "0.8.4"
 regex = "*"
-anyhow = "1.0.44"
+anyhow = { version = "1.0", default-features = false }
 log = "0.4.0"
 env_logger = "0.9"
 parking_lot = "0.11.2"

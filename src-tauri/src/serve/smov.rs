@@ -6,8 +6,9 @@ use crate::model::smov::SmovFile;
 use crate::model::smov::SmovSeek;
 use crate::serve::file::tidy_smov;
 use kuchiki::traits::*;
+use reqwest::Client;
 use reqwest::header::HeaderMap;
-use std::path::Path;
+use std::path::PathBuf;
 use std::{
   fs::File,
   io::{Read, Write},
@@ -45,9 +46,14 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
   let url = format!("{}/search?q={}&f=all", *MAIN_URL, format);
 
   let client = reqwest::Client::new();
-  let res = client.get(url).headers(headers.clone()).send().await?;
+  let res = client
+    .get(url)
+    .headers(headers.clone())
+    .send()
+    .await
+    .expect("无法格式化");
 
-  let text = res.text().await?;
+  let text = res.text().await.expect("无法格式化");
 
   let document = kuchiki::parse_html().one(text);
 
@@ -73,14 +79,15 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
       let name_f = uid.text_contents().to_uppercase().replace("-", "");
 
       if name_f == format {
-
         //在这里直接对数据进行整理 ，能到这里说明数据真实存在
         //smov_file新建一个方法 ，需要对数据更改位置及更新数据库数据，主要目的为修改位置信息,初始化文件夹，需要回传一个path
         //传入的数据应该为 name 和 id ，就能确定 哪条数据和初始化文件夹的名称
-        let s = tidy_smov{
+        let s = tidy_smov {
           id: &id,
-          name: &name
+          name: &name,
         };
+
+        let img_to_path = s.tidy().expect("整理文件夹出现错误").join("img");
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
         let img = video_item.select("img").unwrap().next_back().unwrap();
@@ -92,17 +99,22 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
         sava_pic(
           &thumbs_url,
           &(format!("thumbs_{}.jpg", name)),
-          &"C:/Users/Leri/Desktop/新建文件夹".to_string(),
-        ).await.expect("保存图片出现错误");
+          &img_to_path,
+          &client
+        )
+        .await
+        .expect("保存图片出现错误");
 
         let url = format!("{}{}", *MAIN_URL, &href);
         let res = client
           .get(&url)
           .headers(headers.clone())
           .send()
-          .await?
+          .await
+          .expect("出现错误")
           .text()
-          .await?;
+          .await
+          .expect("出现错误");
 
         println!("{}", &url);
 
@@ -132,9 +144,12 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
 
         sava_pic(
           &smov_img,
-          &(format!("MAIN_{}.jpg", name)),
-          &"C:/Users/Leri/Desktop/新建文件夹".to_string(),
-        ).await.expect("保存图片出现错误");
+          &(format!("main_{}.jpg", name)),
+          &img_to_path,
+          &client
+        )
+        .await
+        .expect("保存图片出现错误");
 
         let details = video_meta_panel.select(".panel-block").unwrap();
 
@@ -260,12 +275,13 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
 async fn sava_pic(
   url: &String,
   name: &String,
-  path: &String,
+  path: &PathBuf,
+  client: &Client
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let pic_path = format!("{}/{}", path, name);
-  println!("{}", pic_path);
-  let path = Path::new(&pic_path);
-  let client = reqwest::Client::new();
+  // let pic_path = format!("{}/{}", path, name);
+  let pic_path = path.join(name);
+  // let path = Path::new(&pic_path);
+  // let client = reqwest::Client::new();
 
   let mut headers = HeaderMap::new();
   headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());
@@ -285,7 +301,7 @@ async fn sava_pic(
     .bytes()
     .await?;
 
-  let mut file = match File::create(&path) {
+  let mut file = match File::create(&pic_path) {
     Err(why) => panic!("couldn't create {}", why),
     Ok(file) => file,
   };
