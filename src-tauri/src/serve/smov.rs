@@ -87,7 +87,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
           name: &name,
         };
 
-        let img_to_path = s.tidy().expect("整理文件夹出现错误").join("img");
+        let img_to_path = s.tidy().expect("整理文件夹出现错误");
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
         let img = video_item.select("img").unwrap().next_back().unwrap();
