@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 
-use crate::model::smov::{SmovFile, Smov};
+use crate::model::smov::{SmovFile};
 use crate::serve::smov_file::retrieve_all;
 use std::{
   fs::{copy, create_dir_all, remove_dir, remove_file,rename,read_dir},
@@ -71,7 +71,6 @@ impl tidy_smov<'_> {
             }
         }
     }
-
     // remove_dir(&file_folder_path).expect("删除原文件夹出现错误");
     }
 
@@ -80,6 +79,8 @@ impl tidy_smov<'_> {
     if !&img_path.exists() {
       create_dir_all::<_>(&img_path).expect("创建视频文件夹错误");
     }
+
+    SmovFile::update_path_name(self.id, tidy_name, tidy_folder_path.to_str().unwrap_or_else(||"").to_string()).expect("更新数据库出现了错误！,现在没有处理错误，凉凉");
 
     Ok(img_path)//tidy_folder_path
   }

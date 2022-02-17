@@ -417,8 +417,6 @@ impl SmovFile {
     })
   }
 
-
-
   pub fn _query_unseek_db_file() -> Result<Vec<SmovFileSeek>, rusqlite::Error> {
     exec(|conn| {
       let mut stmt =
@@ -507,6 +505,20 @@ impl SmovFile {
         .execute(
           "update smov set seekname = ?1 ,format = ?2 where id = ?3",
           params![seek_name, format, id],
+        )
+        .expect("更新出现错误");
+
+      Ok(update_size)
+    })
+  }
+
+  pub fn update_path_name(id : &i64,realname :String, path:String) -> Result<usize, rusqlite::Error>{
+    exec(|conn| {
+
+      let update_size = conn
+        .execute(
+          "update smov set realname = ?1 ,path = ?2 where id = ?3",
+          params![realname, path, id],
         )
         .expect("更新出现错误");
 

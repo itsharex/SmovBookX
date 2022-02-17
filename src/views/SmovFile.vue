@@ -74,12 +74,7 @@
     <div class="SmovFileNav"></div>
 
     <div class="navBottom">
-      <el-input
-        size="small"
-        style="width: 200px"
-        v-model="search"
-        v-if="false"
-      />
+      <el-input size="small" style="width: 200px" v-model="search" v-if="false" />
       <!-- <el-button size="small" @click="initFn">检索全部</el-button>
 
       <el-button size="small" @click="SearchFile">db数据检索</el-button>-->
@@ -101,6 +96,7 @@ import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import SmovList from "../components/SmovList.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ElNotification } from "element-plus";
+import { ThreadPool } from '../ts/ThreadPool'
 
 export default defineComponent({
   components: { SmovList },
@@ -111,6 +107,8 @@ export default defineComponent({
     const search = ref();
     const singleData = ref({});
     const centerDialogVisible = ref(false);
+
+    let thread = 8;
 
     const table = reactive({
       loading: false,
@@ -158,13 +156,48 @@ export default defineComponent({
       // const allRecords = $table.getTableData().fullData;//获取全部数据
 
       // VXETable.modal.alert(`${selectRecords.length}条数据`)
-
+      let tasks: any[] = [];
+      let i = 0;
       for (let select of selectRecords) {
-        retrieveData(select.seekname, select.id);  //await 关键词 等待完成
+        i++;
+        //retrieveData(select.seekname, select.id);  //await 关键词 等待完成
+        tasks.push(retrieveData(select.seekname, select.id, i));
       }
+
+      let pool = new ThreadPool.FixedThreadPool({
+        size: 2,
+        tasks: [...tasks] //, ...tasks7, ...tasks7
+      })
+
+      pool.start();
+
     };
 
-    async function retrieveData(seekName, id) {
+    function retrieveData(seekName, id, i) {
+      return new ThreadPool.Task({
+        params: i,
+        processor: (params) => {
+          // console.log("线程"+i+"正在运行");
+          return new Promise(resolve => {
+            console.log("正在检索", seekName);
+            invoke("retrieve_data", {
+              seekName: seekName,
+              smovId: id,
+            }).then((res) => {
+              console.log(res);
+            }).finally(()=>{
+               resolve(params);
+            });
+          });
+        },
+        callback: (data) => {
+          console.log(`线程 ${i}, rst is`, data);
+        }
+      });
+    }
+
+    async function retrieveData1(seekName, id) {
+      console.log("正在检索", seekName);
       invoke("retrieve_data", {
         seekName: seekName,
         smovId: id,
@@ -172,7 +205,7 @@ export default defineComponent({
         console.log(res);
       });
     }
-    
+
     onMounted(() => {
       initFn();
     });
@@ -262,7 +295,7 @@ export default defineComponent({
       findList,
       xTable,
       editClosedEvent,
-      getSelectEvent,
+      getSelectEvent
     };
   },
 });
