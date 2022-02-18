@@ -71,7 +71,7 @@ pub fn open_folder_select() -> Response<String> {
 #[command]
 pub fn open_in_explorer(path: String) {
   Command::new("explorer")
-    .arg(".") // <- Specify the directory you'd like to open.
+    .arg(path) // <- Specify the directory you'd like to open.
     .spawn()
     .unwrap();
 }

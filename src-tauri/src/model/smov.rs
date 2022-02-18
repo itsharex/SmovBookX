@@ -24,8 +24,8 @@ pub struct Smov {
   pub serie_id: i64,        //系列
   pub director: String,     //导演
   pub director_id: i64,     //导演
-  pub tags: Vec<tag>,       //标签
-  pub actors: Vec<actor>,   //演员
+  pub tags: Vec<Tag>,       //标签
+  pub actors: Vec<Actor>,   //演员
   pub isch: bool,
   pub thumbs_img: String,
   pub main_img: String,
@@ -33,13 +33,13 @@ pub struct Smov {
 }
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
-pub struct tag {
+pub struct Tag {
   id: i64,
   name: String,
 }
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
-pub struct actor {
+pub struct Actor {
   id: i64,
   name: String,
 }
@@ -175,7 +175,7 @@ impl Smov {
                 params![smov.name, smov.path, smov.len, smov.created, smov.modified, smov.extension, smov.format,publisher,maker,serie,director,smov.format],
                 ).expect("插入smov表出现错误");
 
-      let smovid: u64 = tx
+      let _smovid: u64 = tx
         .query_row_and_then(
           "SELECT id from smov where format = ?1",
           params![smov.format],
@@ -202,7 +202,7 @@ impl Smov {
       //   )?;
       // }
 
-      ///插入演员暂时没用
+      //插入演员暂时没用
       // for actor in smov.actors {
       //   tx.execute(
       //     "insert into actor(name) select ?1 where not exists (select * from actor where name= ?2)",
@@ -305,7 +305,7 @@ impl Smov {
         )?;
 
         let tag_iter = stmt.query_map([smov.id], |row| {
-          Ok(tag {
+          Ok(Tag {
             id: row.get(0)?,
             name: row.get(1)?,
           })
@@ -321,7 +321,7 @@ impl Smov {
         )?;
 
         let actor_iter = stmt.query_map([smov.id], |row| {
-          Ok(actor {
+          Ok(Actor {
             id: row.get(0)?,
             name: row.get(1)?,
           })

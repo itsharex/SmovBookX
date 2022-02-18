@@ -92,7 +92,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
         let thumbs_url = img.attributes.borrow().get("data-src").unwrap().to_string();
         let att = &a.attributes;
         let href = att.borrow().get("href").unwrap().to_string(); //is_some 是否存在？
-        let title = att.borrow().get("title").unwrap().to_string();
+        let _title = att.borrow().get("title").unwrap().to_string();
 
         sava_pic(
           &thumbs_url,
