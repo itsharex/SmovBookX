@@ -5,6 +5,7 @@
 
 #[macro_use]
 extern crate log;
+extern crate env_logger;
 #[macro_use]
 extern crate lazy_static;
 
@@ -24,8 +25,6 @@ async fn main() {
   if cfg!(debug_assertions) {
     env_logger::init();
   }
-
-  //serve::file::init_environment();
 
   app::lock_single();
 
@@ -81,6 +80,7 @@ async fn main() {
       cmd::cmd::insert_folder,
       cmd::cmd::query_folder,
       cmd::cmd::retrieve_data,
+      cmd::cmd::get_all_smov,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,
       cmd::tauri_cmd::open_in_explorer,

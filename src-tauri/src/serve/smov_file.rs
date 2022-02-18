@@ -24,15 +24,8 @@ pub fn smov_file() -> String {
     let main_path = folder.path;
 
     let mut loa_smov = retrieve_all(&main_path);
-    // for y in loa_smov.iter() {
-    //     smov_file::insert_file_data(y);
-    // }
 
     file_smov.append(&mut loa_smov);
-
-    // for y in &smov {
-    //     smov_file::insert_file_data(y).unwrap();
-    // }
   }
 
   let file_smov: HashSet<SmovFile> = file_smov.into_iter().collect();
@@ -69,6 +62,7 @@ fn is_mov_type(extension: &String) -> bool {
   flag
 }
 
+///判断是否汉化放到这里
 pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
   let mut smovs: Vec<SmovFile> = Vec::new();
 
@@ -91,6 +85,14 @@ pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
             .expect("读取文件时发生错误");
           let _format = name.to_uppercase().replace("-C", "").replace("-", "");
           if is_mov_type(&extension) {
+            let file_name = String::from(&name);
+            let isch = match file_name.contains("-c")
+              || file_name.contains("-C")
+              || file_name.contains("-ch")
+            {
+              true => 1,
+              false => 0,
+            };
             let res = SmovFile {
               id: 0,
               realname: String::from(&name),
@@ -101,6 +103,7 @@ pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
               modified: timestamp(mat.modified().expect("文件修改日期读取错误")),
               extension,
               format: String::from(""),
+              isch,
             };
             smovs.push(res);
           }
@@ -118,3 +121,4 @@ pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
   }
   smovs
 }
+

@@ -1,35 +1,42 @@
 use anyhow::{anyhow, Result};
 
-use crate::model::smov::{SmovFile};
+use crate::model::smov::SmovFile;
 use crate::serve::smov_file::retrieve_all;
 use std::{
-  fs::{copy, create_dir_all, remove_dir, remove_file,rename,read_dir},
+  fs::{create_dir_all, read_dir, rename},
   path::PathBuf,
 };
 use tauri::api::file::Move;
 
-lazy_static!{
-   static ref EXT:Vec<&'static str> = vec!["srt","ass","lrc"];
+lazy_static! {
+  static ref EXT: Vec<&'static str> = vec!["srt", "ass", "lrc"];
 }
 
-pub struct tidy_smov<'a> {
+pub struct TidySmov<'a> {
   pub id: &'a i64,
   pub name: &'a String,
 }
 
-impl tidy_smov<'_> {
-  pub fn tidy(self: &Self) -> Result<PathBuf>{
+impl TidySmov<'_> {
+  pub fn tidy(self: &Self) -> Result<PathBuf> {
     let tidy_path = &crate::app::CONF.lock().tidy_folder.clone();
     let smov_file = SmovFile::query_by_id(self.id).expect("查询数据库信息出现错误");
+
+    let mut file_ch = "";
+    if smov_file.isch.eq(&1)  {
+      file_ch = "-C";
+    }
 
     let file_name = format!("{}.{}", &smov_file.realname, &smov_file.extension); //假设存在-C 保留-C
     let file_folder_path = PathBuf::from(&smov_file.path);
     let file_file_path = file_folder_path.join(&file_name);
 
-    let tidy_folder_path = tidy_path.join(self.name);
-    let tidy_name = format!("{}.{}", &self.name, &smov_file.extension);
+    let tidy_folder_path = tidy_path.join(format!("{}{}",self.name,&file_ch));
+    let tidy_file_noextension = format!("{}{}", &self.name,&file_ch );
+    let tidy_name = format!("{}.{}", &tidy_file_noextension, &smov_file.extension);
     let tidy_file_path = &tidy_folder_path.join(&tidy_name);
     //判断文件是否还存在
+
     if !file_file_path.exists() {
       return Err(anyhow!("Missing attribute: {}", "数据已被物理删除"));
     }
@@ -42,8 +49,8 @@ impl tidy_smov<'_> {
         create_dir_all::<_>(&tidy_folder_path).expect("创建视频文件夹错误");
       }
       // copy(&file_file_path, &tidy_file_path).expect("复制文件出现错误");
-      let s= Move::from_source(&file_file_path);
-      
+      let s = Move::from_source(&file_file_path);
+
       s.to_dest(&tidy_file_path).expect("移动文件出现错误");
 
       // remove_file(&file_file_path).expect("删除原文件出现错误");
@@ -51,8 +58,8 @@ impl tidy_smov<'_> {
       //如果不是单文件，移动文件夹并重命名
       // copy(&file_folder_path, &tidy_folder_path).expect("复制文件夹出现错误");
 
-      let s= Move::from_source(&file_folder_path);
-      
+      let s = Move::from_source(&file_folder_path);
+
       s.to_dest(&tidy_folder_path).expect("移动文件夹出现错误");
 
       //重命名文件
@@ -60,29 +67,36 @@ impl tidy_smov<'_> {
       //尝试重命名字幕及zz文件
       if let Ok(entries) = read_dir(&tidy_folder_path) {
         for entry in entries {
-            let srt_path = entry.expect("读取文件夹下文件出现错误").path();
-            let exten = match srt_path.extension(){
-                Some(ex) => ex,
-                None => break,
-            }.to_str().unwrap_or_else(||"");
-            if EXT.contains(&exten){
-                let tidy_ext = format!("{}.{}",&self.name,exten);
-                rename(srt_path, tidy_folder_path.join(tidy_ext)).expect("重命名文件出现错误");
-            }
+          let srt_path = entry.expect("读取文件夹下文件出现错误").path();
+          let exten = match srt_path.extension() {
+            Some(ex) => ex,
+            None => break,
+          }
+          .to_str()
+          .unwrap_or_else(|| "");
+          if EXT.contains(&exten) {
+            let tidy_ext = format!("{}.{}", &self.name, exten);
+            rename(srt_path, tidy_folder_path.join(tidy_ext)).expect("重命名文件出现错误");
+          }
         }
-    }
-    // remove_dir(&file_folder_path).expect("删除原文件夹出现错误");
+      }
+      // remove_dir(&file_folder_path).expect("删除原文件夹出现错误");
     }
 
     let img_path = tidy_folder_path.join("img");
     //创建img文件夹
-    if !&img_path.exists() {
-      create_dir_all::<_>(&img_path).expect("创建视频文件夹错误");
+    if !&img_path.join("detail").exists() {
+      create_dir_all::<_>(&img_path.join("detail")).expect("创建视频文件夹错误");
     }
 
-    SmovFile::update_path_name(self.id, tidy_name, tidy_folder_path.to_str().unwrap_or_else(||"").to_string()).expect("更新数据库出现了错误！,现在没有处理错误，凉凉");
+    SmovFile::update_path_name(
+      self.id,
+      tidy_file_noextension,
+      tidy_folder_path.to_str().unwrap_or_else(|| "").to_string(),
+    )
+    .expect("更新数据库出现了错误！,现在没有处理错误，凉凉");
 
-    Ok(img_path)//tidy_folder_path
+    Ok(img_path) //tidy_folder_path
   }
 }
 

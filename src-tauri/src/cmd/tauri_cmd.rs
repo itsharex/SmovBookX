@@ -83,15 +83,7 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 //测试
 #[command]
 pub fn test() -> String {
-  // let s = &crate::app::CONF
-  //   .lock()
-  //   .tidy_folder
-  //   .to_str()
-  //   .unwrap()
-  //   .to_string();
-  // println!("{}", s);
-  // s.clone()
-  let s = file::tidy_smov{
+  let s = file::TidySmov{
     id : &4,
     name: &String::from("测试1")
   };

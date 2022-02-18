@@ -2,12 +2,11 @@ extern crate kuchiki;
 extern crate lazy_static;
 extern crate reqwest;
 
-use crate::model::smov::SmovFile;
 use crate::model::smov::SmovSeek;
-use crate::serve::file::tidy_smov;
+use crate::serve::file::TidySmov;
 use kuchiki::traits::*;
-use reqwest::Client;
 use reqwest::header::HeaderMap;
+use reqwest::Client;
 use std::path::PathBuf;
 use std::{
   fs::File,
@@ -30,9 +29,7 @@ lazy_static! {
   static ref MAIN_URL: String = String::from("https://javdb36.com");
 }
 
-pub async fn smov_file_bat(smov_list: &Vec<SmovFile>) {}
-
-pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
+pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Error> {
   let mut headers = HeaderMap::new();
   headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());
   headers.insert("cookie", "theme=auto; locale=zh; _ym_uid=1643076534203711663; _ym_d=1643076534; _ym_isad=1; over18=1; _jdb_session=u9TcLXlGGbtvm9gGwZYEpinDW9hp8wUpxrV1z88%2Bu6v7DTLIvBn9rUCQBt7O33JtmzPizK4a67uE8E75PJ56YhJQaocudrRi%2B4Ly025mTYamqzR%2FLDSfG5E%2FI32MC05KRngYkB04O%2Blli1jEvGzLLjH7GMDjERWejUQqwWtYVKEOhf2tfP7%2FPk%2BFo8Rg86S1Tai7Zg7Gc1rB0JwUqIMETFc%2BIToWoZ0jNTXWliRGSlhXpvO4Akn%2FuaBu771kG1uiSK0gQPCDTG9hheuFAjjfI0p%2FFV4b4usCkPiZZH3I2vWCM7S%2B4u6uk%2BXs--YVqvN%2Byh43AE6xyR--J5NZMl5Ko12LNJRzk%2Fzbpw%3D%3D".parse().unwrap());
@@ -63,6 +60,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
 
   let mut flag = false;
 
+  //这个循环要改的
   for videos_div in videos_main {
     let videos_main = videos_div.as_node();
     let videos = videos_main.select(".grid-item").unwrap();
@@ -82,7 +80,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
         //在这里直接对数据进行整理 ，能到这里说明数据真实存在
         //smov_file新建一个方法 ，需要对数据更改位置及更新数据库数据，主要目的为修改位置信息,初始化文件夹，需要回传一个path
         //传入的数据应该为 name 和 id ，就能确定 哪条数据和初始化文件夹的名称
-        let s = tidy_smov {
+        let s = TidySmov {
           id: &id,
           name: &name,
         };
@@ -100,7 +98,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
           &thumbs_url,
           &(format!("thumbs_{}.jpg", name)),
           &img_to_path,
-          &client
+          &client,
         )
         .await
         .expect("保存图片出现错误");
@@ -146,7 +144,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
           &smov_img,
           &(format!("main_{}.jpg", name)),
           &img_to_path,
-          &client
+          &client,
         )
         .await
         .expect("保存图片出现错误");
@@ -161,46 +159,25 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
           duration: 0,
           publishers: String::new(),
           makers: String::new(),
-          series: String::new(),
+          series: String::from("无系列"),
           directors: String::new(),
           tags: Vec::new(),
           actors: Vec::new(),
         };
 
-        let mut flag_size = 0;
-
+        //有两种情况，一种是有系列12个元素 一种没有系列11个元素 按storge检索
         for detail in details {
-          if flag_size == 0 {
-            // 没用部分
-            // let s = detail
-            //     .as_node()
-            //     .select("a")
-            //     .unwrap()
-            //     .next_back()
-            //     .unwrap()
-            //     .attributes
-            //     .borrow()
-            //     .get("value")
-            //     .unwrap()
-            //     .to_string();
-            // let s = detail
-            //     .as_node()
-            //     .select(".value")
-            //     .unwrap()
-            //     .next_back()
-            //     .unwrap();
-            // println!("1.{}", s.text_contents())
-          } else if flag_size == 1 {
-            let s = detail
-              .as_node()
-              .select(".value")
-              .unwrap()
-              .next_back()
-              .unwrap();
+          let detail_m = detail.as_node();
+          let type_flag = match detail_m.select("strong").expect("成功抛出错误").next() {
+            Some(e) => e.text_contents(),
+            None => continue,
+          };
+          // println!("{}", type_flag);
+          if type_flag.eq("日期:") {
+            let s = detail_m.select(".value").unwrap().next_back().unwrap();
             smov_seek.release_time = s.text_contents();
-          } else if flag_size == 2 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq(" 時長:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
@@ -208,52 +185,48 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
               .text_contents()
               .replace(" 分鍾", "");
             smov_seek.duration = s.parse::<i32>().unwrap();
-          } else if flag_size == 3 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq("導演:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.directors = s;
-          } else if flag_size == 4 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq("片商:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.makers = s;
-          } else if flag_size == 5 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq(" 發行:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.publishers = s;
-          } else if flag_size == 6 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq("系列:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.series = s;
-          } else if flag_size == 8 {
-            let tags = detail.as_node().select("a").unwrap();
+          } else if type_flag.eq("類別:") {
+            let tags = detail_m.select("a").unwrap();
 
             for tag in tags {
               let s = tag.as_node().text_contents();
               smov_seek.tags.push(s);
             }
-          } else if flag_size == 9 {
-            let mut actors = detail.as_node().select("a").unwrap();
-            let actors_size = detail.as_node().select(".female").unwrap().count();
+          } else if type_flag.eq("演員:") {
+            let mut actors = detail_m.select("a").unwrap();
+            let actors_size = detail_m.select(".female").unwrap().count();
             let mut i = 0;
             while i != actors_size {
               let s = actors.next().unwrap().text_contents();
@@ -262,9 +235,41 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
             }
             // println!("{:?}",smov_seek);
           }
-          flag_size = flag_size + 1;
         }
+
+        //保存详情图片
+        let screenshots = match document
+          .select(".preview-images")
+          .expect("获取截图块出现错误")
+          .next(){
+            Some(e) => e,
+            None => return Ok(true),
+        };
+
+        let screenshots = screenshots.as_node().select(".tile-item").expect("获取详情图片快出现错误");
+
+        let mut counter = 1;
+        for screenshot in screenshots {
+          let screenshot_href = screenshot
+            .attributes
+            .borrow()
+            .get("href")
+            .unwrap()
+            .to_string();
+          println!("正在保存第{}张图片", &counter);
+          sava_pic(
+            &screenshot_href,
+            &(format!("detail_{}.jpg", counter)),
+            &img_to_path.join("detail"),
+            &client,
+          )
+          .await
+          .expect("保存图片出现错误");
+          counter=counter+1;
+        }
+
         SmovSeek::insert_by_path_name(smov_seek).unwrap();
+
         flag = true;
       }
     }
@@ -276,7 +281,7 @@ async fn sava_pic(
   url: &String,
   name: &String,
   path: &PathBuf,
-  client: &Client
+  client: &Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
   // let pic_path = format!("{}/{}", path, name);
   let pic_path = path.join(name);

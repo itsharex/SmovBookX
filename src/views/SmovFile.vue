@@ -165,7 +165,7 @@ export default defineComponent({
       }
 
       let pool = new ThreadPool.FixedThreadPool({
-        size: 2,
+        size: 4,
         tasks: [...tasks] //, ...tasks7, ...tasks7
       })
 
