@@ -87,10 +87,9 @@ pub fn test() -> String {
     id : &4,
     name: &String::from("测试1")
   };
-  s.tidy();
+  s.tidy().unwrap();
 
   String::from("测试")
-
 }
 
 ///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据

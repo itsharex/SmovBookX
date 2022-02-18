@@ -4,14 +4,17 @@
  */
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+
 #[cfg(not(target_os = "windows"))]
 use std::io::{Read, Write};
 #[cfg(target_os = "windows")]
 use std::ptr::null;
 use std::{
-  fs::{create_dir_all, File,write},
+  fs::{create_dir_all, write, File, OpenOptions},
+  io::Read,
   path::{Path, PathBuf},
-  result::Result::Ok, io::Read,
+  result::Result::Ok,
+  sync::Arc,
 };
 use tauri::{
   command, AppHandle, CustomMenuItem, Event, Manager, Menu, SystemTray, SystemTrayEvent, Window,
@@ -36,6 +39,11 @@ use winreg::enums::*;
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
 
+use tracing::info;
+use tracing_subscriber::{
+  filter, prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt, Layer,
+};
+
 lazy_static! {
   pub static ref APP: Mutex<App> = Mutex::new(App::new());
   pub static ref CONF: Mutex<Conf> = Mutex::new(Conf::new());
@@ -54,14 +62,14 @@ pub fn init_app_dir() -> bool {
 
 pub fn init_app_conf() -> bool {
   if !Path::new(&crate::app::APP.lock().app_dir.join("conf.toml")).exists() {
-      let path = &crate::app::APP.lock().app_dir.join("conf.toml");
+    let path = &crate::app::APP.lock().app_dir.join("conf.toml");
     if let Ok(_) = File::create(path) {
       //写入一个数据
-      let a = Conf{
-           tidy_folder: PathBuf::new(),
+      let a = Conf {
+        tidy_folder: PathBuf::new(),
       };
       let c = toml::to_string(&a).unwrap();
-      write(path,c).unwrap();
+      write(path, c).unwrap();
       return true;
     }
     return false;
@@ -69,8 +77,55 @@ pub fn init_app_conf() -> bool {
   true
 }
 
-/// app配置文件toml配置
+pub fn init_app_log() -> bool {
+  // let format = fmt::format()
+  //   .with_level(true) // don't include levels in formatted output
+  //   .with_target(false) // don't include targets
+  //   .with_thread_ids(false) // include the thread ID of the current thread
+  //   .with_thread_names(true) // include the name of the current thread
+  //   .compact(); // use the `Compact` formatting style.
 
+  let file = &crate::app::APP.lock().app_dir.join("log");
+
+  if !file.exists() {
+    create_dir_all(file).expect("创建日志文件错误");
+  }
+
+  let file = match OpenOptions::new()
+    .write(true)
+    .create(true)
+    .append(true)
+    .open(file.join("app.log"))
+  {
+    Ok(file) => file,
+    Err(error) => panic!("Error: {:?}", error),
+  };
+
+  let stdout_log = tracing_subscriber::fmt::layer().pretty();
+
+  let debug_log = tracing_subscriber::fmt::layer().with_writer(Arc::new(file));
+
+  let metrics_layer = /* ... */ filter::LevelFilter::INFO;
+
+  tracing_subscriber::registry()
+    .with(
+      stdout_log
+        .with_filter(filter::LevelFilter::INFO)
+        .and_then(debug_log)
+        .with_filter(filter::filter_fn(|metadata| {
+          !metadata.target().starts_with("metrics")
+        })),
+    )
+    .with(metrics_layer.with_filter(filter::filter_fn(|metadata| {
+      metadata.target().starts_with("metrics")
+    })))
+    .init();
+
+    info!("日志系统成功载入");
+  true
+}
+
+/// app配置文件toml配置
 
 /// app配置map
 pub struct App {
@@ -78,7 +133,7 @@ pub struct App {
   // pub app_conf:PathBuf,
 }
 
-#[derive(Deserialize,Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct Conf {
   pub tidy_folder: PathBuf,
 }
@@ -86,15 +141,15 @@ pub struct Conf {
 impl Conf {
   pub fn new() -> Conf {
     let conf = &crate::app::APP.lock().app_dir.join("conf.toml");
-    let mut file = match File::open(conf) {  
+    let mut file = match File::open(conf) {
       Ok(f) => f,
       Err(e) => panic!("no such file {} exception:{}", conf.to_str().unwrap(), e),
     };
 
     let mut str_val = String::new();
     match file.read_to_string(&mut str_val) {
-        Ok(s) => s,
-        Err(e) => panic!("Error Reading file: {}", e)
+      Ok(s) => s,
+      Err(e) => panic!("Error Reading file: {}", e),
     };
 
     let config: Conf = toml::from_str(&str_val).unwrap();
@@ -114,32 +169,6 @@ impl App {
         app_dir: p.join("smovbook"),
       },
     }
-  }
-}
-
-///响应结构
-#[derive(Serialize, Deserialize)]
-pub struct Response<T> {
-  pub code: i32,
-  pub data: T,
-  pub msg: String,
-}
-
-impl<T> Response<T> {
-  pub fn new(code: i32, data: T, msg: &str) -> Response<T> {
-    Response {
-      code,
-      data,
-      msg: msg.to_string(),
-    }
-  }
-
-  pub fn ok(data: T, msg: &str) -> Self {
-    Self::new(200, data, msg)
-  }
-
-  pub fn err(data: T, msg: &str) -> Self {
-    Self::new(300, data, msg)
   }
 }
 
