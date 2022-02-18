@@ -5,10 +5,10 @@
 
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate env_logger;
 
 mod app;
 mod cmd;
@@ -22,9 +22,15 @@ use tauri::{CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemT
 
 #[tokio::main]
 async fn main() {
-  if cfg!(debug_assertions) {
-    env_logger::init();
-  }
+  // if cfg!(debug_assertions) {
+  //   env_logger::init();
+  // }
+
+  util::log::setup_file_with_default("C:\\Users\\Leri\\Desktop\\log.log","info");
+
+  info!("such information");
+  warn!("o_O");
+  error!("much error");
 
   app::lock_single();
 
