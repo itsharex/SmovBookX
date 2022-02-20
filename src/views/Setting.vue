@@ -30,7 +30,7 @@ export default defineComponent({
       });
     };
     const test = () => {
-      invoke("get_all_smov").then((res)=>{
+      invoke("test").then((res)=>{
         console.log(res);
       });
     };

@@ -8,6 +8,7 @@ use crate::serve::smov;
 use crate::serve::smov_file;
 use crate::util::smov_format::SmovName;
 use tauri::command;
+use tracing::info;
 
 //检索新文件到数据库
 #[command]
@@ -18,13 +19,13 @@ pub fn query_new_file_todb() -> Response<String> {
 #[command]
 pub async fn retrieve_data(seek_name: String, smov_id: i64) -> Response<Option<i32>> {
   let format = SmovName::format_smov_name(&seek_name);
-  println!("{}", "开始了一个线程检索");
+  info!("开始检索{}", seek_name);
   let handle = thread::Builder::new()
     .name(seek_name)
     .spawn(move || {
       let s: bool = tauri::async_runtime::block_on(async move {
         let a = smov::retrieve_smov(format, smov_id).await.unwrap();
-        println!("{}", "线程检索结束");
+        info!("{}", "线程检索结束");
         return a;
       });
       return s;

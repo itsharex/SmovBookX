@@ -31,6 +31,7 @@
     <vxe-toolbar export :refresh="{ query: findList }">
       <template #buttons>
         <vxe-button @click="getSelectEvent">获取选中</vxe-button>
+        <vxe-input v-model="search" type="search" placeholder="试试全表搜索" @keyup="searchEvent"></vxe-input>
       </template>
     </vxe-toolbar>
 
@@ -96,7 +97,8 @@ import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import SmovList from "../components/SmovList.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ElNotification } from "element-plus";
-import { ThreadPool } from '../ts/ThreadPool'
+import { ThreadPool } from '../ts/ThreadPool';
+import XEUtils from 'xe-utils';
 
 export default defineComponent({
   components: { SmovList },
@@ -107,8 +109,6 @@ export default defineComponent({
     const search = ref();
     const singleData = ref({});
     const centerDialogVisible = ref(false);
-
-    let thread = 8;
 
     const table = reactive({
       loading: false,
@@ -135,7 +135,6 @@ export default defineComponent({
 
     const findList = () => {
       table.loading = true;
-      console.log(FileData);
       return new Promise((resolve) => {
         setTimeout(() => {
           const data = FileData;
@@ -149,6 +148,28 @@ export default defineComponent({
         }, 300);
       });
     };
+
+    const searchEvent = () => {
+      const $table = xTable.value;
+      const searchs = XEUtils.toValueString(search.value).trim().toLowerCase();
+      console.log(searchs)
+      if (searchs) {
+        const filterRE = new RegExp(searchs, 'gi')
+        const searchProps = ['seekname', 'realname', 'extension']
+        const rest = $table.getTableData().fullData.filter(item => searchProps.some(key => XEUtils.toValueString(item[key]).toLowerCase().indexOf(searchs) > -1))
+        const data = rest.map(row => {
+          const item = Object.assign({}, row)
+          searchProps.forEach(key => {
+            item[key] = XEUtils.toValueString(item[key]).replace(filterRE, match => `${match}`)
+          })
+          return item
+        })
+        // console.log(data)
+        $table.loadData(data);
+      }else{
+        $table.loadData(FileData);
+      }
+    }
 
     const getSelectEvent = () => {
       const $table = xTable.value;
@@ -165,7 +186,7 @@ export default defineComponent({
       }
 
       let pool = new ThreadPool.FixedThreadPool({
-        size: 4,
+        size: 1,
         tasks: [...tasks] //, ...tasks7, ...tasks7
       })
 
@@ -185,8 +206,8 @@ export default defineComponent({
               smovId: id,
             }).then((res) => {
               console.log(res);
-            }).finally(()=>{
-               resolve(params);
+            }).finally(() => {
+              resolve(params);
             });
           });
         },
@@ -295,7 +316,8 @@ export default defineComponent({
       findList,
       xTable,
       editClosedEvent,
-      getSelectEvent
+      getSelectEvent,
+      searchEvent
     };
   },
 });

@@ -101,7 +101,7 @@ pub fn init_app_log() -> bool {
     Err(error) => panic!("Error: {:?}", error),
   };
 
-  let stdout_log = tracing_subscriber::fmt::layer().pretty();
+  let stdout_log = tracing_subscriber::fmt::layer().with_thread_names(true).with_target(false).with_file(false).pretty();
 
   let debug_log = tracing_subscriber::fmt::layer().with_writer(Arc::new(file));
 
@@ -113,13 +113,24 @@ pub fn init_app_log() -> bool {
         .with_filter(filter::LevelFilter::INFO)
         .and_then(debug_log)
         .with_filter(filter::filter_fn(|metadata| {
-          !metadata.target().starts_with("metrics")
+          !metadata.target().starts_with("metrics") //不存在的
         })),
     )
     .with(metrics_layer.with_filter(filter::filter_fn(|metadata| {
-      metadata.target().starts_with("metrics")
+      metadata.target().starts_with("metrics") //存在标签存在metrics的
     })))
     .init();
+
+
+      // // This event will *only* be recorded by the metrics layer.
+      info!(target: "metrics","watfuck");
+
+      // // This event will only be seen by the debug log file layer:
+      // tracing::debug!("this is a message, and part of a system of messages");
+  
+      // // This event will be seen by both the stdout log layer *and*
+      // // the debug log file layer, but not by the metrics layer.
+      // tracing::warn!("the message is a warning about danger!");
 
     info!("日志系统成功载入");
   true

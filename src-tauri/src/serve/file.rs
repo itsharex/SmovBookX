@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use tracing::info;
 
 use crate::model::smov::SmovFile;
 use crate::serve::smov_file::retrieve_all;
@@ -40,8 +41,8 @@ impl TidySmov<'_> {
     if !file_file_path.exists() {
       return Err(anyhow!("Missing attribute: {}", "数据已被物理删除"));
     }
-    println!("file_folder_path:{:?}", &file_file_path);
-    println!("tidy_folder_path:{:?}", &tidy_file_path);
+    info!("来源文件夹:{:?}", &file_file_path);
+    info!("对象文件夹:{:?}", &tidy_file_path);
     //判断是否单文件
     if is_single(&smov_file.path) {
       //如果是单文件在整理目录新建文件夹 迁移视频文件

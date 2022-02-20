@@ -7,6 +7,7 @@ use crate::serve::file::TidySmov;
 use kuchiki::traits::*;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
+use tracing::info;
 use std::path::PathBuf;
 use std::{
   fs::File,
@@ -42,13 +43,17 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
 
   let url = format!("{}/search?q={}&f=all", *MAIN_URL, format);
 
+  // let proxy = reqwest::Proxy::all("115.223.195.206:9000").expect("tor proxy should be there");
+
+  // let client = reqwest::Client::builder().proxy(proxy).build().expect("should be able to build reqwest client");
+
   let client = reqwest::Client::new();
   let res = client
     .get(url)
     .headers(headers.clone())
     .send()
     .await
-    .expect("无法格式化");
+    .expect("访问出现错误");
 
   let text = res.text().await.expect("无法格式化");
 
@@ -114,7 +119,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           .await
           .expect("出现错误");
 
-        println!("{}", &url);
+          // info!("{}", &url);
 
         let document = kuchiki::parse_html().one(res);
 
@@ -138,7 +143,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           .unwrap()
           .to_string();
 
-        println!("{}", smov_img);
+          info!("找到主图url:{}", smov_img);
 
         sava_pic(
           &smov_img,
@@ -256,7 +261,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
             .get("href")
             .unwrap()
             .to_string();
-          println!("正在保存第{}张图片", &counter);
+          info!("正在保存第{}张图片", &counter);
           sava_pic(
             &screenshot_href,
             &(format!("detail_{}.jpg", counter)),
