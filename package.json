@@ -34,7 +34,6 @@
   "resolutions": {
     "bin-wrapper": "npm:bin-wrapper-china"
   },
-  "main": "index.js",
   "repository": "https://github.com/214zzl995/SmovBook.git",
   "author": "214zzl995 <214zzl995@gmail.com>"
 }
