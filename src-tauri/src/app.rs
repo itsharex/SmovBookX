@@ -103,24 +103,37 @@ pub fn init_app_log() -> bool {
 
   let stdout_log = tracing_subscriber::fmt::layer().with_thread_names(true).with_target(false).with_file(false).pretty();
 
-  let debug_log = tracing_subscriber::fmt::layer().with_writer(Arc::new(file));
+  let debug_log = tracing_subscriber::fmt::layer().with_writer(Arc::new(file)).with_filter(filter::LevelFilter::INFO);
 
-  let metrics_layer = /* ... */ filter::LevelFilter::INFO;
+  let now_log = stdout_log
+  .with_filter(filter::LevelFilter::DEBUG) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
+  .and_then(debug_log)
+  .with_filter(filter::filter_fn(|metadata| {               //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
+    !metadata.target().starts_with("metrics")  //不存在的
+  }));
+
+  // let metrics_layer = /* ... */ filter::LevelFilter::INFO;
+
+  // tracing_subscriber::registry()
+  //   .with(
+  //     stdout_log
+  //       .with_filter(filter::LevelFilter::INFO) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
+  //       .and_then(debug_log)
+  //        //将stdout_log 过滤过一次的项 放入debug_log
+  //       .with_filter(filter::filter_fn(|metadata| {               //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
+  //         !metadata.target().starts_with("metrics")  //不存在的
+  //       })),
+  //   )
+  //   .with(metrics_layer.with_filter(filter::filter_fn(|metadata| {
+  //     metadata.target().starts_with("metrics") //存在标签存在metrics的 这里的意思是将带有metrics标签的 项收集到这里 所以info级别以上的 都已经被丢弃了
+  //   })))
+  //   .init();
 
   tracing_subscriber::registry()
-    .with(
-      stdout_log
-        .with_filter(filter::LevelFilter::INFO) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
-        .and_then(debug_log)
-        // .with_filter(filter::LevelFilter::WARN)  //将stdout_log 过滤过一次的项 放入debug_log
-        .with_filter(filter::filter_fn(|metadata| {               //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
-          !metadata.target().starts_with("metrics")  //不存在的
-        })),
-    )
-    // .with(metrics_layer.with_filter(filter::filter_fn(|metadata| {
-    //   metadata.target().starts_with("metrics") //存在标签存在metrics的 这里的意思是将带有metrics标签的 项收集到这里 所以info级别以上的 都已经被丢弃了
-    // })))
-    .init();
+  .with(
+    now_log
+  )
+  .init();
 
 
       // // This event will *only* be recorded by the metrics layer.
