@@ -3,6 +3,8 @@
   windows_subsystem = "windows"
 )]
 
+use tauri::{Manager};
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -23,7 +25,7 @@ async fn main() {
       if cfg!(target_os = "windows") {
         app::webview2_is_installed();
       }
-      if !app::init_app_log(){
+      if !app::init_app_log(_app){
         panic!("日志系统初始化失败！");
       }
       if !app::init_app_dir() {
@@ -41,6 +43,7 @@ async fn main() {
     .on_system_tray_event(app::handle_system_tray_event)
     .invoke_handler(tauri::generate_handler![
       app::listen_single,
+      app::init_ui_log,
       cmd::tauri_cmd::log_operation,
       cmd::tauri_cmd::perform_request,
       cmd::cmd::query_unretrieved,

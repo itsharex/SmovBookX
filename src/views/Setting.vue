@@ -30,9 +30,7 @@ export default defineComponent({
       });
     };
     const test = () => {
-      invoke("test").then((res)=>{
-        console.log(res);
-      });
+      invoke("test");
     };
 
     return {

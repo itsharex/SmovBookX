@@ -7,6 +7,7 @@ use crate::response::response::Response;
 use crate::serve::smov;
 use crate::serve::smov_file;
 use crate::util::smov_format::SmovName;
+use tauri::Window;
 use tauri::command;
 use tracing::info;
 

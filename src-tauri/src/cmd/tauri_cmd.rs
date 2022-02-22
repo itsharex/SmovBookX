@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use tracing::info;
 use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
@@ -82,14 +83,8 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 
 //测试
 #[command]
-pub fn test() -> String {
-  let s = file::TidySmov{
-    id : &4,
-    name: &String::from("测试1")
-  };
-  s.tidy().unwrap();
-
-  String::from("测试")
+pub fn test()  {
+  info!(target: "ui",a_bool = true, answer = 42, message = "first example");
 }
 
 ///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据

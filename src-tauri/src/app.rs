@@ -60,19 +60,27 @@ impl<'a> tracing::field::Visit for JsonVisitor<'a> {
   }
 
   fn record_i64(&mut self, field: &tracing::field::Field, value: i64) {
-    println!("  field={} value={}", field.name(), value)
+    self
+    .0
+    .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_u64(&mut self, field: &tracing::field::Field, value: u64) {
-    println!("  field={} value={}", field.name(), value)
+    self
+    .0
+    .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_bool(&mut self, field: &tracing::field::Field, value: bool) {
-    println!("  field={} value={}", field.name(), value)
+    self
+    .0
+    .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
-    println!("  field={} value={}", field.name(), value)
+    self
+    .0
+    .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_error(
@@ -80,7 +88,9 @@ impl<'a> tracing::field::Visit for JsonVisitor<'a> {
     field: &tracing::field::Field,
     value: &(dyn std::error::Error + 'static),
   ) {
-    println!("  field={} value={}", field.name(), value)
+    self
+    .0
+    .insert(field.name().to_string(), serde_json::json!(value.to_string()));
   }
 
   fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
@@ -88,7 +98,9 @@ impl<'a> tracing::field::Visit for JsonVisitor<'a> {
   }
 }
 
-pub struct CustomLayer;
+pub struct CustomLayer{
+  window: Window
+}
 
 impl<S> Layer<S> for CustomLayer
 where
@@ -105,7 +117,9 @@ where
         "level": format!("{:?}", event.metadata().level()),
         "fields": fields,
     });
-    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+    //这里不该是print的 应该是向前台返回东西的
+    // let s = tauri::AppHandle::
+    self.window.emit_all("single", &output).unwrap();
   }
 }
 
@@ -137,7 +151,7 @@ pub fn init_app_conf() -> bool {
   true
 }
 
-pub fn init_app_log() -> bool {
+pub fn init_app_log(app:&mut tauri::App) -> bool {
   let file = &crate::app::APP.lock().app_dir.join("log");
 
   if !file.exists() {
@@ -172,15 +186,20 @@ pub fn init_app_log() -> bool {
       !metadata.target().starts_with("metrics") //不存在的
     }));
 
+    let cus = CustomLayer{
+         window: match app.get_window("main"){
+            Some(e) => e,
+            None => todo!(),
+        }
+    };
+
   tracing_subscriber::registry()
     .with(now_log)
-    .with(CustomLayer.with_filter(filter::filter_fn(|metadata| {
+    .with(cus.with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
       metadata.target().starts_with("ui") //不存在的
     })))
     .init();
-
-  info!(target: "ui","测试");
 
   info!("日志系统成功载入");
   true
@@ -450,4 +469,9 @@ pub async fn listen_single(window: Window) {
         };
       }
     });
+}
+
+#[command]
+pub async fn init_ui_log(window: Window) {
+  
 }

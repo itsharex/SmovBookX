@@ -15,7 +15,7 @@ import {getCurrent, WebviewWindow} from '@tauri-apps/api/window';
     })
 }))()
 !(async () => await listen('single', (event) => {
-    console.log("get signal")
+    console.log(event.payload)
     let current = getCurrent()
     current.setAlwaysOnTop(true)
     current.show()
