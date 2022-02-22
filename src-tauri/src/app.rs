@@ -10,6 +10,7 @@ use std::io::{Read, Write};
 #[cfg(target_os = "windows")]
 use std::ptr::null;
 use std::{
+  collections::BTreeMap,
   fs::{create_dir_all, write, File, OpenOptions},
   io::Read,
   path::{Path, PathBuf},
@@ -49,6 +50,65 @@ lazy_static! {
   pub static ref CONF: Mutex<Conf> = Mutex::new(Conf::new());
 }
 
+struct JsonVisitor<'a>(&'a mut BTreeMap<String, serde_json::Value>);
+
+impl<'a> tracing::field::Visit for JsonVisitor<'a> {
+  fn record_f64(&mut self, field: &tracing::field::Field, value: f64) {
+    self
+      .0
+      .insert(field.name().to_string(), serde_json::json!(value));
+  }
+
+  fn record_i64(&mut self, field: &tracing::field::Field, value: i64) {
+    println!("  field={} value={}", field.name(), value)
+  }
+
+  fn record_u64(&mut self, field: &tracing::field::Field, value: u64) {
+    println!("  field={} value={}", field.name(), value)
+  }
+
+  fn record_bool(&mut self, field: &tracing::field::Field, value: bool) {
+    println!("  field={} value={}", field.name(), value)
+  }
+
+  fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
+    println!("  field={} value={}", field.name(), value)
+  }
+
+  fn record_error(
+    &mut self,
+    field: &tracing::field::Field,
+    value: &(dyn std::error::Error + 'static),
+  ) {
+    println!("  field={} value={}", field.name(), value)
+  }
+
+  fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+    println!("  field={} value={:?}", field.name(), value)
+  }
+}
+
+pub struct CustomLayer;
+
+impl<S> Layer<S> for CustomLayer
+where
+  S: tracing::Subscriber,
+{
+  fn on_event(&self, event: &tracing::Event<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) {
+    let mut fields = BTreeMap::new();
+    let mut visitor = JsonVisitor(&mut fields);
+    event.record(&mut visitor);
+
+    let output = serde_json::json!({
+        "target": event.metadata().target(),
+        "name": event.metadata().name(),
+        "level": format!("{:?}", event.metadata().level()),
+        "fields": fields,
+    });
+    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+  }
+}
+
 ///初始化app文件夹
 pub fn init_app_dir() -> bool {
   if !Path::new(&crate::app::APP.lock().app_dir).exists() {
@@ -78,13 +138,6 @@ pub fn init_app_conf() -> bool {
 }
 
 pub fn init_app_log() -> bool {
-  // let format = fmt::format()
-  //   .with_level(true) // don't include levels in formatted output
-  //   .with_target(false) // don't include targets
-  //   .with_thread_ids(false) // include the thread ID of the current thread
-  //   .with_thread_names(true) // include the name of the current thread
-  //   .compact(); // use the `Compact` formatting style.
-
   let file = &crate::app::APP.lock().app_dir.join("log");
 
   if !file.exists() {
@@ -101,61 +154,41 @@ pub fn init_app_log() -> bool {
     Err(error) => panic!("Error: {:?}", error),
   };
 
-  let stdout_log = tracing_subscriber::fmt::layer().with_thread_names(true).with_target(false).with_file(false).pretty();
+  let stdout_log = tracing_subscriber::fmt::layer()
+    .with_thread_names(true)
+    .with_target(false)
+    .with_file(false)
+    .pretty();
 
-  let debug_log = tracing_subscriber::fmt::layer().with_writer(Arc::new(file)).with_filter(filter::LevelFilter::INFO);
+  let debug_log = tracing_subscriber::fmt::layer()
+    .with_writer(Arc::new(file))
+    .with_filter(filter::LevelFilter::INFO);
 
   let now_log = stdout_log
-  .with_filter(filter::LevelFilter::DEBUG) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
-  .and_then(debug_log)
-  .with_filter(filter::filter_fn(|metadata| {               //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
-    !metadata.target().starts_with("metrics")  //不存在的
-  }));
-
-  // let metrics_layer = /* ... */ filter::LevelFilter::INFO;
-
-  // tracing_subscriber::registry()
-  //   .with(
-  //     stdout_log
-  //       .with_filter(filter::LevelFilter::INFO) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
-  //       .and_then(debug_log)
-  //        //将stdout_log 过滤过一次的项 放入debug_log
-  //       .with_filter(filter::filter_fn(|metadata| {               //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
-  //         !metadata.target().starts_with("metrics")  //不存在的
-  //       })),
-  //   )
-  //   .with(metrics_layer.with_filter(filter::filter_fn(|metadata| {
-  //     metadata.target().starts_with("metrics") //存在标签存在metrics的 这里的意思是将带有metrics标签的 项收集到这里 所以info级别以上的 都已经被丢弃了
-  //   })))
-  //   .init();
+    .with_filter(filter::LevelFilter::DEBUG) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
+    .and_then(debug_log)
+    .with_filter(filter::filter_fn(|metadata| {
+      //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
+      !metadata.target().starts_with("metrics") //不存在的
+    }));
 
   tracing_subscriber::registry()
-  .with(
-    now_log
-  )
-  .init();
+    .with(now_log)
+    .with(CustomLayer.with_filter(filter::filter_fn(|metadata| {
+      //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
+      metadata.target().starts_with("ui") //不存在的
+    })))
+    .init();
 
+  info!(target: "ui","测试");
 
-      // // This event will *only* be recorded by the metrics layer.
-      info!(target: "metrics","watfuck");
-
-      // // This event will only be seen by the debug log file layer:
-      // tracing::debug!("this is a message, and part of a system of messages");
-  
-      // // This event will be seen by both the stdout log layer *and*
-      // // the debug log file layer, but not by the metrics layer.
-      // tracing::warn!("the message is a warning about danger!");
-
-    info!("日志系统成功载入");
+  info!("日志系统成功载入");
   true
 }
-
-/// app配置文件toml配置
 
 /// app配置map
 pub struct App {
   pub app_dir: PathBuf,
-  // pub app_conf:PathBuf,
 }
 
 #[derive(Deserialize, Serialize)]
