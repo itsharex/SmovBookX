@@ -43,7 +43,6 @@ async fn main() {
     .on_system_tray_event(app::handle_system_tray_event)
     .invoke_handler(tauri::generate_handler![
       app::listen_single,
-      app::init_ui_log,
       cmd::tauri_cmd::log_operation,
       cmd::tauri_cmd::perform_request,
       cmd::cmd::query_unretrieved,

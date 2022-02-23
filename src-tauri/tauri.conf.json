@@ -13,7 +13,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.leri.smovbook",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -25,7 +25,7 @@
       "externalBin": [],
       "copyright": "Copyright (c) 2021 Leri",
       "category": "DeveloperTool",
-      "shortDescription": "color picker app",
+      "shortDescription": "smovbook app",
       "longDescription": "",
       "deb": {
         "depends": [],

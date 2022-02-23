@@ -475,8 +475,3 @@ pub async fn listen_single(window: Window) {
       }
     });
 }
-
-#[command]
-pub async fn init_ui_log(window: Window) {
-  
-}
