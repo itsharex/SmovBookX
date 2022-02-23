@@ -11,14 +11,14 @@ rust-version = "1.56"
 build = "src/build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-beta.4", features = [] }
+tauri-build = { version = "1.0.0-rc.3", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 toml = "*"
 serde_derive = "*"
-tauri = { version = "1.0.0-beta.8", features = ["api-all", "system-tray"] }  #updater
+tauri = { version = "1.0.0-rc.3", features = ["api-all", "system-tray"] }  #updater
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.11.9", features = ["json"] }
 kuchiki = "0.8.1"
@@ -27,7 +27,7 @@ rusqlite = "*"
 rand = "0.8.4"
 regex = "*"
 anyhow = { version = "1.0", default-features = false }
-parking_lot = "0.11.2"
+parking_lot = "0.12"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 
@@ -39,7 +39,6 @@ windows = {version="^0.24", features= [
     "Win32_UI_WindowsAndMessaging"
 ] }
 winreg = "0.10.1"
-
 
 [features]
 default = [ "custom-protocol" ]

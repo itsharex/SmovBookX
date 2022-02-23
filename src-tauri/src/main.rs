@@ -23,7 +23,7 @@ async fn main() {
   let _app =tauri::Builder::default()
     .setup(|_app| {
       if cfg!(target_os = "windows") {
-        app::webview2_is_installed();
+        app::webview2_is_installed(_app);
       }
       if !app::init_app_log(_app){
         panic!("日志系统初始化失败！");

@@ -5,12 +5,12 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:dev": "cargo tauri dev",
+    "tauri:build": "cargo tauri build"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^0.2.4",
-    "@tauri-apps/api": "^1.0.0-beta.8",
+    "@tauri-apps/api": "^1.0.0-rc.1",
     "@types/sharp": "^0.29.5",
     "element-plus": "^1.2.0-beta.6",
     "vue": "^3.2.25",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^3.0.1",
-    "@tauri-apps/cli": "^1.0.0-beta.10",
+    "@tauri-apps/cli": "^1.0.0-rc.5",
     "@vitejs/plugin-vue": "^2.0.1",
     "@vuedx/typescript-plugin-vue": "^0.7.4",
     "eslint": "^8.6.0",

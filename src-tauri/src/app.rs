@@ -19,7 +19,7 @@ use std::{
 };
 use tauri::{
   command, AppHandle, CustomMenuItem, Event, Manager, Menu, SystemTray, SystemTrayEvent, Window,
-  WindowMenuEvent, Wry,
+  WindowMenuEvent, Wry, RunEvent,
 };
 extern crate toml;
 
@@ -328,9 +328,9 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
 }
 
 /// 监听app事件
-pub fn handle_app_event(app_handle: &AppHandle<Wry>, event: Event) {
+pub fn handle_app_event(app_handle: &AppHandle<Wry>, event: RunEvent) {
   match event {
-    Event::CloseRequested { label, api, .. } => {
+    RunEvent::CloseRequested { label, api, .. } => {
       if label == "main" {
         let app_handle = app_handle.clone();
         app_handle.get_window(&label).unwrap().hide().unwrap();
@@ -431,7 +431,7 @@ fn open_reg_key() -> std::io::Result<()> {
 
 //windows下检查是否安装了WebView2
 #[cfg(target_os = "windows")]
-pub fn webview2_is_installed() {
+pub fn webview2_is_installed(app:&mut tauri::App<Wry>) {
   if let Err(_) = open_reg_key() {
     unsafe {
       MessageBoxW(
@@ -441,6 +441,7 @@ pub fn webview2_is_installed() {
         MB_OK,
       );
       let _ = tauri::api::shell::open(
+        &app.shell_scope(),
         "https://developer.microsoft.com/zh-cn/microsoft-edge/webview2/#download-section"
           .to_string(),
         None,
