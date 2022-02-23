@@ -119,8 +119,6 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           .await
           .expect("出现错误");
 
-          // info!("{}", &url);
-
         let document = kuchiki::parse_html().one(res);
 
         //这里的错误需要修改 未找到要提前返回
@@ -142,8 +140,6 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           .get("src")
           .unwrap()
           .to_string();
-
-          info!("找到主图url:{}", smov_img);
 
         sava_pic(
           &smov_img,
@@ -177,7 +173,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
             Some(e) => e.text_contents(),
             None => continue,
           };
-          // println!("{}", type_flag);
+          
           if type_flag.eq("日期:") {
             let s = detail_m.select(".value").unwrap().next_back().unwrap();
             smov_seek.release_time = s.text_contents();
@@ -238,7 +234,6 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
               smov_seek.actors.push(s);
               i += 1;
             }
-            // println!("{:?}",smov_seek);
           }
         }
 
@@ -261,7 +256,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
             .get("href")
             .unwrap()
             .to_string();
-          info!("正在保存第{}张图片", &counter);
+          // info!("正在保存第{}张图片", &counter);
           sava_pic(
             &screenshot_href,
             &(format!("detail_{}.jpg", counter)),
@@ -288,10 +283,8 @@ async fn sava_pic(
   path: &PathBuf,
   client: &Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  // let pic_path = format!("{}/{}", path, name);
+
   let pic_path = path.join(name);
-  // let path = Path::new(&pic_path);
-  // let client = reqwest::Client::new();
 
   let mut headers = HeaderMap::new();
   headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());
@@ -302,6 +295,10 @@ async fn sava_pic(
       .parse()
       .unwrap(),
   );
+
+  let msg = format!("保存图片url:{},path:{}",url,path.as_os_str().to_str().unwrap_or_else(|| "none"));
+
+  info!(target: "frontend_log",message = msg.as_str());
 
   let res = client
     .get(url)

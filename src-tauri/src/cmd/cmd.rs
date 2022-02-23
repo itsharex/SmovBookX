@@ -7,7 +7,6 @@ use crate::response::response::Response;
 use crate::serve::smov;
 use crate::serve::smov_file;
 use crate::util::smov_format::SmovName;
-use tauri::Window;
 use tauri::command;
 use tracing::info;
 
@@ -20,7 +19,8 @@ pub fn query_new_file_todb() -> Response<String> {
 #[command]
 pub async fn retrieve_data(seek_name: String, smov_id: i64) -> Response<Option<i32>> {
   let format = SmovName::format_smov_name(&seek_name);
-  info!("开始检索{}", seek_name);
+  let msg = format!("开始检索{}", seek_name);
+  info!(target: "frontend_log",message = msg.as_str());
   let handle = thread::Builder::new()
     .name(seek_name)
     .spawn(move || {

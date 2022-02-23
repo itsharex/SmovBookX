@@ -15,7 +15,7 @@ use std::{
   io::Read,
   path::{Path, PathBuf},
   result::Result::Ok,
-  sync::Arc,
+  sync::Arc, thread,
 };
 use tauri::{
   command, AppHandle, CustomMenuItem, Event, Manager, Menu, SystemTray, SystemTrayEvent, Window,
@@ -111,15 +111,20 @@ where
     let mut visitor = JsonVisitor(&mut fields);
     event.record(&mut visitor);
 
+    let handle = thread::current();
+    let name = match handle.name(){
+        Some(e) => e,
+        None => "",
+    };
+
     let output = serde_json::json!({
+        "thread" : name,
         "target": event.metadata().target(),
-        "name": event.metadata().name(),
+        "model":event.metadata().module_path(),
         "level": format!("{:?}", event.metadata().level()),
         "fields": fields,
     });
-    //这里不该是print的 应该是向前台返回东西的
-    // let s = tauri::AppHandle::
-    self.window.emit_all("single", &output).unwrap();
+    self.window.emit_all("frontend_log", &output).unwrap();
   }
 }
 
@@ -179,11 +184,11 @@ pub fn init_app_log(app:&mut tauri::App) -> bool {
     .with_filter(filter::LevelFilter::INFO);
 
   let now_log = stdout_log
-    .with_filter(filter::LevelFilter::DEBUG) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
+    .with_filter(filter::LevelFilter::INFO) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
     .and_then(debug_log)
     .with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
-      !metadata.target().starts_with("metrics") //不存在的
+      !metadata.target().starts_with("frontend_log") //不存在的
     }));
 
     let cus = CustomLayer{
@@ -197,11 +202,11 @@ pub fn init_app_log(app:&mut tauri::App) -> bool {
     .with(now_log)
     .with(cus.with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
-      metadata.target().starts_with("ui") //不存在的
+      metadata.target().starts_with("frontend_log") //不存在的
     })))
     .init();
 
-  info!("日志系统成功载入");
+  info!(message = "日志系统成功载入");
   true
 }
 

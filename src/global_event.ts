@@ -14,16 +14,12 @@ import {getCurrent, WebviewWindow} from '@tauri-apps/api/window';
         resizable: false,
     })
 }))()
-!(async () => await listen('single', (event) => {
+!(async () => await listen('frontend_log', (event) => {
     console.log(event.payload)
-    let current = getCurrent()
-    current.setAlwaysOnTop(true)
-    current.show()
-    setTimeout(()=>{
-        current.setAlwaysOnTop(false)
-    },50)
-}))()
-
-!(async () => await listen('log', (event) => {
-    console.log("event")
+    // let current = getCurrent()
+    // current.setAlwaysOnTop(true)
+    // current.show()
+    // setTimeout(()=>{
+    //     current.setAlwaysOnTop(false)
+    // },50) //窗口置顶的代码
 }))()

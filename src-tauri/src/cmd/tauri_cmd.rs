@@ -11,7 +11,6 @@ use tauri::command;
 extern crate toml;
 use crate::app::Conf;
 use crate::response::response::Response;
-use crate::serve::file;
 
 #[derive(Deserialize)]
 #[serde(tag = "cmd", rename_all = "camelCase")]
@@ -84,7 +83,7 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 //测试
 #[command]
 pub fn test()  {
-  info!(target: "ui",a_bool = true, answer = 42, message = "first example");
+  info!(target: "frontend_log",message = "test msg" );
 }
 
 ///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据
