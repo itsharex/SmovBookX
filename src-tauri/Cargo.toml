@@ -8,7 +8,6 @@ repository = ""
 default-run = "app"
 edition = "2021"
 rust-version = "1.56"
-build = "src/build.rs"
 
 [build-dependencies]
 tauri-build = { version = "1.0.0-rc.3", features = [] }
@@ -32,7 +31,7 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 
 [target.'cfg(windows)'.dependencies]
-windows = {version="^0.24", features= [
+windows = {version="^0.32", features= [
     "Win32_Foundation",
     "Win32_Security",
     "Win32_System_Threading",

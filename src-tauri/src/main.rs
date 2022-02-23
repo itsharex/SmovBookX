@@ -3,8 +3,6 @@
   windows_subsystem = "windows"
 )]
 
-use tauri::{Manager};
-
 #[macro_use]
 extern crate lazy_static;
 

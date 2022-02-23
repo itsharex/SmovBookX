@@ -18,7 +18,7 @@ use std::{
   sync::Arc, thread,
 };
 use tauri::{
-  command, AppHandle, CustomMenuItem, Event, Manager, Menu, SystemTray, SystemTrayEvent, Window,
+  command, AppHandle, CustomMenuItem, Manager, Menu, SystemTray, SystemTrayEvent, Window,
   WindowMenuEvent, Wry, RunEvent,
 };
 extern crate toml;
