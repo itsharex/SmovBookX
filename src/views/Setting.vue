@@ -32,13 +32,13 @@ export default defineComponent({
       });
     };
     const test = () => {
-      //invoke("test");
-      let option: OpenDialogOptions = {
-        directory: true
-      }
-      dialog.open(option).then((res: any) => {
-        console.log(res)
-      })
+      invoke("test");
+      // let option: OpenDialogOptions = {
+      //   directory: true
+      // }
+      // dialog.open(option).then((res: any) => {
+      //   console.log(res)
+      // })
 
     };
 

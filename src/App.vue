@@ -1,7 +1,9 @@
 <template>
   <div class="app">
     <el-button type="primary" :icon="ArrowLeftBold" @click="back" circle></el-button>
+    
     <router-view />
+    <Log />
   </div>
 </template>
 
@@ -9,19 +11,20 @@
 import { ArrowLeftBold } from '@element-plus/icons-vue';
 import { defineComponent, ref, onMounted, inject, watch, computed } from "vue";
 import { useRouter, useRoute } from 'vue-router';
+import Log from './components/Log.vue';
 
-export default defineComponent({ 
-  setup(){
-     const router = useRouter();
-     const back = () =>{
-        router.back();
-     }
-
-      return {
-        ArrowLeftBold,
-        back
-      }
-  }
+export default defineComponent({
+  components: { Log },
+  setup() {
+    const router = useRouter();
+    const back = () => {
+      router.back();
+    };
+    return {
+      ArrowLeftBold,
+      back
+    };
+  },
 });
 
 </script>
