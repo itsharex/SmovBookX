@@ -123,7 +123,7 @@ where
         "thread" : name,
         "target": event.metadata().target(),
         "model":event.metadata().module_path(),
-        "level": format!("{:?}", event.metadata().level()),
+        "level": event.metadata().level().as_str(),
         "fields": fields,
     });
     self.window.emit_all("frontend_log", &output).unwrap();

@@ -19,16 +19,18 @@ pub fn query_new_file_todb() -> Response<String> {
 #[command]
 pub async fn retrieve_data(seek_name: String, smov_id: i64) -> Response<Option<i32>> {
   let format = SmovName::format_smov_name(&seek_name);
-  let msg = format!("开始检索{}", seek_name);
-  info!(target: "frontend_log",message = msg.as_str());
   let handle = thread::Builder::new()
-    .name(seek_name)
+    .name(String::from(&seek_name))
     .spawn(move || {
+      let msg = format!("开始检索{}", &seek_name);
+      info!(target: "frontend_log",message = msg.as_str());
       let s: bool = tauri::async_runtime::block_on(async move {
         let a = smov::retrieve_smov(format, smov_id).await.unwrap();
         info!("{}", "线程检索结束");
         return a;
       });
+      let msg = format!("检索结束{}", &seek_name);
+      info!(target: "frontend_log",message = msg.as_str());
       return s;
     })
     .expect("线程创建错误")

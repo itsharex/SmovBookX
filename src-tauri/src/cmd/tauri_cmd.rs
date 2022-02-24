@@ -83,7 +83,7 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 //测试
 #[command]
 pub fn test()  {
-  info!(target: "frontend_log",message = "test msg" );
+  info!(target: "frontend_log",message = "test msgasdasdjaghskjhdgajhdgahjgsdhjaghjsdgahjgdhjagshjdgahjgdhjagdshjgahjdgahjsd" );
 }
 
 ///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据
