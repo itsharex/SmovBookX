@@ -4,20 +4,18 @@
   <el-button type="danger" @click="test">ces</el-button>
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent, ref, onMounted, inject, watch, computed } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { dialog } from "@tauri-apps/api";
-import { OpenDialogOptions } from "@tauri-apps/api/dialog";
 
 export default defineComponent({
   components: {},
   name: "Setting",
   setup() {
     const setSeekFolder = () => {
-      invoke("open_folder_select").then((res: any) => {
+      invoke("open_folder_select").then((res) => {
         if (res.code == 200) {
-          invoke("insert_folder", { path: res.data }).then((res1: any) => {
+          invoke("insert_folder", { path: res.data }).then((res1) => {
             console.log(res1);
           });
         }
@@ -25,21 +23,14 @@ export default defineComponent({
     };
 
     const setTidyFolder = () => {
-      invoke("open_folder_select").then((res: any) => {
+      invoke("open_folder_select").then((res) => {
         if (res.code == 200) {
           invoke("update_tidy_folder", { path: res.data });
         }
       });
     };
     const test = () => {
-      //invoke("test");
-      let option: OpenDialogOptions = {
-        directory: true
-      }
-      dialog.open(option).then((res: any) => {
-        console.log(res)
-      })
-
+      invoke("test");
     };
 
     return {

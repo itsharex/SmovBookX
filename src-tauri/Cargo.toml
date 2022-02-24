@@ -35,7 +35,8 @@ windows = {version="^0.32", features= [
     "Win32_Foundation",
     "Win32_Security",
     "Win32_System_Threading",
-    "Win32_UI_WindowsAndMessaging"
+    "Win32_UI_WindowsAndMessaging",
+    "alloc"
 ] }
 winreg = "0.10.1"
 

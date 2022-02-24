@@ -15,11 +15,12 @@ use std::{
   io::Read,
   path::{Path, PathBuf},
   result::Result::Ok,
-  sync::Arc, thread,
+  sync::Arc,
+  thread,
 };
 use tauri::{
-  command, AppHandle, CustomMenuItem, Manager, Menu, SystemTray, SystemTrayEvent, Window,
-  WindowMenuEvent, Wry, RunEvent,
+  command, AppHandle, CustomMenuItem, Manager, Menu, RunEvent, SystemTray, SystemTrayEvent, Window,
+  WindowMenuEvent, Wry,
 };
 extern crate toml;
 
@@ -61,26 +62,26 @@ impl<'a> tracing::field::Visit for JsonVisitor<'a> {
 
   fn record_i64(&mut self, field: &tracing::field::Field, value: i64) {
     self
-    .0
-    .insert(field.name().to_string(), serde_json::json!(value));
+      .0
+      .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_u64(&mut self, field: &tracing::field::Field, value: u64) {
     self
-    .0
-    .insert(field.name().to_string(), serde_json::json!(value));
+      .0
+      .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_bool(&mut self, field: &tracing::field::Field, value: bool) {
     self
-    .0
-    .insert(field.name().to_string(), serde_json::json!(value));
+      .0
+      .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
     self
-    .0
-    .insert(field.name().to_string(), serde_json::json!(value));
+      .0
+      .insert(field.name().to_string(), serde_json::json!(value));
   }
 
   fn record_error(
@@ -88,9 +89,10 @@ impl<'a> tracing::field::Visit for JsonVisitor<'a> {
     field: &tracing::field::Field,
     value: &(dyn std::error::Error + 'static),
   ) {
-    self
-    .0
-    .insert(field.name().to_string(), serde_json::json!(value.to_string()));
+    self.0.insert(
+      field.name().to_string(),
+      serde_json::json!(value.to_string()),
+    );
   }
 
   fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
@@ -98,8 +100,8 @@ impl<'a> tracing::field::Visit for JsonVisitor<'a> {
   }
 }
 
-pub struct CustomLayer{
-  window: Window
+pub struct CustomLayer {
+  window: Window,
 }
 
 impl<S> Layer<S> for CustomLayer
@@ -112,9 +114,9 @@ where
     event.record(&mut visitor);
 
     let handle = thread::current();
-    let name = match handle.name(){
-        Some(e) => e,
-        None => "",
+    let name = match handle.name() {
+      Some(e) => e,
+      None => "",
     };
 
     let output = serde_json::json!({
@@ -156,7 +158,7 @@ pub fn init_app_conf() -> bool {
   true
 }
 
-pub fn init_app_log(app:&mut tauri::App) -> bool {
+pub fn init_app_log(app: &mut tauri::App) -> bool {
   let file = &crate::app::APP.lock().app_dir.join("log");
 
   if !file.exists() {
@@ -191,12 +193,12 @@ pub fn init_app_log(app:&mut tauri::App) -> bool {
       !metadata.target().starts_with("frontend_log") //不存在的
     }));
 
-    let cus = CustomLayer{
-         window: match app.get_window("main"){
-            Some(e) => e,
-            None => todo!(),
-        }
-    };
+  let cus = CustomLayer {
+    window: match app.get_window("main") {
+      Some(e) => e,
+      None => todo!(),
+    },
+  };
 
   tracing_subscriber::registry()
     .with(now_log)
@@ -431,7 +433,7 @@ fn open_reg_key() -> std::io::Result<()> {
 
 //windows下检查是否安装了WebView2
 #[cfg(target_os = "windows")]
-pub fn webview2_is_installed(app:&mut tauri::App<Wry>) {
+pub fn webview2_is_installed(app: &mut tauri::App<Wry>) {
   if let Err(_) = open_reg_key() {
     unsafe {
       MessageBoxW(
