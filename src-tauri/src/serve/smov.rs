@@ -296,7 +296,7 @@ async fn sava_pic(
       .unwrap(),
   );
 
-  let msg = format!("保存图片url:{},path:{}",url,path.as_os_str().to_str().unwrap_or_else(|| "none"));
+  let msg = format!("保存图片url:{} => path:{}",url,path.as_os_str().to_str().unwrap_or_else(|| "none"));
 
   info!(target: "frontend_log",message = msg.as_str());
 

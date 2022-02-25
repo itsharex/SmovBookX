@@ -1,7 +1,7 @@
 <template>
   <div class="log" :class="isOpen ? 'log_open' : 'log_close'">
     <button class="Btn" @click="logClick" :class="isOpen ? 'Btn_open' : 'Btn_close'">{{ isOpen }}</button>
-    <div class="logList">
+    <div class="logList" :class="isOpen ? 'logList_open' : 'logList_close'">
       <div class="logDiv" id="logDiv">
         <div class="logItem" v-for="(item, index) in logList" :key="index">
           <span class="time">{{ item.time }}</span>
@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, inject, watch, computed, reactive } from "vue";
+import { defineComponent, ref, onMounted, inject, watch, computed, reactive, onUpdated, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from '@tauri-apps/api/event';
 
@@ -24,11 +24,8 @@ export default defineComponent({
   components: {},
   name: "Log",
   setup() {
-
     const isOpen = ref(false);
-
     const logList = ref([] as any[]);
-
     watch(logList.value, () => {
       if (logList.value.length > 50) {
         logList.value.shift()
@@ -36,17 +33,30 @@ export default defineComponent({
       // console.log(res)
     });
 
+    onUpdated(() => {
+      scrollToBottom();
+    })
+
+    const scrollToBottom = () => {
+      nextTick(() => {
+        let logDiv = document.getElementById('logDiv');
+        if (logDiv != null) {
+          logDiv.scrollTop = logDiv.scrollHeight;
+        }
+      }
+      )
+    }
     const logClick = () => {
       isOpen.value = !isOpen.value;
       let logDiv = document.getElementById('logDiv');
       if (logDiv != null) {
-        logDiv.scrollTop = logDiv.scrollHeight;
+        logDiv.focus();
       }
     }
 
     //前端log可视 存储用localstorage 用provide 和 inject传递给log组件
     onMounted(() => {
-      eventLog()
+      eventLog();
     });
 
     const eventLog = () => {
@@ -58,10 +68,6 @@ export default defineComponent({
           level: event.payload.level
         };
         logList.value.push(log);
-        let logDiv = document.getElementById('logDiv');
-        if (logDiv != null) {
-          logDiv.scrollTop = logDiv.scrollHeight;
-        }
       }))()
     }
 
@@ -99,7 +105,8 @@ export default defineComponent({
 
 <style lang="less" scoped>
 @log_background: #f1f1f1;
-@log_shadow: 0 -2px 3px -1px rgb(133, 133, 133);
+@log_shadow_close: 0 -2px 3px -1px rgb(133, 133, 133);
+@log_shadow_open: 0 -2px 3px -1px rgb(136, 0, 0);
 .log {
   position: fixed;
   bottom: 0;
@@ -107,7 +114,7 @@ export default defineComponent({
   z-index: 100;
   width: 100%;
   background: @log_background;
-  box-shadow: @log_shadow; // 顶部阴影
+  box-shadow: @log_shadow_close; // 顶部阴影
   font-size: small;
 }
 
@@ -123,7 +130,7 @@ export default defineComponent({
 }
 
 .log_close {
-  height: 2em;
+  height: 3em;
 }
 .logList {
   display: flex;
@@ -131,8 +138,18 @@ export default defineComponent({
   // align-items: flex-end;
   position: relative;
   top: 0px;
-  overflow: auto;
   height: 100%;
+}
+
+.logList_open {
+  overflow: auto;
+}
+
+.logList_close {
+  overflow: hidden;
+  ::-webkit-scrollbar {
+    display: none; /* Chrome Safari */
+  }
 }
 
 .Btn {
@@ -141,7 +158,7 @@ export default defineComponent({
   bottom: 100%;
   border: 0px;
   background: @log_background;
-  box-shadow: @log_shadow;
+  box-shadow: @log_shadow_close;
   height: 20px;
   width: 50px;
   border-radius: 5px 0 0 0;
@@ -149,9 +166,11 @@ export default defineComponent({
 }
 
 .Btn_open {
+  box-shadow: @log_shadow_open;
 }
 
 .Btn_close {
+  box-shadow: @log_shadow_close;
 }
 
 .logItem {
@@ -159,8 +178,9 @@ export default defineComponent({
   display: flex;
   align-items: center;
   margin-left: 10px;
-  flex-wrap:wrap;
-  margin-bottom: 12px;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  height: 2.5rem;
 }
 .level {
   font-weight: 700;

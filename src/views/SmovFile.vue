@@ -1,33 +1,5 @@
 <template>
-  <div>
-    <!-- <el-empty description="未检测到文件" v-if="FileData === undefined || FileData.length === 0"></el-empty>
-    <el-skeleton v-if="skeleton" />-->
-    <!-- <smov-list v-for="(data,index) in FileData "
-               :data="data"
-               :index="index"
-               :key="index"
-               @ChangeStatus="ParenStatus"
-               @ChangeName="changeName">
-    </smov-list>-->
-
-    <!-- <el-table :data="FileData" style="width: 100%" :row-key="id">
-      <el-table-column type="selection" width="55" />
-      <el-table-column type="index" fixed prop="realname" label="检索名" width="300" >
-         <template #default="scope">
-          <span>{{scope.row.realname}}</span>
-          <el-input v-model="FileData[scope.$index].realname" placeholder="Please input" />
-        </template>
-        </el-table-column>
-      <el-table-column prop="path" label="路径" />
-      <el-table-column prop="len" label="文件大小" />
-      <el-table-column fixed="right" label="操作">
-        <template #default="scope">
-          <el-button type="text" size="small" @click="handleClick">详情</el-button>
-          <el-button type="text" size="small" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
-        </template>
-      </el-table-column>
-    </el-table>-->
-
+  <div class="fileMain">
     <vxe-toolbar export :refresh="{ query: findList }">
       <template #buttons>
         <vxe-button @click="getSelectEvent">获取选中</vxe-button>
@@ -40,7 +12,7 @@
       show-overflow
       keep-source
       ref="xTable"
-      height="500"
+      class="fileTable"
       :export-config="{}"
       :loading="table.loading"
       :checkbox-config="{ checkField: 'checked' }"
@@ -63,23 +35,6 @@
       </vxe-column>
     </vxe-table>
 
-    <!-- <el-dialog v-model="centerDialogVisible" title="Tips" width="30%" :before-close="handleClose">
-      <template #footer>  
-        <span class="dialog-footer">
-          <el-button @click="centerDialogVisible = false">Cancel</el-button>
-          <el-button type="primary" @click="dialogFinish">Confirm</el-button>
-        </span>
-      </template>
-    </el-dialog>-->
-
-    <div class="SmovFileNav"></div>
-
-    <div class="navBottom">
-      <el-input size="small" style="width: 200px" v-model="search" v-if="false" />
-      <!-- <el-button size="small" @click="initFn">检索全部</el-button>
-
-      <el-button size="small" @click="SearchFile">db数据检索</el-button>-->
-    </div>
   </div>
 </template>
 
@@ -94,14 +49,13 @@ import {
   reactive,
 } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
-import SmovList from "../components/SmovList.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ElNotification } from "element-plus";
 import { ThreadPool } from '../ts/ThreadPool';
 import XEUtils from 'xe-utils';
 
 export default defineComponent({
-  components: { SmovList },
+  components: { },
   setup: function () {
     const skeleton = ref(false);
     const empty = ref(false);
@@ -301,17 +255,7 @@ export default defineComponent({
     };
 
     return {
-      skeleton,
-      empty,
-      FileData,
-      ParenStatus,
-      changeName,
-      filter,
       search,
-      initFn,
-      handleEdit,
-      centerDialogVisible,
-      dialogFinish,
       table,
       findList,
       xTable,
@@ -323,8 +267,15 @@ export default defineComponent({
 });
 </script>
 
-<style>
-/* .vxe-table--empty-placeholder /deep/ .vxe-loading {
-  background-color: none;
-} */
+<style scoped lang="less">
+.fileMain{
+  height: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.fileTable{
+  flex-grow: 1;
+}
+
 </style>
