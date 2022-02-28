@@ -333,7 +333,7 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
 pub fn handle_app_event(app_handle: &AppHandle<Wry>, event: RunEvent) {
   match event {
     RunEvent::CloseRequested { label, api, .. } => {
-      if label == "main" {
+      if label == "main" || label =="seek" {
         let app_handle = app_handle.clone();
         app_handle.get_window(&label).unwrap().hide().unwrap();
         // use the exposed close api, and prevent the event loop to close

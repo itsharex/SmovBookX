@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
 import { ArrowLeftBold, Loading, ArrowDownBold } from '@element-plus/icons-vue';
@@ -25,21 +25,25 @@ export default defineComponent({
             router.back();
         };
 
-        const onLoad = ref(false);
+        let webview: any = null;
 
-        const goSeek = () => {
-            let webview = new WebviewWindow('test3', {
-                url: '/test3',
-                title: '软件设置',
-                width: 360,
-                height: 280,
+        onMounted(() => {
+            webview = new WebviewWindow('seek', {
+                url: '/seek',
+                title: '检索列表',
+                width: 300,
+                height: 700,
                 center: true,
                 visible: false,
-                alwaysOnTop: true,
+                alwaysOnTop: false,
                 skipTaskbar: true,
                 resizable: false,
             });
-            
+        });
+
+        const onLoad = ref(false);
+
+        const goSeek = () => {
             webview.show();
         }
         return {

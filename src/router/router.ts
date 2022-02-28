@@ -22,6 +22,10 @@ const router = createRouter({
                     component: smovFile,
                 },
                 {
+                    path: '/seek',
+                    component: () => import("../views/Seek.vue")
+                },
+                {
                     path: '/test',
                     component: test,
                     redirect: '/test1',
@@ -44,8 +48,8 @@ const router = createRouter({
 
         },
         {
-            path: '/test3',
-            component: () => import("../views/test3.vue")
+            path: '/seek',
+            component: () => import("../views/Seek.vue")
         },
     ]
 })

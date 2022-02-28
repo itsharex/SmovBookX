@@ -74,7 +74,7 @@ body {
 
 .app .el-header,
 .common-layout .el-footer {
-  background-color: #cfdbeb;
+  background-color: #ffffff;
   color: var(--el-text-color-primary);
   line-height: 60px;
   padding: 0;

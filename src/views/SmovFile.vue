@@ -50,19 +50,14 @@ import {
 } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
-import { ElNotification } from "element-plus";
 import { ThreadPool } from '../ts/ThreadPool';
 import XEUtils from 'xe-utils';
 
 export default defineComponent({
   components: { },
   setup: function () {
-    const skeleton = ref(false);
-    const empty = ref(false);
     let FileData: any[] = reactive([]);
     const search = ref();
-    const singleData = ref({});
-    const centerDialogVisible = ref(false);
 
     const table = reactive({
       loading: false,
@@ -70,22 +65,6 @@ export default defineComponent({
 
     const xTable = ref({} as VxeTableInstance);
 
-    const mockList = (size: number) => {
-      const list: any[] = [];
-      for (let index = 0; index < size; index++) {
-        list.push({
-          checked: false,
-          realname: `名称${index}`,
-          sex: "0",
-          num: 123,
-          age: 18,
-          num2: 234,
-          rate: 3,
-          address: "shenzhen",
-        });
-      }
-      return list;
-    };
 
     const findList = () => {
       table.loading = true;
@@ -118,7 +97,6 @@ export default defineComponent({
           })
           return item
         })
-        // console.log(data)
         $table.loadData(data);
       }else{
         $table.loadData(FileData);
@@ -128,20 +106,16 @@ export default defineComponent({
     const getSelectEvent = () => {
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
-      // const allRecords = $table.getTableData().fullData;//获取全部数据
-
-      // VXETable.modal.alert(`${selectRecords.length}条数据`)
       let tasks: any[] = [];
       let i = 0;
       for (let select of selectRecords) {
         i++;
-        //retrieveData(select.seekname, select.id);  //await 关键词 等待完成
         tasks.push(retrieveData(select.seekname, select.id, i));
       }
 
       let pool = new ThreadPool.FixedThreadPool({
         size: 1,
-        tasks: [...tasks] //, ...tasks7, ...tasks7
+        tasks: [...tasks] , 
       })
 
       pool.start();
@@ -171,16 +145,6 @@ export default defineComponent({
       });
     }
 
-    async function retrieveData1(seekName, id) {
-      console.log("正在检索", seekName);
-      invoke("retrieve_data", {
-        seekName: seekName,
-        smovId: id,
-      }).then((res) => {
-        console.log(res);
-      });
-    }
-
     onMounted(() => {
       initFn();
     });
@@ -193,18 +157,6 @@ export default defineComponent({
           findList();
         }
       });
-    };
-
-    const ParenStatus = (index, status) => {
-      FileData[index].status = status;
-    };
-
-    const changeName = (index, name) => {
-      console.log(name);
-      FileData[index].formatCode = name;
-    };
-    const filter = () => {
-      return FileData.filter((item) => item.name.indexOf(search) < 0);
     };
 
     //局部保存 直接修改元数据
@@ -232,26 +184,6 @@ export default defineComponent({
         }
       );
       // 判断单元格值是否被修改
-    };
-
-    const handleEdit = (index, row) => {
-      const data = {
-        index: index,
-        data: row,
-      };
-
-      singleData.value = data;
-
-      centerDialogVisible.value = true;
-
-      ElNotification({
-        title: "Title",
-        message: h("i", { style: "color: teal" }, "This is a reminder"),
-      });
-    };
-
-    const dialogFinish = () => {
-      centerDialogVisible.value = false;
     };
 
     return {

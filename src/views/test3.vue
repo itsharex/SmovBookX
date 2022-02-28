@@ -1,16 +1,24 @@
 <template>
-  <div>
-     test3
- </div>
+    <div>{{time}}</div>
 </template>
 
 <script lang='ts'>
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 export default defineComponent({
     name: 'test3',
     props: [],
     setup(props, { emit }) {
+
+        let time = ref(0);
+
+        onMounted(() =>{
+           setInterval(() => {
+                time.value = time.value + 1;
+            }, 1000)
+        })
+
         return {
+            time
         };
     }
 })
