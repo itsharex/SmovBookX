@@ -14,13 +14,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, inject, watch, computed } from "vue";
-import Log from '../components/Log.vue';
+import { defineComponent, ref, onMounted, provide, watch, computed ,reactive } from "vue";
 import Navigation from "../components/Navigation.vue";
+import Log from "../components/Log.vue";
 
 export default defineComponent({
-  components: { Log, Navigation },
+  components: { Navigation, Log },
   setup() {
+
+    //定义一个全局值 ，可以由前端打印日志
+
+    const logs =ref('' as any);
+
+    provide('log',logs)
 
     return {
 
@@ -28,6 +34,10 @@ export default defineComponent({
   },
 });
 
+
+function unknow(unknow: any) {
+throw new Error("Function not implemented.");
+}
 </script>
 
 <style lang="less">
@@ -53,6 +63,7 @@ body {
 ::-webkit-scrollbar {
   height: 9px;
   width: 8px;
+  margin-right: 1px;
 }
 
 ::-webkit-scrollbar-thumb {

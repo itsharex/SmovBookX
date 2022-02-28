@@ -19,6 +19,8 @@
 import { defineComponent, ref, onMounted, inject, watch, computed, reactive, onUpdated, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from '@tauri-apps/api/event';
+import { Log } from '../type/log'
+import { CurentTime } from '../util/time'
 
 export default defineComponent({
   components: {},
@@ -26,12 +28,16 @@ export default defineComponent({
   setup() {
     const isOpen = ref(false);
     const logList = ref([] as any[]);
+    const log = inject('log') as any;
     watch(logList.value, () => {
       if (logList.value.length > 50) {
         logList.value.shift()
       }
-      // console.log(res)
     });
+
+    watch(log, () => {
+       logList.value.push(log.value);
+    })
 
     onUpdated(() => {
       scrollToBottom();
@@ -61,7 +67,7 @@ export default defineComponent({
 
     const eventLog = () => {
       !(async () => await listen('frontend_log', (event: any) => {
-        const log = {
+        const log: Log = {
           time: CurentTime(),
           thread: event.payload.thread,
           msg: event.payload.fields.message,
@@ -69,29 +75,6 @@ export default defineComponent({
         };
         logList.value.push(log);
       }))()
-    }
-
-    function CurentTime() {
-      var now = new Date();
-
-      var year = now.getFullYear();
-      var month = now.getMonth() + 1;
-      var day = now.getDate();
-      var hh = now.getHours();
-      var mm = now.getMinutes();
-      var ss = now.getSeconds();
-      var clock = year + "-";
-      if (month < 10) clock += "0";
-      clock += month + "-";
-      if (day < 10) clock += "0";
-      clock += day + " ";
-      if (hh < 10) clock += "0";
-      clock += hh + ":";
-      if (mm < 10) clock += '0';
-      clock += mm + ":";
-      if (ss < 10) clock += '0';
-      clock += ss;
-      return (clock);
     }
 
     return {
