@@ -14,13 +14,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, inject, watch, computed } from "vue";
-import Log from '../components/Log.vue';
+import { defineComponent, ref, onMounted, provide, watch, computed ,reactive } from "vue";
 import Navigation from "../components/Navigation.vue";
+import Log from "../components/Log.vue";
 
 export default defineComponent({
-  components: { Log, Navigation },
+  components: { Navigation, Log },
   setup() {
+
+    //定义一个全局值 ，可以由前端打印日志
+
+    const logs =ref('' as any);
+
+    provide('log',logs)
 
     return {
 
@@ -28,6 +34,10 @@ export default defineComponent({
   },
 });
 
+
+function unknow(unknow: any) {
+throw new Error("Function not implemented.");
+}
 </script>
 
 <style lang="less">
@@ -51,25 +61,23 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 5px;
+  height: 9px;
+  width: 8px;
+  margin-right: 1px;
 }
 
-::-webkit-scrollbar-track-piece {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  border-style: dashed;
+  border-color: transparent;
+  border-width: 2px;
+  background-color: rgba(157, 165, 183, 0.4);
+  background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb:vertical {
-  height: 5px;
-  background-color: rgba(125, 125, 125, 0.7);
-  border-radius: 6px;
-}
-
-::-webkit-scrollbar-thumb:horizontal {
-  width: 5px;
-  background-color: rgba(125, 125, 125, 0.7);
-  border-radius: 6px;
+::-webkit-scrollbar-thumb:hover {
+  border-width: 1px;
+  background: rgba(157, 165, 183, 0.4);
 }
 
 .app .el-header,
