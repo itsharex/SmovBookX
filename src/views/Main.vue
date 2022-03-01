@@ -14,19 +14,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, provide, watch, computed ,reactive } from "vue";
+import { defineComponent, ref, onMounted, provide, inject, watch, computed, reactive } from "vue";
 import Navigation from "../components/Navigation.vue";
 import Log from "../components/Log.vue";
 
 export default defineComponent({
   components: { Navigation, Log },
   setup() {
-
-    //定义一个全局值 ，可以由前端打印日志
-
-    const logs =ref('' as any);
-
-    provide('log',logs)
 
     return {
 
@@ -36,7 +30,7 @@ export default defineComponent({
 
 
 function unknow(unknow: any) {
-throw new Error("Function not implemented.");
+  throw new Error("Function not implemented.");
 }
 </script>
 

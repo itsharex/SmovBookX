@@ -22,10 +22,6 @@ const router = createRouter({
                     component: smovFile,
                 },
                 {
-                    path: '/seek',
-                    component: () => import("../views/Seek.vue")
-                },
-                {
                     path: '/test',
                     component: test,
                     redirect: '/test1',

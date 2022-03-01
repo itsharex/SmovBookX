@@ -24,21 +24,21 @@ export module ThreadPool {
 
     // 异步池
     export class FixedThreadPool {
-        runningFlag: boolean;
+        runningFlag: any;
         runningProcessorCount: number;
         tasks: any[];
         size: any;
-        constructor({
-            size,
-            tasks
-        }) {
+        index: number;
+        constructor({ size, tasks,runningFlag }) {
             this.size = size;
 
             this.tasks = [];
-            this.addTask(...tasks);
+            this.addTasks(...tasks);
 
-            this.runningFlag = false;
+            this.runningFlag = runningFlag;
             this.runningProcessorCount = 0;
+
+            this.index = 0;
         }
 
         isRunning() {
@@ -46,6 +46,7 @@ export module ThreadPool {
         }
 
         start() {
+            // console.log(this.runningFlag);
             if (this.isRunning()) {
                 return;
             }
@@ -63,33 +64,47 @@ export module ThreadPool {
             this.runningFlag = false;
         }
 
-        addTask(...tasks) {
+        addTasks(...tasks) {
             tasks.forEach(task => {
                 if (task instanceof Task) {
                     this.tasks.push(task);
+                    // this.status[task.params.id] = 0;
                 }
                 else {
                     console.error('expected to be instanceof Task');
                 }
             })
         }
+        addTask(task) {
+            if (task instanceof Task) {
+                this.tasks.push(task);
+                // this.status[task.params.id] = 0;
+            }
+            else {
+                console.error('expected to be instanceof Task');
+            }
+        }
 
         processTask() {
             if (!this.runningFlag) {
                 this.runningProcessorCount--;
-                console.log('stop');
                 return;
             }
-
-            const task: any = this.tasks.shift();  //这里移除掉了 得修改一下 先修改状态 然后根据检索状态 决定去留 
-
+            //console.log(this.tasks.length)
+            //const task: any = this.tasks.shift();  //这里移除掉了 得修改一下 先修改状态 然后根据检索状态 决定去留 
+            const task: any = this.tasks[this.index];   //这里每次都是获取第一位 第一个执行的时候 还没删除呢 需要修改获取方式
             if (task) {
+                this.index++;
+                task.params.status = 1;
                 const prom = task.processor(task.params);
                 if (prom instanceof Promise) {
                     let cb;
                     prom.then(data => {
                         cb = task.callback(data);
                     }).finally(() => {
+                        //this.tasks.shift();
+                        //this.tasks.splice(nowIndex,1);  //在这出现了下标的变动
+                        task.params.status = 2;
                         if (cb instanceof Promise) {
                             cb.finally(() => {
                                 this.processTask();
@@ -98,6 +113,7 @@ export module ThreadPool {
                         else {
                             this.processTask();
                         }
+
                     });
                 }
             }

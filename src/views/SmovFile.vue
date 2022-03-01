@@ -47,6 +47,7 @@ import {
   computed,
   h,
   reactive,
+  inject
 } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
@@ -116,6 +117,7 @@ export default defineComponent({
       let pool = new ThreadPool.FixedThreadPool({
         size: 1,
         tasks: [...tasks] , 
+        runningFlag: inject("seek")
       })
 
       pool.start();

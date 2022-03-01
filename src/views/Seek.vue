@@ -4,14 +4,16 @@
         <el-button @click="click1" color="#626aef" style="color: rgb(255, 0, 0)">Custom1</el-button>
         <el-button @click="click2" color="#626aef" style="color: rgb(0, 255, 221)">Custom2</el-button>
 
-        <div v-for="(item, index) in pool.tasks" :key="index" style="line-height: auto">
-            <el-button type="success">{{ item.params.seekName }}</el-button>
+        <div class="testDiv">
+            <div v-for="(item, index) in pool.tasks" :key="index">
+                <el-button type="success" :loading="item.params.status == 1">{{ item.params.id }}</el-button>
+            </div>
         </div>
     </div>
 </template>
 
 <script lang='ts'>
-import { defineComponent, ref, reactive } from 'vue';
+import { defineComponent, ref, reactive, inject } from 'vue';
 import { ThreadPool } from '../ts/ThreadPool';
 import { invoke } from "@tauri-apps/api/tauri";
 export default defineComponent({
@@ -19,16 +21,17 @@ export default defineComponent({
     props: [],
     setup(props, { emit }) {
 
-        // let tasks: any[] = [];
+        let i = 1;
 
         let pool = reactive(new ThreadPool.FixedThreadPool({
-            size: 1,
+            size: 2,
             tasks: [],
+            runningFlag: inject("seek")
         }))
 
         const click = () => {
-            pool.tasks.push(retrieveData("asdasd", 1));
-            console.log(pool.tasks)
+            pool.addTask(retrieveData("asdasd", i));
+            i++;
         }
 
         const click1 = () => {
@@ -42,19 +45,17 @@ export default defineComponent({
         function retrieveData(seekName, id) {
             const params = {
                 seekName: seekName,
-                smovId: id,
-                status: 0  //0 未在检索状态 1正在检索 2检索完成
+                id: id,
+                status: 0
             }
             return new ThreadPool.Task({
                 params: params,
                 processor: (params) => {
-                    // console.log("线程"+i+"正在运行");
                     return new Promise(resolve => {
-
                         setTimeout(() => {
-                            console.log("正在检索", seekName);
+                            // console.log("正在检索", seekName);
                             resolve(params);
-                        }, 5000);
+                        }, 2000);
 
                         // invoke("retrieve_data",params).then((res) => {
                         //     console.log(res);
@@ -81,4 +82,12 @@ export default defineComponent({
 
 </script>
 <style lang='less' scoped>
+.testDiv {
+    display: flex;
+    flex-wrap: wrap;
+    line-height: 12px;
+    * {
+        margin: 5px;
+    }
+}
 </style>

@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted,inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
 import { ArrowLeftBold, Loading, ArrowDownBold } from '@element-plus/icons-vue';
@@ -36,12 +36,12 @@ export default defineComponent({
                 center: true,
                 visible: false,
                 alwaysOnTop: false,
-                skipTaskbar: true,
+                skipTaskbar: false,
                 resizable: false,
             });
         });
 
-        const onLoad = ref(false);
+        const onLoad = inject("seek");
 
         const goSeek = () => {
             webview.show();
