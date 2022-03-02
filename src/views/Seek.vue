@@ -1,8 +1,11 @@
 <template>
-    <div>
-        <el-button @click="click" color="#626aef" style="color: white">Custom</el-button>
-        <el-button @click="click1" color="#626aef" style="color: rgb(255, 0, 0)">Custom1</el-button>
-        <el-button @click="click2" color="#626aef" style="color: rgb(0, 255, 221)">Custom2</el-button>
+    <div class="seek">
+        <div class = "buttonDiv">
+            <el-button @click="click" color="#626aef" style="color: white">添加测试元素</el-button>
+            <el-button @click="click1" color="#626aef" style="color: rgb(255, 255, 255)">开始检索</el-button>
+            <el-button @click="click2" color="#626aef" style="color: rgb(255, 255, 255)">停止检索</el-button>
+            <el-button @click="click3" color="#626aef" style="color: rgb(255, 255, 255)">关闭窗口</el-button>
+        </div>
 
         <div class="testDiv">
             <div v-for="(item, index) in pool.tasks" :key="index">
@@ -13,9 +16,10 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, ref, reactive, inject } from 'vue';
+import { defineComponent, ref, reactive, inject, watch, getCurrentScope } from 'vue';
 import { ThreadPool } from '../ts/ThreadPool';
 import { invoke } from "@tauri-apps/api/tauri";
+import { getAll, getCurrent } from '@tauri-apps/api/window';
 export default defineComponent({
     name: 'Seek',
     props: [],
@@ -24,9 +28,10 @@ export default defineComponent({
         let i = 1;
 
         let pool = reactive(new ThreadPool.FixedThreadPool({
-            size: 2,
+            size: 1,
             tasks: [],
-            runningFlag: inject("seek")
+            runningFlag: false,
+            autoRun: false
         }))
 
         const click = () => {
@@ -40,6 +45,10 @@ export default defineComponent({
 
         const click2 = () => {
             pool.stop();
+        }
+
+        const click3 = () => {
+            getCurrent().hide();
         }
 
         function retrieveData(seekName, id) {
@@ -66,7 +75,7 @@ export default defineComponent({
                     });
                 },
                 callback: (data) => {
-                    console.log(`线程 ${pool.tasks.length}, rst is`, data);
+                    // console.log(`线程 ${pool.tasks.length}, rst is`, data);
                 }
             });
         }
@@ -74,6 +83,7 @@ export default defineComponent({
             click,
             click1,
             click2,
+            click3,
             pool
 
         };
@@ -88,6 +98,26 @@ export default defineComponent({
     line-height: 12px;
     * {
         margin: 5px;
+    }
+}
+
+.seek {
+    // width: 100%;
+    // height: 100%;
+    // text-align: center;
+    // background-color: #fffae8;
+    // border-radius: 30px;
+    // box-shadow: 8px 8px 10px grey;
+    // -webkit-app-region: drag;
+}
+
+.buttonDiv{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    * {
+        margin: 3px;
     }
 }
 </style>

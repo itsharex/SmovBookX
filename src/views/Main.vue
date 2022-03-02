@@ -36,12 +36,14 @@ function unknow(unknow: any) {
 
 <style lang="less">
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  // font-family: Avenir, Helvetica, Arial, sans-serif;
+   font-family: "Microsoft Yahei", "PingFang SC", "system-ui";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   padding: 0%;
+  background-color: #00000000;
 }
 
 body {

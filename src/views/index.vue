@@ -1,5 +1,5 @@
 <template>
-  <el-button type="danger" @click="goBack">查询未检索信息</el-button>
+  <!-- <el-button type="danger" @click="goBack">查询未检索信息</el-button> -->
   <el-button type="danger" @click="toInit" :loading="loading">检索文件系统</el-button>
   <el-button type="danger" @click="toSeek">跳转至正常检索页面</el-button>
   <el-button type="danger" @click="
@@ -15,11 +15,11 @@
       })
     "
   >跳转至设置</el-button>
-  <el-button type="danger" @click="
+  <!-- <el-button type="danger" @click="
     router.push({
       path: '/seek',
     })
-  ">跳转至检索列表</el-button>
+  ">跳转至检索列表</el-button> -->
 </template>
 
 <script lang="ts">

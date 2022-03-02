@@ -19,4 +19,7 @@ provide('seek', seek);
 </script>
 
 <style lang="less">
+body{
+  background-color: #00000000;
+}
 </style>

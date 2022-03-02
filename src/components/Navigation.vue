@@ -3,8 +3,8 @@
         <el-button type="primary" :icon="ArrowLeftBold" @click="back" circle></el-button>
         <el-button
             type="primary"
-            :class="onLoad ? 'onLoad' : ''"
-            :icon="onLoad ? Loading : ArrowDownBold"
+            :class="onLoad === true ? 'onLoad' : ''"
+            :icon="onLoad === true ? Loading : ArrowDownBold"
             @click="goSeek"
             circle
         ></el-button>
@@ -12,9 +12,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted,inject } from 'vue';
+import { defineComponent, ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
+import { listen } from '@tauri-apps/api/event';
 import { ArrowLeftBold, Loading, ArrowDownBold } from '@element-plus/icons-vue';
 export default defineComponent({
     name: "Navigation",
@@ -36,15 +37,30 @@ export default defineComponent({
                 center: true,
                 visible: false,
                 alwaysOnTop: false,
-                skipTaskbar: false,
+                skipTaskbar: true,
                 resizable: false,
+                decorations: true
             });
+            eventSeekStatus();
         });
 
-        const onLoad = inject("seek");
+        const eventSeekStatus = () => {
+            !(async () => await listen('seek_status', (event: any) => {
+                console.log(event.payload);
+                onLoad.value =eval(event.payload.toLowerCase());   
+            }))()
+        }
+
+        const onLoad = ref(false);
 
         const goSeek = () => {
             webview.show();
+            webview.unminimize();
+
+            webview.setAlwaysOnTop(true);
+            setTimeout(() => {
+                webview.setAlwaysOnTop(false)
+            }, 50);
         }
         return {
             ArrowLeftBold,

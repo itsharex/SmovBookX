@@ -34,7 +34,6 @@
         </template>
       </vxe-column>
     </vxe-table>
-
   </div>
 </template>
 
@@ -55,7 +54,7 @@ import { ThreadPool } from '../ts/ThreadPool';
 import XEUtils from 'xe-utils';
 
 export default defineComponent({
-  components: { },
+  components: {},
   setup: function () {
     let FileData: any[] = reactive([]);
     const search = ref();
@@ -99,7 +98,7 @@ export default defineComponent({
           return item
         })
         $table.loadData(data);
-      }else{
+      } else {
         $table.loadData(FileData);
       }
     }
@@ -116,8 +115,9 @@ export default defineComponent({
 
       let pool = new ThreadPool.FixedThreadPool({
         size: 1,
-        tasks: [...tasks] , 
-        runningFlag: inject("seek")
+        tasks: [...tasks],
+        runningFlag: inject("seek"),
+        autoRun: false
       })
 
       pool.start();
@@ -202,14 +202,13 @@ export default defineComponent({
 </script>
 
 <style scoped lang="less">
-.fileMain{
+.fileMain {
   height: 100%;
   display: flex;
   flex-flow: column nowrap;
 }
 
-.fileTable{
+.fileTable {
   flex-grow: 1;
 }
-
 </style>
