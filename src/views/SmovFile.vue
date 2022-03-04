@@ -52,6 +52,7 @@ import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ThreadPool } from '../ts/ThreadPool';
 import XEUtils from 'xe-utils';
+import { ElMessage } from "element-plus";
 
 export default defineComponent({
   components: {},
@@ -104,24 +105,35 @@ export default defineComponent({
     }
 
     const getSelectEvent = () => {
+      table.loading = true;
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
       let tasks: any[] = [];
-      let i = 0;
+
       for (let select of selectRecords) {
-        i++;
-        tasks.push(retrieveData(select.seekname, select.id, i));
+        tasks.push(
+          {
+            id: select.id,
+            seek_name: select.seekname,
+          }
+        )
       }
 
-      let pool = new ThreadPool.FixedThreadPool({
-        size: 1,
-        tasks: [...tasks],
-        runningFlag: inject("seek"),
-        autoRun: false
+      invoke("change_seek_status", { smov: tasks }).then((res: any) => {
+        if (res.code == 200) {
+          ElMessage({
+            message: '共' + tasks.length + '条加入到检索队列',
+            type: 'success',
+          })
+        } else {
+          ElMessage.error('插入到检索队列出现错误')
+        }
+        //table.loading = false;
+      }
+      ).finally(() => {
+        table.loading = false;
+        $table.removeCheckboxRow();
       })
-
-      pool.start();
-
     };
 
     function retrieveData(seekName, id, i) {
@@ -135,9 +147,9 @@ export default defineComponent({
               seekName: seekName,
               smovId: id,
             }).then((res) => {
-              console.log(res);
+              resolve(res);
             }).finally(() => {
-              resolve(params);
+              //resolve(params);
             });
           });
         },

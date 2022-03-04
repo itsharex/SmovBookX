@@ -82,6 +82,12 @@ pub struct SmovFileSeek {
   pub format: String,    //格式化后名称
 }
 
+#[derive(Hash, Debug, Deserialize, Serialize)]
+pub struct RetrievingSmov {
+  pub id: i64,
+  pub seek_name: String,
+}
+
 impl PartialEq for SmovFile {
   fn eq(&self, other: &Self) -> bool {
     (self.realname == other.realname)
@@ -310,10 +316,10 @@ impl Smov {
             name: row.get(1)?,
           })
         })?;
-       
+
         for tag in tag_iter {
-            let tag1= tag.unwrap();
-            smov.tags.push(tag1);
+          let tag1 = tag.unwrap();
+          smov.tags.push(tag1);
         }
 
         let mut stmt = tx.prepare(
@@ -326,16 +332,14 @@ impl Smov {
             name: row.get(1)?,
           })
         })?;
-       
+
         for actor in actor_iter {
-            let actor1= actor.unwrap();
-            smov.actors.push(actor1);
+          let actor1 = actor.unwrap();
+          smov.actors.push(actor1);
         }
 
-        
-
         smov_list.push(smov);
-      };
+      }
       Ok(smov_list)
     })
   }
@@ -544,7 +548,7 @@ impl SmovFile {
   pub fn query_db_file_id_unseek() -> Result<Vec<SmovFile>, rusqlite::Error> {
     exec(|conn| {
       let mut stmt =
-            conn.prepare("SELECT id,realname,seekname,path,len,created,modified,extension,format,isch FROM smov where is_retrieve = 0")?;
+            conn.prepare("SELECT id,realname,seekname,path,len,created,modified,extension,format,isch FROM smov where is_retrieve = 0 and retrieving =0")?;
       let smov_file_iter = stmt.query_map([], |row| {
         Ok(SmovFile {
           id: row.get(0)?,
@@ -657,6 +661,7 @@ impl SMOVBOOK {
                 makers_id    integer              Null,
                 series_id    integer              Null,
                 directors_id integer              Null,
+                retrieving   TINYINT(1) Default 0 Null,
                 is_retrieve  TINYINT(1) Default 0 Null,
                 is_active    TINYINT(1) Default 0 Null,
                 isch         TINYINT(1) Default 0 Null
@@ -771,10 +776,50 @@ impl SMOVBOOK {
 }
 
 impl SmovFileSeek {
-  pub fn _seek2db(_smov_seek: &SmovSeek, _smov_file_seek: &SmovFileSeek) -> Result<()> {
+  pub fn change_seek_status(smov: Vec<RetrievingSmov>) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
-      tx.commit().unwrap();
+
+      for y in smov {
+        tx.execute("update smov set retrieving =1 where id = ?1", params![y.id])
+          .expect("修改状态出现错误！");
+      }
+
+      tx.commit().expect("修改状态出现错误！");
+
+      Ok(())
+    })
+  }
+
+  pub fn get_seek_smov() -> Result<(Vec<RetrievingSmov>)> {
+    exec(|conn| {
+      let mut stmt = conn.prepare("SELECT id,seekName FROM smov where retrieving=1")?;
+      let smov_file_iter = stmt.query_map([], |row| {
+        Ok(RetrievingSmov {
+          id: row.get(0)?,
+          seek_name: row.get(1)?, //当前的实际名称
+        })
+      })?;
+
+      let mut res: Vec<RetrievingSmov> = Vec::new();
+
+      for smov_file in smov_file_iter {
+        let s = smov_file.unwrap();
+        res.push(s);
+      }
+
+      Ok(res)
+    })
+  }
+
+  pub fn remove_smov_seek_status(id: i64) -> Result<()> {
+    exec(|conn| {
+      let tx = conn.transaction()?;
+      tx.execute("update smov set retrieving =0 where id = ?1", params![id])
+        .expect("修改状态出现错误！");
+
+      tx.commit().expect("修改状态出现错误！");
+
       Ok(())
     })
   }

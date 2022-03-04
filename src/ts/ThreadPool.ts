@@ -26,15 +26,20 @@ export module ThreadPool {
         runningFlag: any;
         runningProcessorCount: number;
         tasks: any[];
+        sussTasks: any[];
+        failTasks: any[];
         size: any;
         index: number;
         window: any;
         autoRun: boolean;
-        constructor({ size, tasks, runningFlag,autoRun }) {
+        constructor({ size, tasks, runningFlag, autoRun }) {
             this.size = size;
 
             this.tasks = [];
             this.addTasks(...tasks);
+
+            this.sussTasks = [];
+            this.failTasks = [];
 
             this.runningFlag = runningFlag;
             this.runningProcessorCount = 0;  //正在执行中的线程
@@ -85,7 +90,7 @@ export module ThreadPool {
         addTask(task) {
             if (task instanceof Task) {
                 //console.log("程序池中插入");
-                console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index);
+                //console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index);
                 this.tasks.push(task);
                 if (this.tasks.length > this.index && this.autoRun == true && this.runningFlag == false) {
                     //console.log("开始程序");
@@ -97,28 +102,39 @@ export module ThreadPool {
             }
         }
 
+        removeTask(index, type) {
+            if (type = 'normal') {
+                this.tasks.splice(index, 1);
+            } else if (type = 'suss') {
+                this.sussTasks.splice(index, 1);
+            } else if (type = 'fail') {
+                this.failTasks.splice(index, 1);
+            }
+        }
+
         processTask() {
             if (!this.runningFlag) {
                 //this.runningProcessorCount--;
                 return;
             }
-            // console.log(this.index)
-            //const task: any = this.tasks.shift();  //这里移除掉了 得修改一下 先修改状态 然后根据检索状态 决定去留 
-            const task: any = this.tasks[this.index];   //这里每次都是获取第一位 第一个执行的时候 还没删除呢 需要修改获取方式
+            //这里每次都是获取第一位 第一个执行的时候 还没删除呢 需要修改获取方式
+            const task: any = this.tasks[this.index];
+
+            //这里修改为 不提取下标队列 提取线程数  如何删除这个程序？
+
             if (task) {
                 this.runningProcessorCount++;
                 this.index++;
-                task.params.status = 1;
+                task.params.status = 3;
                 const prom = task.processor(task.params);
                 if (prom instanceof Promise) {
                     let cb;
                     prom.then(data => {
                         cb = task.callback(data);
+                        task.params.status = data;
                     }).finally(() => {
-                        //this.tasks.shift();
-                        //this.tasks.splice(nowIndex,1);  //在这出现了下标的变动
                         this.runningProcessorCount--;
-                        task.params.status = 2;
+                        task.params.status = 1;
                         if (cb instanceof Promise) {
                             cb.finally(() => {
                                 this.processTask();
@@ -131,10 +147,6 @@ export module ThreadPool {
                 }
             }
             else {
-                //setTimeout(() => {
-                //    this.processTask();
-                //}, 500); 
-                //当不存在下一项时 停止执行
                 //console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index);
                 setTimeout(() => {  //延迟500ms防止 炸了
                     if (this.tasks.length == this.index && this.runningProcessorCount == 0) {

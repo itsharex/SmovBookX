@@ -1,13 +1,17 @@
 use std::thread;
 
 use crate::model::folder::Folder;
+use crate::model::smov::RetrievingSmov;
 use crate::model::smov::Smov;
 use crate::model::smov::SmovFile;
+use crate::model::smov::SmovFileSeek;
 use crate::response::response::Response;
 use crate::serve::smov;
 use crate::serve::smov_file;
 use crate::util::smov_format::SmovName;
 use tauri::command;
+use tauri::Manager;
+use tauri::Window;
 use tracing::info;
 
 //检索新文件到数据库
@@ -85,4 +89,31 @@ pub fn get_all_smov() -> Response<Option<Vec<Smov>>> {
     Ok(e) => return Response::new(200, Some(e), "success"),
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
   }
+}
+
+#[command]
+pub fn change_seek_status(smov: Vec<RetrievingSmov>, window: Window) -> Response<Option<bool>> {
+  window
+    .emit_to("seek", "addTask", &smov)
+    .expect("向另一个窗口传送数据出现错误");
+  match SmovFileSeek::change_seek_status(smov) {
+    Ok(_) => return Response::new(200, Some(true), "success"),
+    Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+  };
+}
+
+#[command]
+pub fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
+  match SmovFileSeek::get_seek_smov() {
+    Ok(e) => return Response::new(200, Some(e), "success"),
+    Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+  };
+}
+
+#[command]
+pub fn remove_smov_seek_status(id: i64) -> Response<Option<bool>> {
+  match SmovFileSeek::remove_smov_seek_status(id) {
+    Ok(e) => return Response::new(200, Some(true), "success"),
+    Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+  };
 }

@@ -261,10 +261,12 @@ impl App {
 pub fn create_try() -> SystemTray {
   let quit = CustomMenuItem::new("quit".to_string(), "退出");
   let set = CustomMenuItem::new("set".to_string(), "设置");
+  let seek = CustomMenuItem::new("seek".to_string(), "检索列表");
   let tray_menu = SystemTrayMenu::new()
     .add_item(set)
     .add_native_item(SystemTrayMenuItem::Separator)
-    .add_item(quit);
+    .add_item(quit)
+    .add_item(seek);
   SystemTray::new().with_menu(tray_menu)
 }
 
@@ -316,6 +318,10 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
       "set" => {
         app.get_window("main").unwrap().emit("set", "").unwrap();
       }
+      "seek" => {
+        app.get_window("seek").unwrap().unminimize().unwrap();
+        app.get_window("seek").unwrap().show().unwrap();
+      }
       _ => {}
     },
     SystemTrayEvent::LeftClick { .. } => {
@@ -333,7 +339,7 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
 pub fn handle_app_event(app_handle: &AppHandle<Wry>, event: RunEvent) {
   match event {
     RunEvent::CloseRequested { label, api, .. } => {
-      if label == "main" || label =="seek" {
+      if label == "main" || label == "seek" {
         let app_handle = app_handle.clone();
         app_handle.get_window(&label).unwrap().hide().unwrap();
         // use the exposed close api, and prevent the event loop to close

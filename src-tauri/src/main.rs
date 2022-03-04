@@ -15,15 +15,14 @@ mod util;
 
 #[tokio::main]
 async fn main() {
-
   app::lock_single();
 
-  let _app =tauri::Builder::default()
+  let _app = tauri::Builder::default()
     .setup(|_app| {
       if cfg!(target_os = "windows") {
         app::webview2_is_installed(_app);
       }
-      if !app::init_app_log(_app){
+      if !app::init_app_log(_app) {
         panic!("日志系统初始化失败！");
       }
       if !app::init_app_dir() {
@@ -50,6 +49,9 @@ async fn main() {
       cmd::cmd::query_folder,
       cmd::cmd::retrieve_data,
       cmd::cmd::get_all_smov,
+      cmd::cmd::change_seek_status,
+      cmd::cmd::get_seek_smov,
+      cmd::cmd::remove_smov_seek_status,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,
       cmd::tauri_cmd::open_in_explorer,
@@ -58,5 +60,5 @@ async fn main() {
     .build(tauri::generate_context!())
     .expect("error while running tauri application");
 
-    _app.run(app::handle_app_event);
+  _app.run(app::handle_app_event);
 }
