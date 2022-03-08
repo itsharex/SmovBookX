@@ -85,6 +85,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
         //在这里直接对数据进行整理 ，能到这里说明数据真实存在
         //smov_file新建一个方法 ，需要对数据更改位置及更新数据库数据，主要目的为修改位置信息,初始化文件夹，需要回传一个path
         //传入的数据应该为 name 和 id ，就能确定 哪条数据和初始化文件夹的名称
+        //这里不需要错误回滚机制 因为出现错误时还没有被修改文件的 检索状态 第二次可以直接继续查询
         let s = TidySmov {
           id: &id,
           name: &name,

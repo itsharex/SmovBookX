@@ -35,7 +35,7 @@
                         class="smovCard"
                         :class="item.params.status == 1 ? 'smovCard_suss' : item.params.status == 2 ? 'smovCard_fail' : item.params.status == 3 ? 'smovCard_seeking' : ''"
                     >
-                        <div class="smovName">{{ item.params.seekName }}</div>
+                        <div class="smovName">{{ item.params.seek_name }}</div>
                         <!-- -->
                         <div class="loadingDiv" v-if="item.params.status == 3">
                             <el-icon color="#409EFC" class="is-loading loading">
@@ -92,8 +92,9 @@ export default defineComponent({
         //获取一个检索队列
         const addTaskEvent = () => {
             !(async () => await listen('addTask', (event: any) => {
+                console.log(event);
                 event.payload.forEach(item => {
-                    pool.addTask(retrieveData(item.seek_name, item.id));
+                    pool.addTask(retrieveData(item));
                 });
             }))()
         }
@@ -102,7 +103,8 @@ export default defineComponent({
             invoke("get_seek_smov").then((res: any) => {
                 if (res.data) {
                     res.data.forEach(item => {
-                        pool.addTask(retrieveData(item.seek_name, item.id));
+                        console.log(item);
+                        pool.addTask(retrieveData(item));
                     });
                 }
 
@@ -117,7 +119,10 @@ export default defineComponent({
         const randomBoolean = () => Math.random() >= 0.5;
 
         const click = () => {
-            pool.addTask(retrieveData("asdasd", i));
+            const test = {
+
+            }
+            // pool.addTask(retrieveData("asdasd", i));
             i++;
         }
 
@@ -135,6 +140,7 @@ export default defineComponent({
 
         const deleteTask = (index: number, id: number) => {
             invoke("remove_smov_seek_status", { id: id }).then((res: any) => {
+                console.log(res)
                 if (res.code == 200) {
                     pool.removeTask(index);
                 } else {
@@ -144,14 +150,10 @@ export default defineComponent({
             });
         }
 
-        function retrieveData(seekName, id) {
-            const params = {
-                seekName: seekName,
-                id: id,
-                status: 0
-            }
+        function retrieveData(item :any) {
+
             return new ThreadPool.Task({
-                params: params,
+                params: item,
                 processor: (params) => {
                     return new Promise(resolve => {
                         // setTimeout(() => {
@@ -166,7 +168,7 @@ export default defineComponent({
 
                         // }, 2000);
 
-                        invoke("retrieve_data", params).then((res: any) => {
+                        invoke("retrieve_data", {retrievingSmov:params}).then((res: any) => {
                             if (res.code == 200) {
                                 resolve(1);
                             } else {

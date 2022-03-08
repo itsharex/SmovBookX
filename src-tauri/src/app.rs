@@ -191,7 +191,8 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
     .with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
       !metadata.target().starts_with("frontend_log") //不存在的
-    }));
+    }))
+  ;
 
   let cus = CustomLayer {
     window: match app.get_window("main") {
@@ -203,8 +204,8 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
   tracing_subscriber::registry()
     .with(now_log)
     .with(cus.with_filter(filter::filter_fn(|metadata| {
-      //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
-      metadata.target().starts_with("frontend_log") //不存在的
+      //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！ || metadata.level().eq(&tracing::Level::WARN)
+      metadata.target().starts_with("frontend_log")  || metadata.level().eq(&tracing::Level::ERROR)  //存在的
     })))
     .init();
 

@@ -4,7 +4,7 @@
         <el-button
             type="primary"
             :class="onLoad === true ? 'onLoad' : ''"
-            :icon="onLoad === true ? Loading : ArrowDownBold"
+            :icon="onLoad === true ? Loading : Download"
             @click="goSeek"
             circle
         ></el-button>
@@ -16,7 +16,7 @@ import { defineComponent, ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
-import { ArrowLeftBold, Loading, ArrowDownBold } from '@element-plus/icons-vue';
+import { ArrowLeftBold, Loading, Download } from '@element-plus/icons-vue';
 export default defineComponent({
     name: "Navigation",
     props: [],
@@ -66,7 +66,7 @@ export default defineComponent({
             ArrowLeftBold,
             back,
             goSeek,
-            ArrowDownBold,
+            Download,
             onLoad,
             Loading
         };

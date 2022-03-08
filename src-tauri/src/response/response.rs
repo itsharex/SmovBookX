@@ -10,6 +10,7 @@ pub struct Response<T> {
 
 impl<T> Response<T> {
     pub fn new(code: i32, data: T, msg: &str) -> Response<T> {
+        
         Response {
             code,
             data,

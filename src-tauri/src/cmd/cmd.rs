@@ -21,31 +21,45 @@ pub fn query_new_file_todb() -> Response<String> {
 }
 
 #[command]
-pub async fn retrieve_data(seek_name: String, id: i64) -> Response<Option<i32>> {
-  let format = SmovName::format_smov_name(&seek_name);
-  let handle = thread::Builder::new()
-    .name(String::from(&seek_name))
+pub async fn retrieve_data(retrieving_smov: RetrievingSmov) -> Response<Option<i32>> {
+  let format = SmovName::format_smov_name(&retrieving_smov.seek_name);
+  let handle = match thread::Builder::new()
+    .name(String::from(&retrieving_smov.seek_name))
     .spawn(move || {
-      let msg = format!("开始检索{}", &seek_name);
+      let msg = format!("开始检索{}", &retrieving_smov.seek_name);
       info!(target: "frontend_log",message = msg.as_str());
-      let s: bool = tauri::async_runtime::block_on(async move {
-        let a = smov::retrieve_smov(format, id).await.unwrap();
+      let s = tauri::async_runtime::block_on(async move {
+        let a = smov::retrieve_smov(format, retrieving_smov.smov_id).await;
         info!("{}", "线程检索结束");
         return a;
       });
-      let msg = format!("检索结束{}", &seek_name);
+      let msg = format!("检索结束{}", &retrieving_smov.seek_name);
       info!(target: "frontend_log",message = msg.as_str());
       return s;
-    })
-    .expect("线程创建错误")
-    .join();
+    }) {
+    Ok(res) => res,
+    Err(e) => return Response::err(None, format!("{}", &e).as_str()),
+  };
+
+  // "线程创建错误" return Response::err(Some(1),
+
+  let handle = handle.join();
 
   match handle {
     Ok(e) => match e {
-      true => Response::new(200, Some(1), "success"),
-      false => Response::new(404, Some(1), "not found"),
+      Ok(n) => match n {
+        true => {
+          SmovFileSeek::change_status(retrieving_smov.id, 1).expect("出现了一个错误");
+          Response::new(200, Some(1), "success")
+        }
+        false => {
+          SmovFileSeek::change_status(retrieving_smov.id, 2).expect("出现了一个错误");
+          Response::new(404, Some(1), "not found")
+        }
+      },
+      Err(err) => Response::err(None,format!("{}", &err).as_str() ),
     },
-    Err(_e) => Response::err(Some(1), "出现未知错误"),
+    Err(_e) => Response::err(None, "出现了一个我不会解析的错误！"),
   }
 }
 
@@ -93,11 +107,15 @@ pub fn get_all_smov() -> Response<Option<Vec<Smov>>> {
 
 #[command]
 pub fn change_seek_status(smov: Vec<RetrievingSmov>, window: Window) -> Response<Option<bool>> {
-  window
-    .emit_to("seek", "addTask", &smov)
-    .expect("向另一个窗口传送数据出现错误");
-  match SmovFileSeek::change_seek_status(smov) {
-    Ok(_) => return Response::new(200, Some(true), "success"),
+  let mut to_smov = smov.clone();
+
+  match SmovFileSeek::change_seek_status(&mut to_smov) {
+    Ok(_) => {
+      window
+        .emit_to("seek", "addTask", &to_smov)
+        .expect("向另一个窗口传送数据出现错误");
+      return Response::new(200, Some(true), "success");
+    }
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
   };
 }
@@ -113,7 +131,21 @@ pub fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
 #[command]
 pub fn remove_smov_seek_status(id: i64) -> Response<Option<bool>> {
   match SmovFileSeek::remove_smov_seek_status(id) {
-    Ok(e) => return Response::new(200, Some(true), "success"),
-    Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+    Ok(_) => return Response::new(200, Some(true), "success"),
+    Err(err) =>{
+      tracing::error!(message = format!("{}", err).as_str());
+      return Response::new(300, None, format!("{}", err).as_str())
+    } 
+  };
+}
+
+#[command]
+pub fn disable_smov(id :Vec<i64>) ->Response<Option<bool>>{
+  match SmovFile::disable(id) {
+    Ok(_) => return Response::new(200, Some(true), "success"),
+    Err(err) =>{
+      tracing::error!(message = format!("{}", err).as_str());
+      return Response::new(300, None, format!("{}", err).as_str())
+    } 
   };
 }

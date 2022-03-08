@@ -98,6 +98,7 @@ export module ThreadPool {
         }
 
         removeTask(index) {
+            this.index--;
             this.tasks.splice(index, 1);
         }
 

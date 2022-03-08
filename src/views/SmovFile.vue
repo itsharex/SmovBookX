@@ -1,11 +1,27 @@
 <template>
   <div class="fileMain">
-    <vxe-toolbar export :refresh="{ query: findList }">
-      <template #buttons>
-        <vxe-button @click="getSelectEvent">获取选中</vxe-button>
-        <vxe-input v-model="search" type="search" placeholder="试试全表搜索" @keyup="searchEvent"></vxe-input>
-      </template>
-    </vxe-toolbar>
+    <div class="toolBar">
+      <el-button type="primary" :icon="Files" :loading="false" @click="getSelectEvent">加入检索列表</el-button>
+      <el-button type="primary" :icon="Refresh" circle @click="initFn"></el-button>
+      <el-input
+        v-model="search"
+        class="search"
+        placeholder="全表检索"
+        :suffix-icon="Search"
+        @input="searchEvent"
+      />
+    </div>
+
+    <!-- <vxe-toolbar perfect>
+   
+    <template #buttons>-->
+    <!-- <vxe-button type="text" icon="fa fa-plus" content="加入检索列表" @click="getSelectEvent"></vxe-button> -->
+    <!-- <el-button type="primary" :icon="Files" :loading="false">加入检索列表</el-button> -->
+    <!-- <vxe-input v-model="search" type="search" placeholder="全表搜索" @keyup="searchEvent"></vxe-input> -->
+    <!-- <vxe-button type="text" icon="fa fa-trash-o" content="删除"></vxe-button>
+    <vxe-button type="text" icon="fa fa-save" content="保存"></vxe-button>-->
+    <!-- </template>
+    </vxe-toolbar>-->
 
     <vxe-table
       resizable
@@ -13,12 +29,21 @@
       keep-source
       ref="xTable"
       class="fileTable"
+      height="92%"
       :export-config="{}"
+      :empty-render="{ name: 'NotData' }"
       :loading="table.loading"
       :checkbox-config="{ checkField: 'checked' }"
-      :edit-config="{ trigger: 'click', mode: 'row', showStatus: true }"
+      :edit-config="{ trigger: 'dblclick', mode: 'row', showStatus: true }"
       @edit-closed="editClosedEvent"
     >
+      <template #empty>
+        <!-- <div class="noData">
+          <img src="https://pic2.zhimg.com/50/v2-f7031359103859e1ed38559715ef5f3f_hd.gif" />
+          <p>亲，没有更多数据了！</p>
+        </div>-->
+        <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
+      </template>
       <vxe-column type="seq" width="100"></vxe-column>
       <vxe-column type="checkbox" width="60"></vxe-column>
       <vxe-column field="realname" title="文件名称"></vxe-column>
@@ -38,21 +63,13 @@
 </template>
 
 <script lang="ts">
-import {
-  defineComponent,
-  ref,
-  onMounted,
-  watch,
-  computed,
-  h,
-  reactive,
-  inject
-} from "vue";
+import { defineComponent, ref, onMounted, reactive } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ThreadPool } from '../ts/ThreadPool';
 import XEUtils from 'xe-utils';
 import { ElMessage } from "element-plus";
+import { Files, Refresh, Search } from '@element-plus/icons-vue';
 
 export default defineComponent({
   components: {},
@@ -64,8 +81,14 @@ export default defineComponent({
       loading: false,
     });
 
-    const xTable = ref({} as VxeTableInstance);
+    // VXETable.renderer.add('NotData', {
+    //   // 空内容模板
+    //   renderEmpty() {
+    //     return [<span><img src='https://pic2.zhimg.com/50/v2-f7031359103859e1ed38559715ef5f3f_hd.gif'/> <p>亲，没有更多数据了！</p> </span>]
+    //   }
+    // })
 
+    const xTable = ref({} as VxeTableInstance);
 
     const findList = () => {
       table.loading = true;
@@ -86,11 +109,12 @@ export default defineComponent({
     const searchEvent = () => {
       const $table = xTable.value;
       const searchs = XEUtils.toValueString(search.value).trim().toLowerCase();
-      console.log(searchs)
+      const backdata = $table.getTableData().fullData;
       if (searchs) {
         const filterRE = new RegExp(searchs, 'gi')
         const searchProps = ['seekname', 'realname', 'extension']
         const rest = $table.getTableData().fullData.filter(item => searchProps.some(key => XEUtils.toValueString(item[key]).toLowerCase().indexOf(searchs) > -1))
+        console.log(rest)
         const data = rest.map(row => {
           const item = Object.assign({}, row)
           searchProps.forEach(key => {
@@ -113,8 +137,10 @@ export default defineComponent({
       for (let select of selectRecords) {
         tasks.push(
           {
-            id: select.id,
+            id: 0,
+            smov_id: select.id,
             seek_name: select.seekname,
+            status: 0
           }
         )
       }
@@ -126,7 +152,7 @@ export default defineComponent({
             type: 'success',
           })
         } else {
-          ElMessage.error('插入到检索队列出现错误')
+          ElMessage.error('插入到检索队列出现错误,' + res.msg)
         }
         //table.loading = false;
       }
@@ -136,40 +162,22 @@ export default defineComponent({
       })
     };
 
-    function retrieveData(seekName, id, i) {
-      return new ThreadPool.Task({
-        params: i,
-        processor: (params) => {
-          // console.log("线程"+i+"正在运行");
-          return new Promise(resolve => {
-            console.log("正在检索", seekName);
-            invoke("retrieve_data", {
-              seekName: seekName,
-              smovId: id,
-            }).then((res) => {
-              resolve(res);
-            }).finally(() => {
-              //resolve(params);
-            });
-          });
-        },
-        callback: (data) => {
-          console.log(`线程 ${i}, rst is`, data);
-        }
-      });
-    }
-
     onMounted(() => {
       initFn();
     });
 
     const initFn = () => {
+      table.loading = true;
       invoke("query_unretrieved").then((res) => {
         let data: any = res;
         if (data.code == 200) {
           FileData = data.data;
           findList();
         }
+      }).finally(() => {
+        setTimeout(() => {
+          table.loading = false;
+        }, 1000);
       });
     };
 
@@ -206,8 +214,12 @@ export default defineComponent({
       findList,
       xTable,
       editClosedEvent,
+      searchEvent,
       getSelectEvent,
-      searchEvent
+      Files,
+      Refresh,
+      initFn,
+      Search
     };
   },
 });
@@ -222,5 +234,25 @@ export default defineComponent({
 
 .fileTable {
   flex-grow: 1;
+}
+.toolBar {
+  padding: 10px;
+  border: 1px solid #e8e9eb;
+  background-color: #f8f8f9;
+  display: flex;
+  z-index: 999;
+  align-items: center;
+}
+</style>
+
+<style lang="less">
+.search {
+  flex: 1;
+  display: flex;
+  justify-content:right;
+
+  input {
+    width: 250px;
+  }
 }
 </style>
