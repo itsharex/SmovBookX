@@ -99,6 +99,8 @@ export module ThreadPool {
 
         removeTask(index) {
             this.index--;
+            console.log(this.tasks.length);
+            //是什么导致了删除到一定时间就不删除了呢 因为数量变了 下标也tm变了啊
             this.tasks.splice(index, 1);
         }
 
@@ -127,8 +129,11 @@ export module ThreadPool {
                         cb = task.callback(data);
                         task.params.status = data;
                     }).finally(() => {
+                        //可以考虑用XEUtil去精准删除 然后 放到其他 队列 
+
                         this.runningProcessorCount--;
                         //task.params.status = 1;
+
                         if (cb instanceof Promise) {
                             cb.finally(() => {
                                 this.processTask();

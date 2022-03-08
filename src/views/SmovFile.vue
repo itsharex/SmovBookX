@@ -1,8 +1,9 @@
 <template>
   <div class="fileMain">
     <div class="toolBar">
-      <el-button type="primary" :icon="Files" :loading="false" @click="getSelectEvent">加入检索列表</el-button>
-      <el-button type="primary" :icon="Refresh" circle @click="initFn"></el-button>
+      <el-button type="primary" :icon="Files" :loading="false" @click="getSelectEvent">剑气纵横三万里</el-button>
+      <el-button type="warning" :icon="Close" :loading="false" @click="changeStatusAll">一剑光寒十九洲</el-button>
+      <el-button type="primary" :icon="Refresh" @click="initFn">重载</el-button>
       <el-input
         v-model="search"
         class="search"
@@ -36,6 +37,7 @@
       :checkbox-config="{ checkField: 'checked' }"
       :edit-config="{ trigger: 'dblclick', mode: 'row', showStatus: true }"
       @edit-closed="editClosedEvent"
+      :scroll-y="{ gt: 100 }"
     >
       <template #empty>
         <!-- <div class="noData">
@@ -44,10 +46,10 @@
         </div>-->
         <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
       </template>
-      <vxe-column type="seq" width="100"></vxe-column>
+      <vxe-column type="seq" width="60"></vxe-column>
       <vxe-column type="checkbox" width="60"></vxe-column>
       <vxe-column field="realname" title="文件名称"></vxe-column>
-      <vxe-column field="extension" title="拓展名"></vxe-column>
+      <vxe-column field="extension" title="拓展名" width="100"></vxe-column>
       <vxe-column
         field="seekname"
         title="检索名称"
@@ -56,6 +58,24 @@
       >
         <template #edit="{ row }">
           <vxe-input v-model="row.seekname" type="text"></vxe-input>
+        </template>
+      </vxe-column>
+      <vxe-column field="is_active" title="可用" width="60">
+        <template #default="{ row }">
+          <span>{{ row.is_active == 1 ? "是" : "否" }}</span>
+        </template>
+      </vxe-column>
+      <vxe-column title="操作" width="60">
+        <template #default="{ row }">
+          <!-- <el-switch
+              v-model="row.is_active"
+
+              :active-value="1"
+              :inactive-value="0"
+              @change="changActive(row)"
+          />-->
+          <!-- <vxe-switch v-model="row.is_active" :open-value="1"  :close-value="2" @change="changActive(row)" ></vxe-switch> -->
+          <el-button type="warning" :icon="Close" size="small" circle @click="changActive(row)"></el-button>
         </template>
       </vxe-column>
     </vxe-table>
@@ -69,7 +89,7 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { ThreadPool } from '../ts/ThreadPool';
 import XEUtils from 'xe-utils';
 import { ElMessage } from "element-plus";
-import { Files, Refresh, Search } from '@element-plus/icons-vue';
+import { Files, Refresh, Search, Close } from '@element-plus/icons-vue';
 
 export default defineComponent({
   components: {},
@@ -129,38 +149,85 @@ export default defineComponent({
     }
 
     const getSelectEvent = () => {
-      table.loading = true;
+
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
       let tasks: any[] = [];
 
-      for (let select of selectRecords) {
-        tasks.push(
-          {
-            id: 0,
-            smov_id: select.id,
-            seek_name: select.seekname,
-            status: 0
-          }
-        )
-      }
-
-      invoke("change_seek_status", { smov: tasks }).then((res: any) => {
-        if (res.code == 200) {
-          ElMessage({
-            message: '共' + tasks.length + '条加入到检索队列',
-            type: 'success',
-          })
-        } else {
-          ElMessage.error('插入到检索队列出现错误,' + res.msg)
+      if (selectRecords.length != 0) {
+        table.loading = true;
+        for (let select of selectRecords) {
+          tasks.push(
+            {
+              id: 0,
+              smov_id: select.id,
+              seek_name: select.seekname,
+              status: 0
+            }
+          )
         }
-        //table.loading = false;
+
+        invoke("change_seek_status", { smov: tasks }).then((res: any) => {
+          if (res.code == 200) {
+            ElMessage({
+              message: '共' + tasks.length + '条加入到检索队列',
+              type: 'success',
+            })
+          } else {
+            ElMessage.error('插入到检索队列出现错误,' + res.msg)
+          }
+          //是否有删除原始数据的更优解法
+          //initFn();
+          //table.loading = false;
+        }
+        ).finally(() => {
+          table.loading = false;
+          //使用XEUtil进行删除
+          selectRecords.forEach(item => {
+            XEUtils.remove(FileData, toitem => toitem === item)
+          })
+          $table.removeCheckboxRow();
+        })
       }
-      ).finally(() => {
-        table.loading = false;
-        $table.removeCheckboxRow();
-      })
     };
+
+    //批量修改 需要优化！ 批量是否重新渲染的代价比较低
+    const changeStatusAll = () => {
+      table.loading = true;
+      const $table = xTable.value;
+      const selectRecords = $table.getCheckboxRecords();
+      selectRecords.forEach(item => {
+        // invoke("change_active_status", { id: item.id, status: 0 }).then((res: any) => {
+        //   if (res.code == 200) {
+        //     const $table = xTable.value;
+        //   } else {
+        //     ElMessage.error('关闭出现了一个问题' + res.msg)
+        //   }
+        // })
+        changActive(item);
+      });
+
+      table.loading = false;
+
+      ElMessage({
+        message: '共' + selectRecords.length + '条数据被关闭',
+        type: 'success',
+      })
+      // initFn();
+    }
+
+    const changActive = (row) => {
+      invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
+        if (res.code == 200) {
+          const $table = xTable.value;
+          $table.remove(row);
+          XEUtils.remove(FileData, toitem => toitem === row)
+        } else {
+          ElMessage.error('关闭出现了一个问题' + res.msg)
+        }
+      })
+
+    }
 
     onMounted(() => {
       initFn();
@@ -169,6 +236,7 @@ export default defineComponent({
     const initFn = () => {
       table.loading = true;
       invoke("query_unretrieved").then((res) => {
+        console.log(res)
         let data: any = res;
         if (data.code == 200) {
           FileData = data.data;
@@ -219,7 +287,10 @@ export default defineComponent({
       Files,
       Refresh,
       initFn,
-      Search
+      Search,
+      changActive,
+      Close,
+      changeStatusAll
     };
   },
 });
@@ -249,7 +320,7 @@ export default defineComponent({
 .search {
   flex: 1;
   display: flex;
-  justify-content:right;
+  justify-content: right;
 
   input {
     width: 250px;

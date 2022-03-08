@@ -104,6 +104,7 @@ pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
               extension,
               format: String::from(""),
               isch,
+              is_active:0
             };
             smovs.push(res);
           }

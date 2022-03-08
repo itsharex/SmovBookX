@@ -27,3 +27,6 @@ ffmpeg -f concat -i filelist.txt -c copy output.mkv
 
 注意：使用 FFmpeg concat 分离器时，如果文件名有奇怪的字符，要在 filelist.txt 中转义
 
+
+看来需要对大量错误的option写法做返回判断了。。。。
+

@@ -24,7 +24,7 @@ impl TidySmov<'_> {
     let smov_file = SmovFile::query_by_id(self.id).expect("查询数据库信息出现错误");
 
     let mut file_ch = "";
-    if smov_file.isch.eq(&1)  {
+    if smov_file.isch.eq(&1) {
       file_ch = "-C";
     }
 
@@ -32,8 +32,8 @@ impl TidySmov<'_> {
     let file_folder_path = PathBuf::from(&smov_file.path);
     let file_file_path = file_folder_path.join(&file_name);
 
-    let tidy_folder_path = tidy_path.join(format!("{}{}",self.name,&file_ch));
-    let tidy_file_noextension = format!("{}{}", &self.name,&file_ch );
+    let tidy_folder_path = tidy_path.join(format!("{}{}", self.name, &file_ch));
+    let tidy_file_noextension = format!("{}{}", &self.name, &file_ch);
     let tidy_name = format!("{}.{}", &tidy_file_noextension, &smov_file.extension);
     let tidy_file_path = &tidy_folder_path.join(&tidy_name);
     //判断文件是否还存在
@@ -52,7 +52,10 @@ impl TidySmov<'_> {
       // copy(&file_file_path, &tidy_file_path).expect("复制文件出现错误");
       let s = Move::from_source(&file_file_path);
 
-      s.to_dest(&tidy_file_path).expect("移动文件出现错误");
+      match s.to_dest(&tidy_folder_path) {
+        Err(err) => return Err(anyhow!("移动文件出现错误:{}", err)),
+        _ => {}
+      };
 
       // remove_file(&file_file_path).expect("删除原文件出现错误");
     } else {
@@ -61,7 +64,10 @@ impl TidySmov<'_> {
 
       let s = Move::from_source(&file_folder_path);
 
-      s.to_dest(&tidy_folder_path).expect("移动文件夹出现错误");
+      match s.to_dest(&tidy_folder_path) {
+        Err(err) => return Err(anyhow!("移动文件出现错误:{}", err)),
+        _ => {}
+      };
 
       //重命名文件
       rename(tidy_folder_path.join(&file_name), tidy_file_path).expect("重命名文件出现错误");

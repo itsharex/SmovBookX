@@ -26,6 +26,12 @@
                 color="#626aef"
                 style="color: rgb(255, 255, 255)"
             >未检索是否可见</el-button>
+
+            <el-button
+                @click="removeAll"
+                color="#626aef"
+                style="color: rgb(255, 255, 255)"
+            >超级牛逼之一键删除</el-button>
         </div>
 
         <div class="smovList">
@@ -36,7 +42,6 @@
                         :class="item.params.status == 1 ? 'smovCard_suss' : item.params.status == 2 ? 'smovCard_fail' : item.params.status == 3 ? 'smovCard_seeking' : ''"
                     >
                         <div class="smovName">{{ item.params.seek_name }}</div>
-                        <!-- -->
                         <div class="loadingDiv" v-if="item.params.status == 3">
                             <el-icon color="#409EFC" class="is-loading loading">
                                 <loading />
@@ -46,7 +51,7 @@
                         <div class="close">
                             <el-button
                                 type="text"
-                                v-if = "item.params.status != 3"
+                                v-if="item.params.status != 3"
                                 :icon="Delete"
                                 circle
                                 @click="deleteTask(index, item.params.id)"
@@ -67,6 +72,7 @@ import { getAll, getCurrent } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
 import { Loading, Delete } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import XEUtils from 'xe-utils';
 export default defineComponent({
     name: 'Seek',
     components: { Loading },
@@ -89,7 +95,7 @@ export default defineComponent({
             autoRun: false
         }))
 
-        //获取一个检索队列
+        //获取检索队列
         const addTaskEvent = () => {
             !(async () => await listen('addTask', (event: any) => {
                 console.log(event);
@@ -108,6 +114,12 @@ export default defineComponent({
                     });
                 }
 
+            })
+        }
+
+        const removeAll = () => {
+            XEUtils.arrayEach(pool.tasks, (item, key) => {
+                deleteTask(0, item.params.id);
             })
         }
 
@@ -140,9 +152,8 @@ export default defineComponent({
 
         const deleteTask = (index: number, id: number) => {
             invoke("remove_smov_seek_status", { id: id }).then((res: any) => {
-                console.log(res)
                 if (res.code == 200) {
-                    pool.removeTask(index);
+                    XEUtils.throttle(pool.removeTask(index) as any, 100)
                 } else {
                     ElMessage.error('移除检索队列出现错误');
                     return;
@@ -150,35 +161,19 @@ export default defineComponent({
             });
         }
 
-        function retrieveData(item :any) {
+        function retrieveData(item: any) {
 
             return new ThreadPool.Task({
                 params: item,
                 processor: (params) => {
                     return new Promise(resolve => {
-                        // setTimeout(() => {
-                        //     // console.log("正在检索", seekName);
-                        //     const b = randomBoolean();
-
-                        //     if (b) {
-                        //         resolve(1);
-                        //     } else {
-                        //         resolve(2);
-                        //     }
-
-                        // }, 2000);
-
-                        invoke("retrieve_data", {retrievingSmov:params}).then((res: any) => {
+                        invoke("retrieve_data", { retrievingSmov: params }).then((res: any) => {
                             if (res.code == 200) {
                                 resolve(1);
                             } else {
                                 resolve(2);
                             }
-                            // resolve(params);
                         });
-
-
-
                     });
                 },
                 callback: (data) => {
@@ -194,7 +189,8 @@ export default defineComponent({
             pool,
             openStatus,
             Delete,
-            deleteTask
+            deleteTask,
+            removeAll
         };
     }
 })
@@ -245,9 +241,6 @@ export default defineComponent({
     background: #ffe0e0;
 }
 
-.smovCard_seeking {
-}
-
 .loadingDiv {
     display: flex;
     align-items: center;
@@ -277,5 +270,14 @@ export default defineComponent({
     display: flex;
     align-items: center;
     height: 100%;
+}
+
+.smovName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 80%;
+    text-align: left;
+    margin-left: 10px;
 }
 </style>

@@ -19,7 +19,7 @@ create table if not exists smov
     directors_id integer              Null,
     is_retrieve  TINYINT(1) Default 0 Null,
     is_active    TINYINT(1) Default 0 Null,
-    isch         TINYINT(1) Default 0 Null,
+    isch         TINYINT(1) Default 0 Null,   --什么意思？？？ 是否中文。。。
 );
 
 

@@ -71,6 +71,7 @@ pub struct SmovFile {
   pub extension: String, //拓展名
   pub format: String,    //格式化后名称
   pub isch: i32,
+  pub is_active: i32,
 }
 
 #[derive(Hash, Debug, Clone, Deserialize, Serialize)]
@@ -471,26 +472,34 @@ impl SmovFile {
       tx.commit().unwrap();
 
       Ok(())
-    })  
+    })
   }
 
   //正常的标准写法！
-  pub fn disable(id :Vec<i64>) -> Result<()> {
+  pub fn disable(id: Vec<i64>) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
       for y in id {
-        match tx.execute(
-          "update smov set is_active = 0 where id = ?1",
-          params![y],
-        ){
-            Ok(_) => todo!(),
-            Err(err) => return Err(err),
+        match tx.execute("update smov set is_active = 0 where id = ?1", params![y]) {
+          Ok(_) => {},
+          Err(err) => return Err(err),
         };
       }
       tx.commit()
     })
   }
- 
+
+  pub fn change_active_status(id: i64, status: i32) -> Result<()> {
+    exec(|conn| {
+      match conn.execute(
+        "update smov set is_active = ?1 where id = ?2",
+        params![status, id],
+      ) {
+        Ok(_) => Ok(()),
+        Err(err) => return Err(err),
+      }
+    })
+  }
 
   pub fn query_db_file_unid() -> Result<Vec<SmovFile>, rusqlite::Error> {
     exec(|conn| {
@@ -509,6 +518,7 @@ impl SmovFile {
           extension: row.get(6)?,     //拓展名
           format: String::from(""),   //格式化后名称
           isch: row.get(8)?,
+          is_active: 0,
         })
       })?;
 
@@ -525,7 +535,7 @@ impl SmovFile {
 
   pub fn query_by_id(id: &i64) -> Result<SmovFile, rusqlite::Error> {
     exec(|conn| {
-      conn.query_row_and_then("SELECT realname,seekname,path,len,created,modified,extension,format,isch FROM smov where id = ?1",
+      conn.query_row_and_then("SELECT realname,seekname,path,len,created,modified,extension,format,isch,is_active FROM smov where id = ?1",
          params![id], |row| {
           Ok(SmovFile {
             id: 0,
@@ -537,7 +547,8 @@ impl SmovFile {
             modified: row.get(5)?,      //本地修改时间
             extension: row.get(6)?,     //拓展名
             format: String::from(""),   //格式化后名称
-            isch: row.get(8)?
+            isch: row.get(8)?,
+            is_active:row.get(9)?,
           })
         })
     })
@@ -568,9 +579,9 @@ impl SmovFile {
   pub fn query_db_file_id_unseek() -> Result<Vec<SmovFile>, rusqlite::Error> {
     exec(|conn| {
       let mut stmt = conn.prepare(
-        "SELECT id,realname, seekname,path,len,created,modified,extension,format,isch
+        "SELECT id,realname, seekname,path,len,created,modified,extension,format,isch,is_active
             FROM smov
-            where is_retrieve = 0 and is_active = 1
+            where is_retrieve = 0 and is_active=1
               and not exists(select 1 from seek_queue where smov_id = smov.id)",
       )?;
       let smov_file_iter = stmt.query_map([], |row| {
@@ -585,6 +596,7 @@ impl SmovFile {
           extension: row.get(7)?, //拓展名
           format: row.get(8)?,    //格式化后名称
           isch: row.get(9)?,
+          is_active: row.get(10)?,
         })
       })?;
 
@@ -602,7 +614,7 @@ impl SmovFile {
   pub fn _query_db_file_id() -> Result<Vec<SmovFile>, rusqlite::Error> {
     exec(|conn| {
       let mut stmt = conn.prepare(
-        "SELECT id,realname,seekname,path,len,created,modified,extension,format,isch FROM smov",
+        "SELECT id,realname,seekname,path,len,created,modified,extension,format,isch,is_active FROM smov",
       )?;
       let smov_file_iter = stmt.query_map([], |row| {
         Ok(SmovFile {
@@ -616,6 +628,7 @@ impl SmovFile {
           extension: row.get(7)?, //拓展名
           format: row.get(8)?,    //格式化后名称
           isch: row.get(9)?,
+          is_active: row.get(10)?,
         })
       })?;
 
@@ -869,18 +882,21 @@ impl SmovFileSeek {
   }
 
   pub fn remove_smov_seek_status(id: i64) -> Result<()> {
-    exec(|conn| {
-      match conn.execute("delete from seek_queue where id = ?1", params![id]) {
+    exec(
+      |conn| match conn.execute("delete from seek_queue where id = ?1", params![id]) {
         Ok(_) => Ok(()),
         Err(e) => Err(e),
-      }
-    })
+      },
+    )
   }
 
-  pub fn change_status(id:i64 , status: i64) -> Result<()>{
+  pub fn change_status(id: i64, status: i64) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
-      match tx.execute("update seek_queue set status = ?1 where id = ?2", params![status,id]) {
+      match tx.execute(
+        "update seek_queue set status = ?1 where id = ?2",
+        params![status, id],
+      ) {
         Ok(_) => match tx.commit() {
           Ok(_) => Ok(()),
           Err(_) => return Err(Error::ExecuteReturnedResults),
@@ -888,6 +904,5 @@ impl SmovFileSeek {
         Err(_) => return Err(Error::ExecuteReturnedResults),
       }
     })
-
   }
 }

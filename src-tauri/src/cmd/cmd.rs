@@ -41,10 +41,7 @@ pub async fn retrieve_data(retrieving_smov: RetrievingSmov) -> Response<Option<i
     Err(e) => return Response::err(None, format!("{}", &e).as_str()),
   };
 
-  // "线程创建错误" return Response::err(Some(1),
-
   let handle = handle.join();
-
   match handle {
     Ok(e) => match e {
       Ok(n) => match n {
@@ -57,9 +54,16 @@ pub async fn retrieve_data(retrieving_smov: RetrievingSmov) -> Response<Option<i
           Response::new(404, Some(1), "not found")
         }
       },
-      Err(err) => Response::err(None,format!("{}", &err).as_str() ),
+      Err(err) => {
+        tracing::error!(message = format!("{}", err).as_str());
+        SmovFileSeek::change_status(retrieving_smov.id, 2).expect("出现了一个错误");
+        Response::err(None, format!("{}", &err).as_str())
+      }
     },
-    Err(_e) => Response::err(None, "出现了一个我不会解析的错误！"),
+    Err(err) => {
+      tracing::error!(message = format!("{:?}", err).as_str());
+      Response::err(None, "出现了一个我不会解析的错误！")
+    }
   }
 }
 
@@ -132,20 +136,31 @@ pub fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
 pub fn remove_smov_seek_status(id: i64) -> Response<Option<bool>> {
   match SmovFileSeek::remove_smov_seek_status(id) {
     Ok(_) => return Response::new(200, Some(true), "success"),
-    Err(err) =>{
+    Err(err) => {
       tracing::error!(message = format!("{}", err).as_str());
-      return Response::new(300, None, format!("{}", err).as_str())
-    } 
+      return Response::new(300, None, format!("{}", err).as_str());
+    }
   };
 }
 
 #[command]
-pub fn disable_smov(id :Vec<i64>) ->Response<Option<bool>>{
+pub fn disable_smov(id: Vec<i64>) -> Response<Option<bool>> {
   match SmovFile::disable(id) {
     Ok(_) => return Response::new(200, Some(true), "success"),
-    Err(err) =>{
+    Err(err) => {
       tracing::error!(message = format!("{}", err).as_str());
-      return Response::new(300, None, format!("{}", err).as_str())
-    } 
+      return Response::new(300, None, format!("{}", err).as_str());
+    }
+  };
+}
+
+#[command]
+pub fn change_active_status(id: i64, status: i32) -> Response<Option<bool>> {
+  match SmovFile::change_active_status(id,status) {
+    Ok(_) => return Response::new(200, Some(true), "success"),
+    Err(err) => {
+      tracing::error!(message = format!("{}", err).as_str());
+      return Response::new(300, None, format!("{}", err).as_str());
+    }
   };
 }

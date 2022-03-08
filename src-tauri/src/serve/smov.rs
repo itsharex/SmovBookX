@@ -91,7 +91,10 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           name: &name,
         };
 
-        let img_to_path = s.tidy().expect("整理文件夹出现错误");
+        let img_to_path = match s.tidy(){
+            Ok(n) => n,
+            Err(e) => return Err(e),
+        };
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
         let img = video_item.select("img").unwrap().next_back().unwrap();
