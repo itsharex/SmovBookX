@@ -5,32 +5,55 @@
             <el-button @click="click1" color="#626aef" style="color: rgb(255, 255, 255)">开始检索</el-button>
             <el-button @click="click2" color="#626aef" style="color: rgb(255, 255, 255)">停止检索</el-button>
             <el-button @click="click3" color="#626aef" style="color: rgb(255, 255, 255)">关闭窗口</el-button>
+
+            <el-button
+                @click="openStatus[2] = !openStatus[2]"
+                color="#626aef"
+                style="color: rgb(255, 255, 255)"
+            >错误是否可见</el-button>
+            <el-button
+                @click="openStatus[1] = !openStatus[1]"
+                color="#626aef"
+                style="color: rgb(255, 255, 255)"
+            >成功是否可见</el-button>
+            <el-button
+                @click="openStatus[3] = !openStatus[3]"
+                color="#626aef"
+                style="color: rgb(255, 255, 255)"
+            >正在检索是否可见</el-button>
+            <el-button
+                @click="openStatus[0] = !openStatus[0]"
+                color="#626aef"
+                style="color: rgb(255, 255, 255)"
+            >未检索是否可见</el-button>
         </div>
 
         <div class="smovList">
-            <div v-for="(item, index) in pool.tasks" :key="index" class="smov">
-                <!-- v-loading="item.params.status == 3" -->
-                <el-card
-                    class="smovCard"
-                    :class="item.params.status == 1 ? 'smovCard_suss' : item.params.status == 2 ? 'smovCard_fail' : item.params.status == 3 ? 'smovCard_seeking' : ''"
-                >
-                    <div class="smovName">{{ item.params.seekName }}</div>
-                    <!-- -->
-                    <div class="loadingDiv" v-if="item.params.status == 3">
-                        <el-icon color="#409EFC" class="is-loading loading">
-                            <loading />
-                        </el-icon>
-                    </div>
+            <div v-for="(item, index) in pool.tasks" :key="index">
+                <div class="smov" v-if="openStatus[item.params.status] == true">
+                    <el-card
+                        class="smovCard"
+                        :class="item.params.status == 1 ? 'smovCard_suss' : item.params.status == 2 ? 'smovCard_fail' : item.params.status == 3 ? 'smovCard_seeking' : ''"
+                    >
+                        <div class="smovName">{{ item.params.seekName }}</div>
+                        <!-- -->
+                        <div class="loadingDiv" v-if="item.params.status == 3">
+                            <el-icon color="#409EFC" class="is-loading loading">
+                                <loading />
+                            </el-icon>
+                        </div>
 
-                    <div class="close">
-                        <el-button
-                            type="text"
-                            :icon="Delete"
-                            circle
-                            @click="deleteTask(index, item.params.id, 'normal')"
-                        ></el-button>
-                    </div>
-                </el-card>
+                        <div class="close">
+                            <el-button
+                                type="text"
+                                v-if = "item.params.status != 3"
+                                :icon="Delete"
+                                circle
+                                @click="deleteTask(index, item.params.id)"
+                            ></el-button>
+                        </div>
+                    </el-card>
+                </div>
             </div>
         </div>
     </div>
@@ -53,9 +76,10 @@ export default defineComponent({
         let i = 1;
 
         const openStatus = ref({
-            none: false,
-            suss: false,
-            fail: false
+            0: true,  //wait //不应该是判断检索状态 应该是判断检索结果！
+            1: true,  //suss
+            2: true,  //fail
+            3: true  //run time
         })
 
         let pool = reactive(new ThreadPool.FixedThreadPool({
@@ -76,9 +100,12 @@ export default defineComponent({
 
         const getSeekSmov = () => {
             invoke("get_seek_smov").then((res: any) => {
-                res.data.forEach(item => {
-                    pool.addTask(retrieveData(item.seek_name, item.id));
-                });
+                if (res.data) {
+                    res.data.forEach(item => {
+                        pool.addTask(retrieveData(item.seek_name, item.id));
+                    });
+                }
+
             })
         }
 
@@ -86,6 +113,8 @@ export default defineComponent({
             addTaskEvent();
             getSeekSmov();
         })
+
+        const randomBoolean = () => Math.random() >= 0.5;
 
         const click = () => {
             pool.addTask(retrieveData("asdasd", i));
@@ -104,10 +133,10 @@ export default defineComponent({
             getCurrent().hide();
         }
 
-        const deleteTask = (index: number, id: number, type: String) => {
+        const deleteTask = (index: number, id: number) => {
             invoke("remove_smov_seek_status", { id: id }).then((res: any) => {
                 if (res.code == 200) {
-                    pool.removeTask(index, type);
+                    pool.removeTask(index);
                 } else {
                     ElMessage.error('移除检索队列出现错误');
                     return;
@@ -125,16 +154,28 @@ export default defineComponent({
                 params: params,
                 processor: (params) => {
                     return new Promise(resolve => {
-                        setTimeout(() => {
-                            // console.log("正在检索", seekName);
-                            resolve(1);
-                        }, 2000);
+                        // setTimeout(() => {
+                        //     // console.log("正在检索", seekName);
+                        //     const b = randomBoolean();
 
-                        // invoke("retrieve_data",params).then((res) => {
-                        //     console.log(res);
-                        // }).finally(() => {
-                        //     resolve(params);
-                        // });
+                        //     if (b) {
+                        //         resolve(1);
+                        //     } else {
+                        //         resolve(2);
+                        //     }
+
+                        // }, 2000);
+
+                        invoke("retrieve_data", params).then((res: any) => {
+                            if (res.code == 200) {
+                                resolve(1);
+                            } else {
+                                resolve(2);
+                            }
+                            // resolve(params);
+                        });
+
+
 
                     });
                 },

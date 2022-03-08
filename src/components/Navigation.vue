@@ -32,7 +32,7 @@ export default defineComponent({
             webview = new WebviewWindow('seek', {
                 url: '/seek',
                 title: '检索列表',
-                width: 300,
+                width: 500,
                 height: 700,
                 center: true,
                 visible: false,

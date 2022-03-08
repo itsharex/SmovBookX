@@ -21,7 +21,7 @@ pub fn query_new_file_todb() -> Response<String> {
 }
 
 #[command]
-pub async fn retrieve_data(seek_name: String, smov_id: i64) -> Response<Option<i32>> {
+pub async fn retrieve_data(seek_name: String, id: i64) -> Response<Option<i32>> {
   let format = SmovName::format_smov_name(&seek_name);
   let handle = thread::Builder::new()
     .name(String::from(&seek_name))
@@ -29,7 +29,7 @@ pub async fn retrieve_data(seek_name: String, smov_id: i64) -> Response<Option<i
       let msg = format!("开始检索{}", &seek_name);
       info!(target: "frontend_log",message = msg.as_str());
       let s: bool = tauri::async_runtime::block_on(async move {
-        let a = smov::retrieve_smov(format, smov_id).await.unwrap();
+        let a = smov::retrieve_smov(format, id).await.unwrap();
         info!("{}", "线程检索结束");
         return a;
       });

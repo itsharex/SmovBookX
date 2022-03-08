@@ -1,6 +1,6 @@
-use std::path::PathBuf;
+use std::{path::PathBuf};
 
-use rusqlite::{params, Connection, Result};
+use rusqlite::{params, Connection, Result, Error};
 use serde::{Deserialize, Serialize};
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
@@ -815,12 +815,14 @@ impl SmovFileSeek {
   pub fn remove_smov_seek_status(id: i64) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
-      tx.execute("update smov set retrieving =0 where id = ?1", params![id])
-        .expect("修改状态出现错误！");
-
-      tx.commit().expect("修改状态出现错误！");
-
-      Ok(())
+      match tx.execute("update smov set retrieving =0 where id = ?1", params![id])
+        {
+            Ok(_) => match tx.commit(){
+                Ok(_) => Ok(()),
+                Err(_) => return Err(Error::ExecuteReturnedResults),
+            },
+            Err(_) =>  return Err(Error::ExecuteReturnedResults),
+        }
     })
   }
 }

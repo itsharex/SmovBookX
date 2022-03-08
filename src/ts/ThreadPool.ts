@@ -26,8 +26,6 @@ export module ThreadPool {
         runningFlag: any;
         runningProcessorCount: number;
         tasks: any[];
-        sussTasks: any[];
-        failTasks: any[];
         size: any;
         index: number;
         window: any;
@@ -37,9 +35,6 @@ export module ThreadPool {
 
             this.tasks = [];
             this.addTasks(...tasks);
-
-            this.sussTasks = [];
-            this.failTasks = [];
 
             this.runningFlag = runningFlag;
             this.runningProcessorCount = 0;  //正在执行中的线程
@@ -102,14 +97,12 @@ export module ThreadPool {
             }
         }
 
-        removeTask(index, type) {
-            if (type = 'normal') {
-                this.tasks.splice(index, 1);
-            } else if (type = 'suss') {
-                this.sussTasks.splice(index, 1);
-            } else if (type = 'fail') {
-                this.failTasks.splice(index, 1);
-            }
+        removeTask(index) {
+            this.tasks.splice(index, 1);
+        }
+
+        removeTaskByid(id) {
+
         }
 
         processTask() {
@@ -134,7 +127,7 @@ export module ThreadPool {
                         task.params.status = data;
                     }).finally(() => {
                         this.runningProcessorCount--;
-                        task.params.status = 1;
+                        //task.params.status = 1;
                         if (cb instanceof Promise) {
                             cb.finally(() => {
                                 this.processTask();
