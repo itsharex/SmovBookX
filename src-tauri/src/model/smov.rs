@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use rusqlite::{params, Connection, Error, Result};
 use serde::{Deserialize, Serialize};
@@ -108,6 +108,7 @@ pub struct SMOVBOOK {
 fn create_sqlite_connection() -> Result<Connection> {
   let database = PathBuf::from(&crate::app::APP.lock().app_dir).join("SmovBook.db");
   let conn = Connection::open(database)?;
+  conn.busy_timeout(Duration::new(15,0))?;
   Ok(conn)
 }
 /// 封装一个方法，获取连接
@@ -881,13 +882,27 @@ impl SmovFileSeek {
     })
   }
 
-  pub fn remove_smov_seek_status(id: i64) -> Result<()> {
-    exec(
-      |conn| match conn.execute("delete from seek_queue where id = ?1", params![id]) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(e),
-      },
-    )
+  // pub fn remove_smov_seek_status(id: Vec<i64>) -> Result<()> {
+  //   exec(
+  //     |conn| 
+  //     match conn.execute("delete from seek_queue where id = ?1", params![id]) {
+  //       Ok(_) => Ok(()),
+  //       Err(e) => Err(e),
+  //     },
+  //   )
+  // }
+
+  pub fn remove_smov_seek_status(id: Vec<i64>) -> Result<()> {
+    exec(|conn| {
+      let tx = conn.transaction()?;
+      for y in id {
+        match tx.execute("delete from seek_queue where id = ?1", params![y]) {
+          Ok(_) => {},
+          Err(err) => return Err(err),
+        };
+      }
+      tx.commit()
+    })
   }
 
   pub fn change_status(id: i64, status: i64) -> Result<()> {

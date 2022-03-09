@@ -22,6 +22,8 @@ import { listen } from '@tauri-apps/api/event';
 import { Log } from '../type/log'
 import { CurentTime } from '../util/time'
 
+//我需要一个seek页面的监听器 当传入的数量大于一定值时 我需要他转起来
+
 export default defineComponent({
   components: {},
   name: "Log",

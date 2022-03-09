@@ -133,7 +133,7 @@ pub async fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
 }
 
 #[command]
-pub async fn remove_smov_seek_status(id: i64) -> Response<Option<bool>> {
+pub async fn remove_smov_seek_status(id: Vec<i64>) -> Response<Option<bool>> {
   match SmovFileSeek::remove_smov_seek_status(id) {
     Ok(_) => return Response::new(200, Some(true), "success"),
     Err(err) => {

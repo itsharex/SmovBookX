@@ -65,13 +65,13 @@
 </template>
 
 <script lang='ts'>
-import { defineComponent, ref, reactive, inject, watch, getCurrentScope, onMounted } from 'vue';
+import { defineComponent, ref, reactive, inject, watch, getCurrentScope, onMounted, onUpdated, nextTick } from 'vue';
 import { ThreadPool } from '../ts/ThreadPool';
 import { invoke, } from "@tauri-apps/api/tauri";
 import { getAll, getCurrent } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
 import { Loading, Delete } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElLoading } from 'element-plus';
 import XEUtils from 'xe-utils';
 export default defineComponent({
     name: 'Seek',
@@ -95,21 +95,45 @@ export default defineComponent({
             autoRun: false
         }))
 
+        // onUpdated(() => {
+        //     scrollToBottom();
+        // })
+
+        // const scrollToBottom = () => {
+        //     nextTick(() => {
+        //         loading.value.visible.value = false;
+        //     }
+        //     )
+        // }
+
+
+
         //获取检索队列
         const addTaskEvent = () => {
             !(async () => await listen('addTask', (event: any) => {
-                console.log(event);
-                event.payload.forEach(item => {
+                // const loading = ElLoading.service({
+                //     lock: true,
+                //     text: '正在处理数据',
+                //     // background: 'rgba(0, 0, 0, 0.7)',
+                // })
+                console.log("检测到数据")
+                console.log(Date.now())
+                event.payload.forEach((item: any) => {
                     pool.addTask(retrieveData(item));
                 });
+                nextTick(() => {
+                    // loading.close();
+                    console.log("数据加载完成")
+                    console.log(Date.now())
+                }
+                )
             }))()
         }
 
         const getSeekSmov = () => {
             invoke("get_seek_smov").then((res: any) => {
                 if (res.data) {
-                    res.data.forEach(item => {
-                        console.log(item);
+                    res.data.forEach((item: any) => {
                         pool.addTask(retrieveData(item));
                     });
                 }
@@ -117,18 +141,77 @@ export default defineComponent({
             })
         }
 
-        const removeAll = () => {
-            XEUtils.arrayEach(pool.tasks, (item, key) => {
-                deleteTask(0, item.params.id);
-            })
+        const array_diff = ($array_1: any[], $array_2: any[]) => {
+            //将array2转化为一个Object key名为id 值名为undifind 
+            let array_2 = {};
+            XEUtils.arrayEach($array_2, (item) => {
+                array_2[item.params.id] = 1;
+            });
+            //通过判断Obj中是否有相应key的对象 过滤出需要的
+            const newArr = XEUtils.filter($array_1, item => array_2[item.params.id] != 1);
 
-            console.log("是否异步");
+            // console.log(newArr)
+
+            return $array_1;
         }
 
         onMounted(() => {
             addTaskEvent();
             getSeekSmov();
-        })
+        });
+
+        const removeAll = () => {
+            // XEUtils.arrayEach(pool.tasks, (item, key) => {
+            //     deleteTask(0, item.params.id);
+            // })
+            // const getAllHistory = async (selectRecords) => {
+            //     let allHistory = [] as any[];
+            //     XEUtils.arrayEach(selectRecords, (item) => {
+            //       allHistory.push((async (item) => {
+            //             return await getChangePromise(item)
+            //         })(item))
+            //     });
+
+            //     return await Promise.all(allHistory);
+            // };
+
+            // const getChangePromise = (row: any) => {
+            //     return new Promise(function (resolve, reject) {
+            //         invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
+            //             if (res.code == 200) {
+            //                 // const $table = xTable.value;
+            //                 // $table.remove(row);
+            //                 // XEUtils.remove(FileData, toitem => toitem === row)
+            //             } else {
+            //                 ElMessage.error('关闭出现了一个问题' + res.msg)
+            //             }
+            //         }).finally(() => {
+            //             resolve(row);
+            //         })
+            //     });
+            // }
+
+            // loading.value.visible.value = true;
+
+            const data = XEUtils.map(pool.tasks, item => item.params.id);
+
+            invoke("remove_smov_seek_status", { id: data }).then((res: any) => {
+                if (res.code == 200) {
+                    ElMessage({
+                        message: '将' + data.length + '条数据移出队列',
+                        type: 'success',
+                    })
+                    pool.tasks = [];
+                    pool.index = 0;
+                    // XEUtils.remove(pool.tasks, item => item.id === id)
+                } else {
+                    ElMessage.error('移除检索队列出现错误');
+                    return;
+                }
+            });
+
+
+        }
 
         const randomBoolean = () => Math.random() >= 0.5;
 
@@ -153,8 +236,9 @@ export default defineComponent({
         }
 
         const deleteTask = (index: number, id: number) => {
-            invoke("remove_smov_seek_status", { id: id }).then((res: any) => {
+            invoke("remove_smov_seek_status", { id: [id] }).then((res: any) => {
                 if (res.code == 200) {
+
                     pool.removeTask(index);
                     // XEUtils.remove(pool.tasks, item => item.id === id)
                 } else {
@@ -168,7 +252,7 @@ export default defineComponent({
 
             return new ThreadPool.Task({
                 params: item,
-                processor: (params) => {
+                processor: (params: any) => {
                     return new Promise(resolve => {
                         invoke("retrieve_data", { retrievingSmov: params }).then((res: any) => {
                             if (res.code == 200) {
@@ -179,7 +263,7 @@ export default defineComponent({
                         });
                     });
                 },
-                callback: (data) => {
+                callback: (data: any) => {
                     // console.log(`线程 ${pool.tasks.length}, rst is`, data);
                 }
             });

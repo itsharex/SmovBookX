@@ -136,6 +136,9 @@ export default defineComponent({
           )
         }
 
+        console.log("发送数据")
+        console.log(Date.now())
+
         invoke("change_seek_status", { smov: tasks }).then((res: any) => {
           if (res.code == 200) {
             ElMessage({
@@ -145,9 +148,6 @@ export default defineComponent({
           } else {
             ElMessage.error('插入到检索队列出现错误,' + res.msg)
           }
-          //是否有删除原始数据的更优解法
-          //initFn();
-          //table.loading = false;
         }
         ).finally(() => {
           table.loading = false;
@@ -166,36 +166,30 @@ export default defineComponent({
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
 
-      // const len = selectRecords.length;
+      const data = XEUtils.map(selectRecords, item => item.id);
 
-      // for (let i = 0; i < len; i++) {
-      //   let row = selectRecords[0];
-      //   console.log(row.id);
-      //   invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
-      //     if (res.code == 200) {
-      //       const $table = xTable.value;
-      //       $table.remove(row);
-      //       XEUtils.remove(FileData, toitem => toitem === row)
-      //     } else {
-      //       ElMessage.error('关闭出现了一个问题' + res.msg)
-      //     }
-      //   })
+      invoke("disable_smov", { id: data }).then((res: any) => {
+        if (res.code == 200) {
+          table.loading = false;
+          $table.removeCheckboxRow();
 
-      // }
-
-      
-
-      getAllHistory(selectRecords).then((res) => {
-        console.log(res);
-        table.loading = false;
-        $table.removeCheckboxRow();
-
-        ElMessage({
-          message: '共' + selectRecords.length + '条数据被关闭',
-          type: 'success',
-        })
+          ElMessage({
+            message: '共' + selectRecords.length + '条数据被关闭',
+            type: 'success',
+          })
+        }
       })
 
+
+      // getAllHistory(selectRecords).then((res) => {
+      //   table.loading = false;
+      //   $table.removeCheckboxRow();
+
+      //   ElMessage({
+      //     message: '共' + selectRecords.length + '条数据被关闭',
+      //     type: 'success',
+      //   })
+      // })
 
       // initFn();
     }
@@ -229,9 +223,6 @@ export default defineComponent({
       return new Promise(function (resolve, reject) {
         invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
           if (res.code == 200) {
-            // const $table = xTable.value;
-            // $table.remove(row);
-            // XEUtils.remove(FileData, toitem => toitem === row)
           } else {
             ElMessage.error('关闭出现了一个问题' + res.msg)
           }
