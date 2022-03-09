@@ -102,7 +102,7 @@ pub fn query_folder() -> Response<Option<Vec<Folder>>> {
 }
 
 #[command]
-pub fn get_all_smov() -> Response<Option<Vec<Smov>>> {
+pub async fn get_all_smov() -> Response<Option<Vec<Smov>>> {
   match Smov::get_all_smov() {
     Ok(e) => return Response::new(200, Some(e), "success"),
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
@@ -110,7 +110,7 @@ pub fn get_all_smov() -> Response<Option<Vec<Smov>>> {
 }
 
 #[command]
-pub fn change_seek_status(smov: Vec<RetrievingSmov>, window: Window) -> Response<Option<bool>> {
+pub async fn change_seek_status(smov: Vec<RetrievingSmov>, window: Window) -> Response<Option<bool>> {
   let mut to_smov = smov.clone();
 
   match SmovFileSeek::change_seek_status(&mut to_smov) {
@@ -125,7 +125,7 @@ pub fn change_seek_status(smov: Vec<RetrievingSmov>, window: Window) -> Response
 }
 
 #[command]
-pub fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
+pub async fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
   match SmovFileSeek::get_seek_smov() {
     Ok(e) => return Response::new(200, Some(e), "success"),
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
@@ -133,7 +133,7 @@ pub fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
 }
 
 #[command]
-pub fn remove_smov_seek_status(id: i64) -> Response<Option<bool>> {
+pub async fn remove_smov_seek_status(id: i64) -> Response<Option<bool>> {
   match SmovFileSeek::remove_smov_seek_status(id) {
     Ok(_) => return Response::new(200, Some(true), "success"),
     Err(err) => {
@@ -144,7 +144,7 @@ pub fn remove_smov_seek_status(id: i64) -> Response<Option<bool>> {
 }
 
 #[command]
-pub fn disable_smov(id: Vec<i64>) -> Response<Option<bool>> {
+pub async fn disable_smov(id: Vec<i64>) -> Response<Option<bool>> {
   match SmovFile::disable(id) {
     Ok(_) => return Response::new(200, Some(true), "success"),
     Err(err) => {
@@ -155,7 +155,7 @@ pub fn disable_smov(id: Vec<i64>) -> Response<Option<bool>> {
 }
 
 #[command]
-pub fn change_active_status(id: i64, status: i32) -> Response<Option<bool>> {
+pub async fn change_active_status(id: i64, status: i32) -> Response<Option<bool>> {
   match SmovFile::change_active_status(id,status) {
     Ok(_) => return Response::new(200, Some(true), "success"),
     Err(err) => {

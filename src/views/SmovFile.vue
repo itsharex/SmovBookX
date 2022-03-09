@@ -13,17 +13,6 @@
       />
     </div>
 
-    <!-- <vxe-toolbar perfect>
-   
-    <template #buttons>-->
-    <!-- <vxe-button type="text" icon="fa fa-plus" content="加入检索列表" @click="getSelectEvent"></vxe-button> -->
-    <!-- <el-button type="primary" :icon="Files" :loading="false">加入检索列表</el-button> -->
-    <!-- <vxe-input v-model="search" type="search" placeholder="全表搜索" @keyup="searchEvent"></vxe-input> -->
-    <!-- <vxe-button type="text" icon="fa fa-trash-o" content="删除"></vxe-button>
-    <vxe-button type="text" icon="fa fa-save" content="保存"></vxe-button>-->
-    <!-- </template>
-    </vxe-toolbar>-->
-
     <vxe-table
       resizable
       show-overflow
@@ -40,10 +29,6 @@
       :scroll-y="{ gt: 100 }"
     >
       <template #empty>
-        <!-- <div class="noData">
-          <img src="https://pic2.zhimg.com/50/v2-f7031359103859e1ed38559715ef5f3f_hd.gif" />
-          <p>亲，没有更多数据了！</p>
-        </div>-->
         <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
       </template>
       <vxe-column type="seq" width="60"></vxe-column>
@@ -67,14 +52,6 @@
       </vxe-column>
       <vxe-column title="操作" width="60">
         <template #default="{ row }">
-          <!-- <el-switch
-              v-model="row.is_active"
-
-              :active-value="1"
-              :inactive-value="0"
-              @change="changActive(row)"
-          />-->
-          <!-- <vxe-switch v-model="row.is_active" :open-value="1"  :close-value="2" @change="changActive(row)" ></vxe-switch> -->
           <el-button type="warning" :icon="Close" size="small" circle @click="changActive(row)"></el-button>
         </template>
       </vxe-column>
@@ -86,7 +63,6 @@
 import { defineComponent, ref, onMounted, reactive } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
-import { ThreadPool } from '../ts/ThreadPool';
 import XEUtils from 'xe-utils';
 import { ElMessage } from "element-plus";
 import { Files, Refresh, Search, Close } from '@element-plus/icons-vue';
@@ -100,13 +76,6 @@ export default defineComponent({
     const table = reactive({
       loading: false,
     });
-
-    // VXETable.renderer.add('NotData', {
-    //   // 空内容模板
-    //   renderEmpty() {
-    //     return [<span><img src='https://pic2.zhimg.com/50/v2-f7031359103859e1ed38559715ef5f3f_hd.gif'/> <p>亲，没有更多数据了！</p> </span>]
-    //   }
-    // })
 
     const xTable = ref({} as VxeTableInstance);
 
@@ -192,31 +161,47 @@ export default defineComponent({
     };
 
     //批量修改 需要优化！ 批量是否重新渲染的代价比较低
-    const changeStatusAll = () => {
+    const changeStatusAll = async () => {
       table.loading = true;
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
-      selectRecords.forEach(item => {
-        // invoke("change_active_status", { id: item.id, status: 0 }).then((res: any) => {
-        //   if (res.code == 200) {
-        //     const $table = xTable.value;
-        //   } else {
-        //     ElMessage.error('关闭出现了一个问题' + res.msg)
-        //   }
-        // })
-        changActive(item);
-      });
 
-      table.loading = false;
+      // const len = selectRecords.length;
 
-      ElMessage({
-        message: '共' + selectRecords.length + '条数据被关闭',
-        type: 'success',
+      // for (let i = 0; i < len; i++) {
+      //   let row = selectRecords[0];
+      //   console.log(row.id);
+      //   invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
+      //     if (res.code == 200) {
+      //       const $table = xTable.value;
+      //       $table.remove(row);
+      //       XEUtils.remove(FileData, toitem => toitem === row)
+      //     } else {
+      //       ElMessage.error('关闭出现了一个问题' + res.msg)
+      //     }
+      //   })
+
+      // }
+
+      
+
+      getAllHistory(selectRecords).then((res) => {
+        console.log(res);
+        table.loading = false;
+        $table.removeCheckboxRow();
+
+        ElMessage({
+          message: '共' + selectRecords.length + '条数据被关闭',
+          type: 'success',
+        })
       })
+
+
       // initFn();
     }
 
-    const changActive = (row) => {
+    const changActive = (row: any) => {
+      console.log(row.id);
       invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
         if (res.code == 200) {
           const $table = xTable.value;
@@ -225,8 +210,35 @@ export default defineComponent({
         } else {
           ElMessage.error('关闭出现了一个问题' + res.msg)
         }
+      }).finally(() => {
+        // resolve();
       })
+    }
 
+    const getAllHistory = async (selectRecords) => {
+      let allHistory = [] as any[]
+      selectRecords.forEach((item) => {
+        allHistory.push((async (item) => {
+          return await getChangePromise(item)
+        })(item))
+      })
+      return await Promise.all(allHistory);
+    }
+
+    const getChangePromise = (row: any) => {
+      return new Promise(function (resolve, reject) {
+        invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
+          if (res.code == 200) {
+            // const $table = xTable.value;
+            // $table.remove(row);
+            // XEUtils.remove(FileData, toitem => toitem === row)
+          } else {
+            ElMessage.error('关闭出现了一个问题' + res.msg)
+          }
+        }).finally(() => {
+          resolve(row);
+        })
+      });
     }
 
     onMounted(() => {
@@ -327,3 +339,5 @@ export default defineComponent({
   }
 }
 </style>
+
+

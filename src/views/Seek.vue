@@ -121,6 +121,8 @@ export default defineComponent({
             XEUtils.arrayEach(pool.tasks, (item, key) => {
                 deleteTask(0, item.params.id);
             })
+
+            console.log("是否异步");
         }
 
         onMounted(() => {
@@ -153,7 +155,8 @@ export default defineComponent({
         const deleteTask = (index: number, id: number) => {
             invoke("remove_smov_seek_status", { id: id }).then((res: any) => {
                 if (res.code == 200) {
-                    XEUtils.throttle(pool.removeTask(index) as any, 100)
+                    pool.removeTask(index);
+                    // XEUtils.remove(pool.tasks, item => item.id === id)
                 } else {
                     ElMessage.error('移除检索队列出现错误');
                     return;
