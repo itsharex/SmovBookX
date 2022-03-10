@@ -34,8 +34,21 @@
             >超级牛逼之一键删除</el-button>
         </div>
 
+        <div v-if="load" class="load">
+            <span>Loading...</span>
+        </div>
+
         <div class="smovList">
-            <!-- 大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加  添加一个进度条 ， 在数据传入时 进度条显示-->
+            <!-- 
+              大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加  
+              测试发现四千条数据的传输时间已经到了300ms 这个速度非常不满意 对于用户可能要做 表格loading 加 分批传输 加 进度条的的功能
+              但是进度条还有个问题 渲染是个异步的过程 在渲染时很可能会出现 几百条数据一次性 突然出现 这个时肯定的 有没有其他办法优化用户的体验
+
+              当前方案
+              1.在数据进入时就给一个 左上角的 loading 代表数据正在进入
+              2.压缩传入的数据  传入的数据时间 至少应该要控制在 200ms内
+              3.忽略用户感受
+            -->
             <div v-for="(item, index) in pool.tasks" :key="index">
                 <div class="smov" v-if="openStatus[item.params.status] == true">
                     <el-card
@@ -82,6 +95,8 @@ export default defineComponent({
 
         let i = 1;
 
+        const load = ref(false);
+
         const openStatus = ref({
             0: true,  //wait //不应该是判断检索状态 应该是判断检索结果！
             1: true,  //suss
@@ -96,16 +111,16 @@ export default defineComponent({
             autoRun: false
         }))
 
-        // onUpdated(() => {
-        //     scrollToBottom();
-        // })
+        onUpdated(() => {
+            scrollToBottom();
+        })
 
-        // const scrollToBottom = () => {
-        //     nextTick(() => {
-        //         loading.value.visible.value = false;
-        //     }
-        //     )
-        // }
+        const scrollToBottom = () => {
+            nextTick(() => {
+                load.value = false;
+            }
+            )
+        }
 
 
 
@@ -114,20 +129,22 @@ export default defineComponent({
             !(async () => await listen('addTask', (event: any) => {
                 console.log("检测到数据")
                 console.log(Date.now())
+                load.value = true;
                 let s = [] as any[];
                 event.payload.forEach((item: any) => {
                     pool.addTask(retrieveData(item));
                 });
-                nextTick(() => {
-                    // loading.close();
-                    console.log("数据加载完成")
-                    console.log(Date.now())
-                }
-                )
+                // nextTick(() => {
+                //     load.value = false;
+                //     console.log("数据加载完成")
+                //     console.log(Date.now())
+                // }
+                // )
             }))()
         }
 
         const getSeekSmov = () => {
+            load.value = true;
             invoke("get_seek_smov").then((res: any) => {
                 if (res.data) {
                     res.data.forEach((item: any) => {
@@ -275,7 +292,8 @@ export default defineComponent({
             openStatus,
             Delete,
             deleteTask,
-            removeAll
+            removeAll,
+            load
         };
     }
 })
@@ -364,5 +382,12 @@ export default defineComponent({
     width: 80%;
     text-align: left;
     margin-left: 10px;
+}
+
+.load {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #ffe0e0;
 }
 </style>
