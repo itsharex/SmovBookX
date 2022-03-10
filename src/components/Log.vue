@@ -27,7 +27,7 @@ import { CurentTime } from '../util/time'
 export default defineComponent({
   components: {},
   name: "Log",
-  setup() {
+  setup() {   
     const isOpen = ref(false);
     const logList = ref([] as any[]);
     const log = inject('log') as any;

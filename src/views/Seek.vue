@@ -118,11 +118,11 @@ export default defineComponent({
         const scrollToBottom = () => {
             nextTick(() => {
                 load.value = false;
+                console.log(Date.now())
+                console.log("加载结束")
             }
             )
         }
-
-
 
         //获取检索队列
         const addTaskEvent = () => {
@@ -130,6 +130,7 @@ export default defineComponent({
                 console.log("检测到数据")
                 console.log(Date.now())
                 load.value = true;
+                console.log(load.value)
                 let s = [] as any[];
                 event.payload.forEach((item: any) => {
                     pool.addTask(retrieveData(item));
