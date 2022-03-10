@@ -120,22 +120,26 @@ pub async fn change_seek_status(
   match SmovFileSeek::change_seek_status(&mut to_smov) {
     Ok(_) => {
       //对数据进行分批次传输 不然渲染压力太大了
-      let size: f32 = 500.00;
-      let all_size: f32 = to_smov.len() as f32;
-      let page_size = (all_size / size).ceil() as i32;
-      info!(message=format!("{},{},{}",size,all_size,page_size).as_str());
-      for i in 0..page_size {
-        if i.eq(&(&page_size-1)) {
-          window
-            .emit_to("seek", "addTask", &to_smov)
-            .expect("向另一个窗口传送数据出现错误");
-        } else {
-          window
-            .emit_to("seek", "addTask", &to_smov.split_off(500))
-            .expect("向另一个窗口传送数据出现错误");
-          thread::sleep(Duration::from_millis(500));  //分批的状态并不适合
-        }
-      }
+      // let size: f32 = 500.00;
+      // let all_size: f32 = to_smov.len() as f32;
+      // let page_size = (all_size / size).ceil() as i32;
+      // info!(message=format!("{},{},{}",size,all_size,page_size).as_str());
+      // for i in 0..page_size {
+      //   if i.eq(&(&page_size-1)) {
+      //     window
+      //       .emit_to("seek", "addTask", &to_smov)
+      //       .expect("向另一个窗口传送数据出现错误");
+      //   } else {
+      //     window
+      //       .emit_to("seek", "addTask", &to_smov.split_off(500))
+      //       .expect("向另一个窗口传送数据出现错误");
+      //     thread::sleep(Duration::from_millis(500));  //分批的状态并不适合
+      //   }
+      // }
+
+      window
+      .emit_to("seek", "addTask", &to_smov)
+      .expect("向另一个窗口传送数据出现错误");
 
       return Response::new(200, Some(true), "success");
     }

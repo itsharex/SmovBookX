@@ -35,7 +35,7 @@
         </div>
 
         <div class="smovList">
-            <!-- 大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加 -->
+            <!-- 大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加  添加一个进度条 ， 在数据传入时 进度条显示-->
             <div v-for="(item, index) in pool.tasks" :key="index">
                 <div class="smov" v-if="openStatus[item.params.status] == true">
                     <el-card
