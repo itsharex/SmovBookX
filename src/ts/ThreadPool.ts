@@ -1,12 +1,15 @@
 import { getAll } from '@tauri-apps/api/window';
+import XEUtils from 'xe-utils';
 
 export module ThreadPool {
     export class Task {
         callback: (any) => void;
         params: any;
+        id: number;
         processor: (any) => Promise<unknown>;
         constructor({ params, processor, callback }) {
             this.params = params;
+            this.id = params.id;
             if (typeof processor === 'function') {
                 this.processor = processor;
             }
@@ -101,6 +104,7 @@ export module ThreadPool {
             this.index--;
             //是什么导致了删除到一定时间就不删除了呢 因为数量变了 下标也tm变了啊
             this.tasks.splice(index, 1);
+            // XEUtils.remove(this.tasks, item => item.id === index)
         }
 
         removeTaskByid(id) {

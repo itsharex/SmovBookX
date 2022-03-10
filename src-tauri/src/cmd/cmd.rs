@@ -1,4 +1,5 @@
 use std::thread;
+use std::time::Duration;
 
 use crate::model::folder::Folder;
 use crate::model::smov::RetrievingSmov;
@@ -110,14 +111,32 @@ pub async fn get_all_smov() -> Response<Option<Vec<Smov>>> {
 }
 
 #[command]
-pub async fn change_seek_status(smov: Vec<RetrievingSmov>, window: Window) -> Response<Option<bool>> {
+pub async fn change_seek_status(
+  smov: Vec<RetrievingSmov>,
+  window: Window,
+) -> Response<Option<bool>> {
   let mut to_smov = smov.clone();
 
   match SmovFileSeek::change_seek_status(&mut to_smov) {
     Ok(_) => {
-      window
-        .emit_to("seek", "addTask", &to_smov)
-        .expect("向另一个窗口传送数据出现错误");
+      //对数据进行分批次传输 不然渲染压力太大了
+      let size: f32 = 500.00;
+      let all_size: f32 = to_smov.len() as f32;
+      let page_size = (all_size / size).ceil() as i32;
+      info!(message=format!("{},{},{}",size,all_size,page_size).as_str());
+      for i in 0..page_size {
+        if i.eq(&(&page_size-1)) {
+          window
+            .emit_to("seek", "addTask", &to_smov)
+            .expect("向另一个窗口传送数据出现错误");
+        } else {
+          window
+            .emit_to("seek", "addTask", &to_smov.split_off(500))
+            .expect("向另一个窗口传送数据出现错误");
+          thread::sleep(Duration::from_millis(500));  //分批的状态并不适合
+        }
+      }
+
       return Response::new(200, Some(true), "success");
     }
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
@@ -156,7 +175,7 @@ pub async fn disable_smov(id: Vec<i64>) -> Response<Option<bool>> {
 
 #[command]
 pub async fn change_active_status(id: i64, status: i32) -> Response<Option<bool>> {
-  match SmovFile::change_active_status(id,status) {
+  match SmovFile::change_active_status(id, status) {
     Ok(_) => return Response::new(200, Some(true), "success"),
     Err(err) => {
       tracing::error!(message = format!("{}", err).as_str());

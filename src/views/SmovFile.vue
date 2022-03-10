@@ -118,7 +118,6 @@ export default defineComponent({
     }
 
     const getSelectEvent = () => {
-
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
       let tasks: any[] = [];
@@ -136,8 +135,8 @@ export default defineComponent({
           )
         }
 
-        console.log("发送数据")
-        console.log(Date.now())
+        // console.log("发送数据")
+        // console.log(Date.now())
 
         invoke("change_seek_status", { smov: tasks }).then((res: any) => {
           if (res.code == 200) {

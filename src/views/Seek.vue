@@ -35,6 +35,7 @@
         </div>
 
         <div class="smovList">
+            <!-- 大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加 -->
             <div v-for="(item, index) in pool.tasks" :key="index">
                 <div class="smov" v-if="openStatus[item.params.status] == true">
                     <el-card
@@ -111,13 +112,9 @@ export default defineComponent({
         //获取检索队列
         const addTaskEvent = () => {
             !(async () => await listen('addTask', (event: any) => {
-                // const loading = ElLoading.service({
-                //     lock: true,
-                //     text: '正在处理数据',
-                //     // background: 'rgba(0, 0, 0, 0.7)',
-                // })
                 console.log("检测到数据")
                 console.log(Date.now())
+                let s = [] as any[];
                 event.payload.forEach((item: any) => {
                     pool.addTask(retrieveData(item));
                 });
@@ -236,6 +233,7 @@ export default defineComponent({
         }
 
         const deleteTask = (index: number, id: number) => {
+            pool.tasks[index].params.status = 3;
             invoke("remove_smov_seek_status", { id: [id] }).then((res: any) => {
                 if (res.code == 200) {
 
