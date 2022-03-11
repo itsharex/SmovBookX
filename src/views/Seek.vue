@@ -5,6 +5,7 @@
             <el-button @click="click1" color="#626aef" style="color: rgb(255, 255, 255)">开始检索</el-button>
             <el-button @click="click2" color="#626aef" style="color: rgb(255, 255, 255)">停止检索</el-button>
             <el-button @click="click3" color="#626aef" style="color: rgb(255, 255, 255)">关闭窗口</el-button>
+            <el-button @click="getSeekSmov" color="#626aef" style="color: rgb(255, 255, 255)">重载数据</el-button>
 
             <el-button
                 @click="openStatus[2] = !openStatus[2]"
@@ -43,11 +44,16 @@
               大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加  
               测试发现四千条数据的传输时间已经到了300ms 这个速度非常不满意 对于用户可能要做 表格loading 加 分批传输 加 进度条的的功能
               但是进度条还有个问题 渲染是个异步的过程 在渲染时很可能会出现 几百条数据一次性 突然出现 这个时肯定的 有没有其他办法优化用户的体验
-
+              
               当前方案
               1.在数据进入时就给一个 左上角的 loading 代表数据正在进入
               2.压缩传入的数据  传入的数据时间 至少应该要控制在 200ms内
               3.忽略用户感受
+
+              周末优化
+              1.将列表用vxe实现 优化性能问题 
+              2.优化vxe 外观 ，包括loading等待的界面 
+              3.传入数据时增加异步loading状态
             -->
             <div v-for="(item, index) in pool.tasks" :key="index">
                 <div class="smov" v-if="openStatus[item.params.status] == true">
@@ -135,12 +141,6 @@ export default defineComponent({
                 event.payload.forEach((item: any) => {
                     pool.addTask(retrieveData(item));
                 });
-                // nextTick(() => {
-                //     load.value = false;
-                //     console.log("数据加载完成")
-                //     console.log(Date.now())
-                // }
-                // )
             }))()
         }
 
@@ -206,7 +206,7 @@ export default defineComponent({
             //     });
             // }
 
-            // loading.value.visible.value = true;
+            load.value = true;
 
             const data = XEUtils.map(pool.tasks, item => item.params.id);
 
@@ -294,7 +294,8 @@ export default defineComponent({
             Delete,
             deleteTask,
             removeAll,
-            load
+            load,
+            getSeekSmov
         };
     }
 })
