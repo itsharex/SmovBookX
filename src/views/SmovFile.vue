@@ -21,7 +21,6 @@
       class="fileTable"
       height="92%"
       :export-config="{}"
-      :empty-render="{ name: 'NotData' }"
       :loading="table.loading"
       :checkbox-config="{ checkField: 'checked' }"
       :edit-config="{ trigger: 'dblclick', mode: 'row', showStatus: true }"
@@ -84,6 +83,8 @@ export default defineComponent({
       return new Promise((resolve) => {
         setTimeout(() => {
           const data = FileData;
+
+          console.log(FileData)
           // 阻断 vue 对大数组的监听，避免 vue 绑定大数据造成短暂的卡顿
           const $table = xTable.value;
           if ($table) {
@@ -91,6 +92,7 @@ export default defineComponent({
           }
           resolve(null);
           table.loading = false;
+          console.log($table.getData(0))
         }, 300);
       });
     };
@@ -178,57 +180,22 @@ export default defineComponent({
           })
         }
       })
-
-
-      // getAllHistory(selectRecords).then((res) => {
-      //   table.loading = false;
-      //   $table.removeCheckboxRow();
-
-      //   ElMessage({
-      //     message: '共' + selectRecords.length + '条数据被关闭',
-      //     type: 'success',
-      //   })
-      // })
-
-      // initFn();
     }
 
     const changActive = (row: any) => {
-      console.log(row.id);
+
       invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
         if (res.code == 200) {
           const $table = xTable.value;
           $table.remove(row);
+          //$table.reloadRow(row, null,undefined)
           XEUtils.remove(FileData, toitem => toitem === row)
         } else {
           ElMessage.error('关闭出现了一个问题' + res.msg)
         }
       }).finally(() => {
-        // resolve();
-      })
-    }
 
-    const getAllHistory = async (selectRecords) => {
-      let allHistory = [] as any[]
-      selectRecords.forEach((item) => {
-        allHistory.push((async (item) => {
-          return await getChangePromise(item)
-        })(item))
       })
-      return await Promise.all(allHistory);
-    }
-
-    const getChangePromise = (row: any) => {
-      return new Promise(function (resolve, reject) {
-        invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
-          if (res.code == 200) {
-          } else {
-            ElMessage.error('关闭出现了一个问题' + res.msg)
-          }
-        }).finally(() => {
-          resolve(row);
-        })
-      });
     }
 
     onMounted(() => {
@@ -238,7 +205,7 @@ export default defineComponent({
     const initFn = () => {
       table.loading = true;
       invoke("query_unretrieved").then((res) => {
-        console.log(res)
+        // console.log(res)
         let data: any = res;
         if (data.code == 200) {
           FileData = data.data;
@@ -248,14 +215,15 @@ export default defineComponent({
         setTimeout(() => {
           table.loading = false;
         }, 1000);
+
       });
     };
 
-    //局部保存 直接修改元数据
+    //局部保存 直接修改元数据  经过测试 除了删除其他操作数据都会同步到元数据
     const editClosedEvent: VxeTableEvents.EditClosed = ({ row, column }) => {
       const $table = xTable.value;
-      const field = column.property;
-      const cellValue = row[field];
+      const field = column.field;  //旧值 
+      const cellValue = row[field]; //新值
 
       //更新数据库中的数据
       invoke("update_seekname", { id: row.id, seekName: row.seekname }).then(
@@ -268,7 +236,6 @@ export default defineComponent({
                   content: `局部保存成功！ ${field}=${cellValue}`,
                   status: "success",
                 });
-                // 局部更新单元格为已保存状态
                 $table.reloadRow(row, null, field);
               }, 300);
             }

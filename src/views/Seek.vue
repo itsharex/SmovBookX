@@ -1,10 +1,9 @@
 <template>
     <div class="seek">
         <div class="buttonDiv">
-            <el-button @click="click" color="#626aef" style="color: white">添加测试元素</el-button>
-            <el-button @click="click1" color="#626aef" style="color: rgb(255, 255, 255)">开始检索</el-button>
-            <el-button @click="click2" color="#626aef" style="color: rgb(255, 255, 255)">停止检索</el-button>
-            <el-button @click="click3" color="#626aef" style="color: rgb(255, 255, 255)">关闭窗口</el-button>
+            <el-button @click="start" color="#626aef" style="color: rgb(255, 255, 255)">开始检索</el-button>
+            <el-button @click="stop" color="#626aef" style="color: rgb(255, 255, 255)">停止检索</el-button>
+            <el-button @click="close" color="#626aef" style="color: rgb(255, 255, 255)">关闭窗口</el-button>
             <el-button @click="getSeekSmov" color="#626aef" style="color: rgb(255, 255, 255)">重载数据</el-button>
 
             <el-button
@@ -35,7 +34,7 @@
             >超级牛逼之一键删除</el-button>
         </div>
 
-        <div v-if="load" class="load">
+        <div v-if="HotLoading" class="load">
             <span>Loading...</span>
         </div>
 
@@ -54,32 +53,48 @@
               1.将列表用vxe实现 优化性能问题 
               2.优化vxe 外观 ，包括loading等待的界面 
               3.传入数据时增加异步loading状态
-            -->
-            <div v-for="(item, index) in pool.tasks" :key="index">
-                <div class="smov" v-if="openStatus[item.params.status] == true">
-                    <el-card
-                        class="smovCard"
-                        :class="item.params.status == 1 ? 'smovCard_suss' : item.params.status == 2 ? 'smovCard_fail' : item.params.status == 3 ? 'smovCard_seeking' : ''"
-                    >
-                        <div class="smovName">{{ item.params.seek_name }}</div>
-                        <div class="loadingDiv" v-if="item.params.status == 3">
-                            <el-icon color="#409EFC" class="is-loading loading">
-                                <loading />
-                            </el-icon>
-                        </div>
 
-                        <div class="close">
-                            <el-button
-                                type="text"
-                                v-if="item.params.status != 3"
-                                :icon="Delete"
-                                circle
-                                @click="deleteTask(index, item.params.id)"
-                            ></el-button>
+              4.线程池不存方法，方法在每次用的时候生成一个 
+            -->
+            <vxe-table
+                border
+                show-overflow
+                resizable
+                keep-source
+                height="580"
+                :loading="pool.loading"
+                ref="Tasks"
+                :show-header="false"
+                :row-config="{ isHover: true }"
+            >
+                <vxe-column field="is_active" title="对象">
+                    <template #default="{ row }">
+                        <div class="smov" v-if="openStatus[row.status] == true">
+                            <el-card
+                                class="smovCard"
+                                :class="row.status == 1 ? 'smovCard_suss' : row.status == 2 ? 'smovCard_fail' : row.status == 3 ? 'smovCard_seeking' : ''"
+                            >
+                                <div class="smovName">{{ row.seek_name }}</div>
+                                <div class="loadingDiv" v-if="row.status == 3">
+                                    <el-icon color="#409EFC" class="is-loading loading">
+                                        <loading />
+                                    </el-icon>
+                                </div>
+
+                                <div class="close">
+                                    <el-button
+                                        type="text"
+                                        @click="deleteTask(row)"
+                                        v-if="row.status != 3"
+                                        :icon="Delete"
+                                        circle
+                                    ></el-button>
+                                </div>
+                            </el-card>
                         </div>
-                    </el-card>
-                </div>
-            </div>
+                    </template>
+                </vxe-column>
+            </vxe-table>
         </div>
     </div>
 </template>
@@ -93,15 +108,16 @@ import { listen } from '@tauri-apps/api/event';
 import { Loading, Delete } from '@element-plus/icons-vue';
 import { ElMessage, ElLoading } from 'element-plus';
 import XEUtils from 'xe-utils';
+import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 export default defineComponent({
     name: 'Seek',
     components: { Loading },
     props: [],
     setup(props, { emit }) {
 
-        let i = 1;
+        const Tasks = ref({} as VxeTableInstance)
 
-        const load = ref(false);
+        const HotLoading = ref(false);
 
         const openStatus = ref({
             0: true,  //wait //不应该是判断检索状态 应该是判断检索结果！
@@ -110,105 +126,74 @@ export default defineComponent({
             3: true  //run time
         })
 
+
+
         let pool = reactive(new ThreadPool.FixedThreadPool({
             size: 1,
-            tasks: [],
             runningFlag: false,
             autoRun: false
         }))
 
         onUpdated(() => {
-            scrollToBottom();
+
         })
 
-        const scrollToBottom = () => {
-            nextTick(() => {
-                load.value = false;
-                console.log(Date.now())
-                console.log("加载结束")
-            }
-            )
-        }
-
-        //获取检索队列
         const addTaskEvent = () => {
-            !(async () => await listen('addTask', (event: any) => {
-                console.log("检测到数据")
-                console.log(Date.now())
-                load.value = true;
-                console.log(load.value)
-                let s = [] as any[];
-                event.payload.forEach((item: any) => {
-                    pool.addTask(retrieveData(item));
-                });
+            !(async () => listen('addTask', (event: any) => {
+                HotLoading.value = true;
+                // event.payload.forEach((item: any) => {
+                //     pool.addTask(item);
+                // });
+                // pool.tasks.push();
+
+                pool.tasks.concat(event.payload);
+
+                // if (event.payload.length > 500) {
+                //     getSeekSmov();
+                // } else {
+                Tasks.value.insertAt(event.payload, -1);
+                // }
+
+                HotLoading.value = false;
             }))()
         }
 
         const getSeekSmov = () => {
-            load.value = true;
+            pool.loading = true;
+            pool.tasks = [];
+            Tasks.value.remove();
             invoke("get_seek_smov").then((res: any) => {
-                if (res.data) {
-                    res.data.forEach((item: any) => {
-                        pool.addTask(retrieveData(item));
-                    });
+                let data: any = res;
+                if (data.code == 200) {
+                    pool.addTasks(data.data);
                 }
-
+            }).finally(() => {
+                const $table = Tasks.value;
+                if ($table) {
+                    const data = pool.tasks;
+                    $table.loadData(data);
+                }
+                pool.loading = false;
             })
         }
 
-        const array_diff = ($array_1: any[], $array_2: any[]) => {
-            //将array2转化为一个Object key名为id 值名为undifind 
-            let array_2 = {};
-            XEUtils.arrayEach($array_2, (item) => {
-                array_2[item.params.id] = 1;
-            });
-            //通过判断Obj中是否有相应key的对象 过滤出需要的
-            const newArr = XEUtils.filter($array_1, item => array_2[item.params.id] != 1);
-
-            // console.log(newArr)
-
-            return $array_1;
-        }
-
         onMounted(() => {
+            nextTick(() => {
+                getSeekSmov();
+            })
             addTaskEvent();
-            getSeekSmov();
+
+
+
         });
 
         const removeAll = () => {
-            // XEUtils.arrayEach(pool.tasks, (item, key) => {
-            //     deleteTask(0, item.params.id);
-            // })
-            // const getAllHistory = async (selectRecords) => {
-            //     let allHistory = [] as any[];
-            //     XEUtils.arrayEach(selectRecords, (item) => {
-            //       allHistory.push((async (item) => {
-            //             return await getChangePromise(item)
-            //         })(item))
-            //     });
 
-            //     return await Promise.all(allHistory);
-            // };
+            pool.loading = true;
 
-            // const getChangePromise = (row: any) => {
-            //     return new Promise(function (resolve, reject) {
-            //         invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
-            //             if (res.code == 200) {
-            //                 // const $table = xTable.value;
-            //                 // $table.remove(row);
-            //                 // XEUtils.remove(FileData, toitem => toitem === row)
-            //             } else {
-            //                 ElMessage.error('关闭出现了一个问题' + res.msg)
-            //             }
-            //         }).finally(() => {
-            //             resolve(row);
-            //         })
-            //     });
-            // }
+            const data: number[] = XEUtils.map(pool.tasks, item => item.id);
 
-            load.value = true;
-
-            const data = XEUtils.map(pool.tasks, item => item.params.id);
+            console.log(data);
 
             invoke("remove_smov_seek_status", { id: data }).then((res: any) => {
                 if (res.code == 200) {
@@ -216,47 +201,39 @@ export default defineComponent({
                         message: '将' + data.length + '条数据移出队列',
                         type: 'success',
                     })
+                    Tasks.value.remove();
                     pool.tasks = [];
                     pool.index = 0;
-                    // XEUtils.remove(pool.tasks, item => item.id === id)
                 } else {
                     ElMessage.error('移除检索队列出现错误');
                     return;
                 }
+            }).finally(() => {
+                pool.loading = false;
             });
-
-
         }
 
-        const randomBoolean = () => Math.random() >= 0.5;
 
-        const click = () => {
-            const test = {
-
-            }
-            // pool.addTask(retrieveData("asdasd", i));
-            i++;
-        }
-
-        const click1 = () => {
+        const start = () => {
             pool.start();
         }
 
-        const click2 = () => {
+        const stop = () => {
             pool.stop();
         }
 
-        const click3 = () => {
+        const close = () => {
             getCurrent().hide();
         }
 
-        const deleteTask = (index: number, id: number) => {
-            pool.tasks[index].params.status = 3;
-            invoke("remove_smov_seek_status", { id: [id] }).then((res: any) => {
+        const deleteTask = (row) => {
+            row.status = 3;
+            invoke("remove_smov_seek_status", { id: [row.id] }).then((res: any) => {
                 if (res.code == 200) {
-
-                    pool.removeTask(index);
-                    // XEUtils.remove(pool.tasks, item => item.id === id)
+                    const $table = Tasks.value;
+                    $table.remove(row);
+                    XEUtils.remove(pool.tasks, item => item.id === row.id);
+                    pool.index--;
                 } else {
                     ElMessage.error('移除检索队列出现错误');
                     return;
@@ -264,38 +241,18 @@ export default defineComponent({
             });
         }
 
-        function retrieveData(item: any) {
-
-            return new ThreadPool.Task({
-                params: item,
-                processor: (params: any) => {
-                    return new Promise(resolve => {
-                        invoke("retrieve_data", { retrievingSmov: params }).then((res: any) => {
-                            if (res.code == 200) {
-                                resolve(1);
-                            } else {
-                                resolve(2);
-                            }
-                        });
-                    });
-                },
-                callback: (data: any) => {
-                    // console.log(`线程 ${pool.tasks.length}, rst is`, data);
-                }
-            });
-        }
         return {
-            click,
-            click1,
-            click2,
-            click3,
+            start,
+            stop,
+            close,
             pool,
             openStatus,
             Delete,
             deleteTask,
             removeAll,
-            load,
-            getSeekSmov
+            HotLoading,
+            getSeekSmov,
+            Tasks
         };
     }
 })
@@ -393,3 +350,8 @@ export default defineComponent({
     background: #ffe0e0;
 }
 </style>
+
+
+
+
+               

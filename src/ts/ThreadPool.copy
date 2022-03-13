@@ -1,29 +1,43 @@
-import { invoke } from '@tauri-apps/api';
 import { getAll } from '@tauri-apps/api/window';
+import XEUtils from 'xe-utils';
 
 export module ThreadPool {
-    export type task = {
-        time: String,
-        thread: String,
-        msg: String,
-        level: String
-    }
+    export class Task {
+        callback: (any) => void;
+        params: any;
+        id: number;
+        processor: (any) => Promise<unknown>;
+        constructor({ params, processor, callback }) {
+            this.params = params;
+            this.id = params.id;
+            if (typeof processor === 'function') {
+                this.processor = processor;
+            }
+            else {
+                throw new Error('processor must be a funtion');
+            }
 
+            if (typeof callback === 'function') {
+                this.callback = callback || (() => { });
+            }
+            else {
+                throw new Error('callback must be a funtion');
+            }
+        }
+    }
     export class FixedThreadPool {
         runningFlag: any;
         runningProcessorCount: number;
         tasks: any[];
         size: any;
-        loading: boolean;
         index: number;
         window: any;
         autoRun: boolean;
-        constructor({ size, runningFlag, autoRun }) {
+        constructor({ size, tasks, runningFlag, autoRun }) {
             this.size = size;
 
-            this.tasks = [] as any[];
-
-            this.loading = false;
+            this.tasks = [];
+            this.addTasks(...tasks);
 
             this.runningFlag = runningFlag;
             this.runningProcessorCount = 0;  //正在执行中的线程
@@ -61,11 +75,9 @@ export module ThreadPool {
             this.window.emit("seek_status", this.runningFlag);
         }
 
-        addTasks(tasks: any[]) {
-            console.log(this.tasks)
+        addTasks(...tasks) {
             tasks.forEach(task => {
-                if (task) {
-
+                if (task instanceof Task) {
                     this.tasks.push(task);
                 }
                 else {
@@ -73,10 +85,13 @@ export module ThreadPool {
                 }
             })
         }
-        addTask(task: any) {
-            if (task) {
+        addTask(task) {
+            if (task instanceof Task) {
+                //console.log("程序池中插入");
+                //console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index);
                 this.tasks.push(task);
                 if (this.tasks.length > this.index && this.autoRun == true && this.runningFlag == false) {
+                    //console.log("开始程序");
                     this.start();
                 }
             }
@@ -87,7 +102,9 @@ export module ThreadPool {
 
         removeTask(index) {
             this.index--;
+            //是什么导致了删除到一定时间就不删除了呢 因为数量变了 下标也tm变了啊
             this.tasks.splice(index, 1);
+            // XEUtils.remove(this.tasks, item => item.id === index)
         }
 
         removeTaskByid(id) {
@@ -96,28 +113,40 @@ export module ThreadPool {
 
         processTask() {
             if (!this.runningFlag) {
+                //this.runningProcessorCount--;
                 return;
             }
-
-            //获取这套程序的 参数值
+            //这里每次都是获取第一位 第一个执行的时候 还没删除呢 需要修改获取方式
             const task: any = this.tasks[this.index];
+
+            //这里修改为 不提取下标队列 提取线程数  如何删除这个程序？
 
             if (task) {
                 this.runningProcessorCount++;
                 this.index++;
-                task.status = 3;
-                invoke("retrieve_data", { retrievingSmov: task }).then((res: any) => {
-                    if (res.code == 200) {
-                        task.status = 1;
-                    } else {
-                        task.status = 2;
-                    }
-                }).finally(() => {
-                    //可以考虑用XEUtil去精准删除 然后 放到其他 队列 
-                    this.runningProcessorCount--;
-                    //task.params.status = 1;
-                    this.processTask();
-                });
+                task.params.status = 3;
+                const prom = task.processor(task.params);
+                if (prom instanceof Promise) {
+                    let cb;
+                    prom.then(data => {
+                        cb = task.callback(data);
+                        task.params.status = data;
+                    }).finally(() => {
+                        //可以考虑用XEUtil去精准删除 然后 放到其他 队列 
+
+                        this.runningProcessorCount--;
+                        //task.params.status = 1;
+
+                        if (cb instanceof Promise) {
+                            cb.finally(() => {
+                                this.processTask();
+                            });
+                        }
+                        else {
+                            this.processTask();
+                        }
+                    });
+                }
             }
             else {
                 //console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index);
