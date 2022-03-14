@@ -142,8 +142,19 @@ export default defineComponent({
         const addTaskEvent = () => {
             !(async () => listen('addTask', (event: any) => {
                 HotLoading.value = true;
+                // event.payload.forEach((item: any) => {
+                //     pool.addTask(item);
+                // });
+                // pool.tasks.push();
+                console.log(Date.now());
                 Array.prototype.push.apply(pool.tasks, event.payload);
-                Tasks.value.insertAt(event.payload, -1);
+                console.log(Date.now());
+                // if (event.payload.length > 500) {
+                //     getSeekSmov();
+                // } else {
+                //Tasks.value.insertAt(event.payload, -1);
+                // }
+
                 HotLoading.value = false;
             }))()
         }
@@ -182,6 +193,8 @@ export default defineComponent({
             pool.loading = true;
 
             const data: number[] = XEUtils.map(pool.tasks, item => item.id);
+
+            // console.log(data);
 
             invoke("remove_smov_seek_status", { id: data }).then((res: any) => {
                 if (res.code == 200) {

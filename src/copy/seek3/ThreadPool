@@ -64,14 +64,6 @@ export module ThreadPool {
         addTasks(tasks: any[]) {
             console.log(this.tasks)
             Array.prototype.push.apply(this.tasks, tasks);
-            // tasks.forEach(task => {
-            //     if (task) {
-            //         this.tasks.push(task);
-            //     }
-            //     else {
-            //         console.error('expected to be instanceof Task');
-            //     }
-            // })
         }
         addTask(task: any) {
             if (task) {
