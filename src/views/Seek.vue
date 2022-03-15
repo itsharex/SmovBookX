@@ -1,5 +1,5 @@
 <template>
-<!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
+    <!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
     <div class="seek">
         <div class="buttonDiv">
             <el-button @click="start" color="#626aef" style="color: rgb(255, 255, 255)">开始检索</el-button>
@@ -109,7 +109,7 @@ import { listen } from '@tauri-apps/api/event';
 import { Loading, Delete } from '@element-plus/icons-vue';
 import { ElMessage, ElLoading } from 'element-plus';
 import XEUtils from 'xe-utils';
-import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
+import { VXETable, VxeTableInstance, VxeTableEvents, RecordInfo } from "vxe-table";
 export default defineComponent({
     name: 'Seek',
     components: { Loading },
@@ -124,13 +124,14 @@ export default defineComponent({
             0: true,  //wait //不应该是判断检索状态 应该是判断检索结果！
             1: true,  //suss
             2: true,  //fail
-            3: true  //run time
+            3: true,  //run time
+            4: true   //delete run time
         })
 
 
 
         let pool = reactive(new ThreadPool.FixedThreadPool({
-            size: 1,
+            size: 3,
             runningFlag: false,
             autoRun: false
         }))
@@ -140,12 +141,30 @@ export default defineComponent({
         })
 
         const addTaskEvent = () => {
-            !(async () => listen('addTask', (event: any) => {
+            !(async () => await listen('addTask', (event: any) => {
                 HotLoading.value = true;
-                Array.prototype.push.apply(pool.tasks, event.payload);
-                Tasks.value.insertAt(event.payload, -1);
-                HotLoading.value = false;
+                console.log(Date.now());
+                asyncJoin(event.payload)
             }))()
+        }
+
+        const asyncJoin = async (list: any[]) => {
+            pool.addTasks(list);
+            Tasks.value.reloadData(pool.tasks).then(() => {
+                setTimeout(() => {
+                    ElMessage({
+                        message: '将' + list.length + '条数据加入队列',
+                        type: 'success',
+                    })
+                    HotLoading.value = false;
+                }, 200);
+
+            });
+
+
+            console.log(pool.tasks.length);
+            console.log(Tasks.value.getData().length);
+
         }
 
         const getSeekSmov = () => {
@@ -156,6 +175,13 @@ export default defineComponent({
                 let data: any = res;
                 if (data.code == 200) {
                     pool.addTasks(data.data);
+                    //获取最后的索引下标
+                    let index = XEUtils.findIndexOf(data.data, item => item.status === 0);
+                    if (index == -1) {
+                        pool.index = 0;
+                    } else {
+                        pool.index = index;
+                    }
                 }
             }).finally(() => {
                 const $table = Tasks.value;
@@ -214,14 +240,17 @@ export default defineComponent({
             getCurrent().hide();
         }
 
-        const deleteTask = (row) => {
+        const deleteTask = (row: { status: number; id: any; }) => {
             row.status = 3;
             invoke("remove_smov_seek_status", { id: [row.id] }).then((res: any) => {
                 if (res.code == 200) {
                     const $table = Tasks.value;
+                    let index = $table.getRowIndex(row);
                     $table.remove(row);
                     XEUtils.remove(pool.tasks, item => item.id === row.id);
-                    pool.index--;
+                    if (index + 1 <= pool.index) {
+                        pool.index--;
+                    }
                 } else {
                     ElMessage.error('移除检索队列出现错误');
                     return;

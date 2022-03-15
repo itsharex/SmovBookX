@@ -1,5 +1,4 @@
 use std::thread;
-use std::time::Duration;
 
 use crate::model::folder::Folder;
 use crate::model::smov::RetrievingSmov;
@@ -56,7 +55,6 @@ pub async fn retrieve_data(retrieving_smov: RetrievingSmov) -> Response<Option<i
         }
       },
       Err(err) => {
-        tracing::error!(message = format!("{}", err).as_str());
         SmovFileSeek::change_status(retrieving_smov.id, 2).expect("出现了一个错误");
         Response::err(None, format!("{}", &err).as_str())
       }

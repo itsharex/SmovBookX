@@ -7,8 +7,8 @@
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
-    "allowJs": true,  //允许js
-    "noImplicitAny": false,  // 不进行any语法检查
+    "allowJs": true, //允许js
+    "noImplicitAny": false, // 不进行any语法检查
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "plugins": [
@@ -19,13 +19,31 @@
         "name": "eslint-plugin-vue"
       }
     ],
-    "lib": ["esnext", "dom"],
-    "types": ["vite/client","node"],
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "types": [
+      "vite/client",
+      "node",
+      "element-plus/global"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue",  "src/**/*.js","src/**/**/*.vue", "./src-tauri/tauri.conf.json"]
+  "include": [
+    "src/**/*.ts",
+    "src/*.ts",
+    "src/**/*.d.ts",
+    "src/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/**/*.js",
+    "src/**/**/*.vue",
+    "./src-tauri/tauri.conf.json"
+  ]
 }
-

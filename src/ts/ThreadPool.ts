@@ -41,7 +41,6 @@ export module ThreadPool {
         }
 
         start() {
-            console.log(this.runningFlag);
             if (this.isRunning()) {
                 return;
             }
@@ -52,27 +51,24 @@ export module ThreadPool {
             this.window.emit("seek_status", this.runningFlag);
             while (i--) {
                 this.processTask();
-                //this.runningProcessorCount++;
             }
         }
 
         stop() {
             this.runningFlag = false;
-            this.window.emit("seek_status", this.runningFlag);
+            setInterval(()=>{
+               if(!this.isRunning()){
+                this.window.emit("seek_status", this.runningFlag);
+               }
+            },200)
+            
         }
 
         addTasks(tasks: any[]) {
             console.log(this.tasks)
             Array.prototype.push.apply(this.tasks, tasks);
-            // tasks.forEach(task => {
-            //     if (task) {
-            //         this.tasks.push(task);
-            //     }
-            //     else {
-            //         console.error('expected to be instanceof Task');
-            //     }
-            // })
         }
+
         addTask(task: any) {
             if (task) {
                 this.tasks.push(task);
@@ -85,7 +81,7 @@ export module ThreadPool {
             }
         }
 
-        removeTask(index) {
+        removeTask(index: number) {
             this.index--;
             this.tasks.splice(index, 1);
         }
@@ -96,42 +92,43 @@ export module ThreadPool {
 
         processTask() {
             if (!this.runningFlag) {
-                return;
-            }
-
-            //获取这套程序的 参数值
-            const task: any = this.tasks[this.index];
-
-            if (task) {
-                this.runningProcessorCount++;
-                this.index++;
-                task.status = 3;
-                invoke("retrieve_data", { retrievingSmov: task }).then((res: any) => {
-                    if (res.code == 200) {
-                        task.status = 1;
-                    } else {
-                        task.status = 2;
-                    }
-                }).finally(() => {
-                    //可以考虑用XEUtil去精准删除 然后 放到其他 队列 
-                    this.runningProcessorCount--;
-                    //task.params.status = 1;
-                    this.processTask();
-                });
-            }
-            else {
-                //console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index);
-                setTimeout(() => {  //延迟500ms防止 炸了
-                    if (this.tasks.length == this.index && this.runningProcessorCount == 0) {
-                        //当运行到倒数第二个时 因为线程为2 第二次运行直接到了这里 这个时候index为1  池中数量也为1 所以会直接回调停止执行
-                        //这里得判断是否还有正在执行的线程
-                        this.stop();
-                    } else {
+                this.stop();
+            } else {
+                const task: any = this.tasks[this.index];
+                console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index,",当前正在运行数量为" + this.runningProcessorCount);
+                if (task) {
+                    this.runningProcessorCount++;
+                    this.index++;
+                    if (task.status != 0) {
+                        this.runningProcessorCount--;
                         this.processTask();
+                    } else {
+                        task.status = 3;
+                        invoke("retrieve_data", { retrievingSmov: task }).then((res: any) => {
+                            if (res.code == 200) {
+                                task.status = 1;
+                            } else {
+                                task.status = 2;
+                            }
+                        }).finally(() => {
+                            this.runningProcessorCount--;
+                            this.processTask();
+                        });
                     }
-                }, 500);
+                }
+                else {
+                    setTimeout(() => {
+                        if (this.tasks.length === this.index && this.runningProcessorCount === 0) {
+                            this.stop();
+                        } else {
+                            this.processTask();
+                        }
+                    }, 500);
 
+                }
             }
+
+
         }
     }
 }
