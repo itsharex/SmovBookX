@@ -11,6 +11,7 @@
     "noImplicitAny": false, // 不进行any语法检查
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "skipLibCheck": true, // 跳过了检查 可是 tm的 elementplus 就是有类型错误导致了 界面显示不出来
     "plugins": [
       {
         "name": "@vuedx/typescript-plugin-vue"
@@ -30,10 +31,8 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    }
+      "~/*": ["src/*"]
+    },
   },
   "include": [
     "src/**/*.ts",
