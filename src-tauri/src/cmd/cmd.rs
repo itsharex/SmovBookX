@@ -190,3 +190,14 @@ pub async fn change_active_status(id: i64, status: i32) -> Response<Option<bool>
     }
   };
 }
+
+#[command]
+pub async fn delete_smov(id: Vec<i64>) -> Response<Option<bool>> {
+  match SmovFile::delete_smov(id) {
+    Ok(_) => return Response::new(200, Some(true), "success"),
+    Err(err) => {
+      tracing::error!(message = format!("{}", err).as_str());
+      return Response::new(300, None, format!("{}", err).as_str());
+    }
+  };
+}

@@ -53,6 +53,7 @@ async fn main() {
       cmd::cmd::get_seek_smov,
       cmd::cmd::disable_smov,
       cmd::cmd::change_active_status,
+      cmd::cmd::delete_smov,
       cmd::cmd::remove_smov_seek_status,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,

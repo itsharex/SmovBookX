@@ -108,7 +108,7 @@ pub struct SMOVBOOK {
 fn create_sqlite_connection() -> Result<Connection> {
   let database = PathBuf::from(&crate::app::APP.lock().app_dir).join("SmovBook.db");
   let conn = Connection::open(database)?;
-  conn.busy_timeout(Duration::new(15,0))?;
+  conn.busy_timeout(Duration::new(15, 0))?;
   Ok(conn)
 }
 /// 封装一个方法，获取连接
@@ -482,7 +482,7 @@ impl SmovFile {
       let tx = conn.transaction()?;
       for y in id {
         match tx.execute("update smov set is_active = 0 where id = ?1", params![y]) {
-          Ok(_) => {},
+          Ok(_) => {}
           Err(err) => return Err(err),
         };
       }
@@ -672,6 +672,22 @@ impl SmovFile {
         .expect("更新出现错误");
 
       Ok(update_size)
+    })
+  }
+
+  pub fn delete_smov(id: Vec<i64>) -> Result<()> {
+    exec(|conn| {
+      let tx = conn.transaction()?;
+      for y in id {
+        match tx.execute("delete from smov where id = ?1", params![y]) {
+          Ok(_) => {}
+          Err(err) => {
+            tx.rollback();
+            return Err(err);
+          }
+        };
+      }
+      tx.commit()
     })
   }
 }
@@ -882,22 +898,12 @@ impl SmovFileSeek {
     })
   }
 
-  // pub fn remove_smov_seek_status(id: Vec<i64>) -> Result<()> {
-  //   exec(
-  //     |conn| 
-  //     match conn.execute("delete from seek_queue where id = ?1", params![id]) {
-  //       Ok(_) => Ok(()),
-  //       Err(e) => Err(e),
-  //     },
-  //   )
-  // }
-
   pub fn remove_smov_seek_status(id: Vec<i64>) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
       for y in id {
         match tx.execute("delete from seek_queue where id = ?1", params![y]) {
-          Ok(_) => {},
+          Ok(_) => {}
           Err(err) => return Err(err),
         };
       }

@@ -41,9 +41,6 @@ export default defineComponent({
     const router = useRouter();
     const loading = ref(false);
     const toInit = () => {
-      // router.push({
-      //   path: "/SomvFile",
-      // });
       loading.value = true;
       invoke("query_new_file_todb")
         .then((res) => {
