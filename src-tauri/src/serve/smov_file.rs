@@ -1,14 +1,25 @@
+use serde::{Deserialize, Serialize};
+
 use crate::model::folder::Folder;
 use crate::model::smov::SmovFile;
+use anyhow::Result;
 use std::collections::HashSet;
 use std::fs;
+use std::hash::Hash;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[warn(non_upper_case_globals)]
 const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv"];
 
-pub fn smov_file() -> String {
+#[derive(Hash, Debug, Deserialize, Serialize)]
+pub struct SmovFileBack {
+  time: i64,
+  add_size: usize,
+  del_smov_file: Vec<SmovFile>,
+}
+
+pub fn smov_file() -> Result<SmovFileBack> {
   let begin = timestamp(SystemTime::now());
 
   let folders = Folder::query_folder().unwrap();
@@ -32,14 +43,17 @@ pub fn smov_file() -> String {
 
   let smov = file_smov.difference(&db_smov).collect::<Vec<&SmovFile>>();
 
+  let smov_del = db_smov.difference(&file_smov).into_iter().map(|x| x.clone()).collect::<Vec<SmovFile>>();
+
   SmovFile::insert_file_data(&smov).unwrap();
 
   let end = timestamp(SystemTime::now());
-  format!(
-    "扫描全部文件用时:{:?}ms，共扫描到{}个差异视频文件",
-    end - begin,
-    &smov.len()
-  )
+
+    Ok(SmovFileBack{
+      time: end - begin,
+      add_size: smov.len(),
+      del_smov_file: smov_del,
+  })
 }
 
 fn timestamp(time: SystemTime) -> i64 {
@@ -104,7 +118,7 @@ pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
               extension,
               format: String::from(""),
               isch,
-              is_active:0
+              is_active: 0,
             };
             smovs.push(res);
           }
@@ -122,4 +136,3 @@ pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
   }
   smovs
 }
-

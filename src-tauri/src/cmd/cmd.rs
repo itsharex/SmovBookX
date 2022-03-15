@@ -13,11 +13,16 @@ use tauri::command;
 use tauri::Manager;
 use tauri::Window;
 use tracing::info;
+use crate::serve::smov_file::SmovFileBack;
 
 //检索新文件到数据库
 #[command]
-pub fn query_new_file_todb() -> Response<String> {
-  Response::ok(smov_file::smov_file(), "检索成功")
+pub fn query_new_file_todb() -> Response<Option<SmovFileBack>> {
+  
+  match smov_file::smov_file() {
+    Ok(e) => Response::ok(Some(e), "检索成功"),
+    Err(e) => Response::err(None, format!("{}", &e).as_str()),
+}
 }
 
 #[command]

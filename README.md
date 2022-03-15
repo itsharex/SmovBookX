@@ -30,3 +30,17 @@ ffmpeg -f concat -i filelist.txt -c copy output.mkv
 
 看来需要对大量错误的option写法做返回判断了。。。。
 
+下阶段计划：
+
+1.SmovItem 
+
+2.SmovView
+
+3.增加不存在的文件自动删除功能
+
+4.增加回收站删除功能
+
+5.合并视频文件提示
+
+
+
