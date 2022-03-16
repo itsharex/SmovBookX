@@ -7,12 +7,12 @@ use crate::serve::file::TidySmov;
 use kuchiki::traits::*;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
-use tracing::info;
 use std::path::PathBuf;
 use std::{
   fs::File,
   io::{Read, Write},
 };
+use tracing::info;
 lazy_static! {
   static ref VEC: Vec<u8> = vec![0x18u8, 0x11u8];
   static ref HEADER: HeaderMap = {
@@ -74,7 +74,10 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
       let video_item = video.as_node();
       let uid = match video_item.select(".uid").unwrap().next_back() {
         Some(x) => x,
-        None => return Ok(false), // None
+        None => {
+          tracing::warn!(target: "frontend_log",message = "未检索到数据");
+          return Ok(false);
+        } // None
       };
 
       let name = uid.text_contents();
@@ -91,9 +94,9 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           name: &name,
         };
 
-        let img_to_path = match s.tidy(){
-            Ok(n) => n,
-            Err(e) => return Err(e),
+        let img_to_path = match s.tidy() {
+          Ok(n) => n,
+          Err(e) => return Err(e),
         };
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
@@ -177,7 +180,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
             Some(e) => e.text_contents(),
             None => continue,
           };
-          
+
           if type_flag.eq("日期:") {
             let s = detail_m.select(".value").unwrap().next_back().unwrap();
             smov_seek.release_time = s.text_contents();
@@ -245,12 +248,16 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
         let screenshots = match document
           .select(".preview-images")
           .expect("获取截图块出现错误")
-          .next(){
-            Some(e) => e,
-            None => return Ok(true),
+          .next()
+        {
+          Some(e) => e,
+          None => return Ok(true),
         };
 
-        let screenshots = screenshots.as_node().select(".tile-item").expect("获取详情图片快出现错误");
+        let screenshots = screenshots
+          .as_node()
+          .select(".tile-item")
+          .expect("获取详情图片快出现错误");
 
         let mut counter = 1;
         for screenshot in screenshots {
@@ -269,7 +276,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           )
           .await
           .expect("保存图片出现错误");
-          counter=counter+1;
+          counter = counter + 1;
         }
 
         SmovSeek::insert_by_path_name(smov_seek).unwrap();
@@ -278,6 +285,12 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
       }
     }
   }
+
+  if !flag {
+    tracing::warn!(target: "frontend_log",message = "未检索到数据");
+    return Ok(false);
+  }
+
   Ok(flag)
 }
 
@@ -287,7 +300,6 @@ async fn sava_pic(
   path: &PathBuf,
   client: &Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
-
   let pic_path = path.join(name);
 
   let mut headers = HeaderMap::new();
@@ -300,7 +312,11 @@ async fn sava_pic(
       .unwrap(),
   );
 
-  let msg = format!("保存图片url:{} => path:{}",url,path.as_os_str().to_str().unwrap_or_else(|| "none"));
+  let msg = format!(
+    "保存图片url:{} => path:{}",
+    url,
+    path.as_os_str().to_str().unwrap_or_else(|| "none")
+  );
 
   info!(target: "frontend_log",message = msg.as_str());
 

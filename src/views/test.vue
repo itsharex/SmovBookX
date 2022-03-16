@@ -12,6 +12,7 @@ import { ThreadPool } from '../ts/ThreadPool'
 import { useRouter } from 'vue-router';
 import { Log } from '../type/log'
 import { CurentTime } from '../util/time'
+import { dialog, notification } from '@tauri-apps/api';
 
 export default defineComponent({
     setup() {
@@ -25,12 +26,21 @@ export default defineComponent({
         let logs = inject('log') as any;
 
         const test1 = () => {
-            router.push({
-                path: '/test2',
-                query: {
-                    num: 1
-                }
-            })
+            // router.push({
+            //     path: '/test2',
+            //     query: {
+            //         num: 1
+            //     }
+            // })
+            // dialog.message("fuck")
+
+            const option: notification.Options = {
+                title: "test",
+                body: "test",
+                icon: "test",
+            }
+
+            notification.sendNotification(option);
         }
 
         const test2 = () => {

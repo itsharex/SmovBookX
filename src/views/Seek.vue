@@ -137,7 +137,7 @@ export default defineComponent({
 
 
         let pool = reactive(new ThreadPool.FixedThreadPool({
-            size: 3,
+            size: 1,
             runningFlag: false,
             autoRun: false
         }))
@@ -342,6 +342,7 @@ export default defineComponent({
 .smov {
     padding: 12px;
     height: 30px;
+    width: 450px;
 }
 
 .smovCard {
@@ -415,6 +416,9 @@ export default defineComponent({
     padding: 10px;
     display: flex;
     font-size: 12px;
+    * {
+        margin-right: 5px;
+    }
 }
 
 .buttonDiv {
@@ -433,7 +437,7 @@ export default defineComponent({
         width: 100%;
         flex-grow: 1;
     }
-    .zw{
+    .zw {
         height: 10px;
         width: 100%;
     }
