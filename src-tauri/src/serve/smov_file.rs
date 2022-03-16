@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::model::folder::Folder;
 use crate::model::smov::SmovFile;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::collections::HashSet;
 use std::fs;
 use std::hash::Hash;
@@ -43,16 +43,25 @@ pub fn smov_file() -> Result<SmovFileBack> {
 
   let smov = file_smov.difference(&db_smov).collect::<Vec<&SmovFile>>();
 
-  let smov_del = db_smov.difference(&file_smov).into_iter().map(|x| x.clone()).collect::<Vec<SmovFile>>();
+  // let smov_del = db_smov.difference(&file_smov).into_iter().map(|x| x.clone()).collect::<Vec<SmovFile>>();
+  let smov_del = db_smov.difference(&file_smov).collect::<Vec<&SmovFile>>();
+
+  let smov_del = match SmovFile::query_by_path_name(smov_del) {
+    Ok(res) => res,
+    Err(err) => {
+      tracing::error!(message = format!("生成已删除文件出现错误:{}", err).as_str());
+      return Err(anyhow!("生成已删除文件出现错误:{}", err));
+    }
+  };
 
   SmovFile::insert_file_data(&smov).unwrap();
 
   let end = timestamp(SystemTime::now());
 
-    Ok(SmovFileBack{
-      time: end - begin,
-      add_size: smov.len(),
-      del_smov_file: smov_del,
+  Ok(SmovFileBack {
+    time: end - begin,
+    add_size: smov.len(),
+    del_smov_file: smov_del,
   })
 }
 

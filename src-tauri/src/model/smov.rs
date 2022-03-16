@@ -682,12 +682,49 @@ impl SmovFile {
         match tx.execute("delete from smov where id = ?1", params![y]) {
           Ok(_) => {}
           Err(err) => {
-            tx.rollback();
+            tx.rollback().unwrap();
             return Err(err);
           }
         };
       }
       tx.commit()
+    })
+  }
+
+  pub fn query_by_path_name(smov: Vec<&SmovFile>) -> Result<Vec<SmovFile>, rusqlite::Error> {
+    let mut smovs: Vec<SmovFile> = Vec::new();
+    exec(|conn| {
+      let tx = conn.transaction()?;
+      for y in smov {
+        match tx.query_row_and_then(
+          "select id,realname,path from smov where realname = ?1 and path = ?2",
+          params![y.realname, y.path],
+          |row| {
+            Ok(SmovFile {
+              id: row.get(0)?,
+              realname: row.get(1)?,
+              seekname: String::from(""),
+              path: row.get(2)?,
+              len: 0,
+              created: 0,
+              modified: 0,
+              extension: String::from(""),
+              format: String::from(""),
+              isch: 0,
+              is_active: 0,
+            })
+          },
+        ) {
+          Ok(res) => smovs.push(res),
+          Err(err) => {
+            tx.rollback().unwrap();
+            return Err(err);
+          }
+        };
+      }
+      tx.commit().unwrap();
+
+      Ok(smovs)
     })
   }
 }

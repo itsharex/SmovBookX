@@ -1,38 +1,29 @@
 <template>
     <!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
     <div class="seek">
-        <div class="buttonDiv">
-            <el-button @click="start" color="#626aef" style="color: rgb(255, 255, 255)">开始检索</el-button>
-            <el-button @click="stop" color="#626aef" style="color: rgb(255, 255, 255)">停止检索</el-button>
-            <el-button @click="close" color="#626aef" style="color: rgb(255, 255, 255)">关闭窗口</el-button>
-            <el-button @click="getSeekSmov" color="#626aef" style="color: rgb(255, 255, 255)">重载数据</el-button>
+        <div class="settingDiv">
+            <div class="buttonDiv">
+                <el-button @click="start" type="danger">开始检索</el-button>
+                <el-button @click="stop" type="danger">停止检索</el-button>
+                <!-- <el-button @click="close" type="danger">关闭窗口</el-button> -->
+                <el-button @click="getSeekSmov" type="danger">重载数据</el-button>
+                <el-button @click="removeAll" type="danger">雁过不留痕风过不留声</el-button>
+            </div>
 
-            <el-button
-                @click="openStatus[2] = !openStatus[2]"
-                color="#626aef"
-                style="color: rgb(255, 255, 255)"
-            >错误是否可见</el-button>
-            <el-button
-                @click="openStatus[1] = !openStatus[1]"
-                color="#626aef"
-                style="color: rgb(255, 255, 255)"
-            >成功是否可见</el-button>
-            <el-button
-                @click="openStatus[3] = !openStatus[3]"
-                color="#626aef"
-                style="color: rgb(255, 255, 255)"
-            >正在检索是否可见</el-button>
-            <el-button
-                @click="openStatus[0] = !openStatus[0]"
-                color="#626aef"
-                style="color: rgb(255, 255, 255)"
-            >未检索是否可见</el-button>
-
-            <el-button
-                @click="removeAll"
-                color="#626aef"
-                style="color: rgb(255, 255, 255)"
-            >超级牛逼之一键删除</el-button>
+            <div class="filtersDiv">
+                <p>
+                    错误
+                    <el-switch v-model="openStatus[2]" @change="ErrChange" />
+                </p>
+                <p>
+                    成功
+                    <el-switch v-model="openStatus[1]" @change="SussChange" />
+                </p>
+                <p>
+                    未检索
+                    <el-switch v-model="openStatus[0]" @change="WaitChange" />
+                </p>
+            </div>
         </div>
 
         <div v-if="HotLoading" class="load">
@@ -58,19 +49,23 @@
               4.线程池不存方法，方法在每次用的时候生成一个 
             -->
             <vxe-table
-                border
+                border="none"
                 show-overflow
                 resizable
                 keep-source
-                height="580"
+                height="100%"
                 :loading="pool.loading"
                 ref="Tasks"
+                :row-config="{ isHover: false }"
                 :show-header="false"
-                :row-config="{ isHover: true }"
             >
+                <template #empty>
+                    <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
+                </template>
                 <vxe-column field="is_active" title="对象">
                     <template #default="{ row }">
-                        <div class="smov" v-if="openStatus[row.status] == true">
+                        <!-- v-if="openStatus[row.status] == true" -->
+                        <div class="smov">
                             <el-card
                                 class="smovCard"
                                 :class="row.status == 1 ? 'smovCard_suss' : row.status == 2 ? 'smovCard_fail' : row.status == 3 ? 'smovCard_seeking' : ''"
@@ -95,8 +90,18 @@
                         </div>
                     </template>
                 </vxe-column>
+
+                <!-- :visible="false"  :filter-method="filterStatusMethod"-->
+
+                <vxe-column
+                    field="status"
+                    :visible="false"
+                    :filters="[{ label: '错误', value: 2, checked: openStatus[2] }, { label: '等待', value: 0, checked: openStatus[0] }, { label: '成功', value: 1, checked: openStatus[1] }]"
+                ></vxe-column>
             </vxe-table>
         </div>
+
+        <div class="zw"></div>
     </div>
 </template>
 
@@ -108,8 +113,9 @@ import { getAll, getCurrent } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
 import { Loading, Delete } from '@element-plus/icons-vue';
 import { ElMessage, ElLoading } from 'element-plus';
+import 'element-plus/es/components/message/style/css'
 import XEUtils from 'xe-utils';
-import { VXETable, VxeTableInstance, VxeTableEvents, RecordInfo } from "vxe-table";
+import { VXETable, VxeTableInstance, VxeTableEvents, RecordInfo, VxeColumnPropTypes } from "vxe-table";
 export default defineComponent({
     name: 'Seek',
     components: { Loading },
@@ -120,13 +126,13 @@ export default defineComponent({
 
         const HotLoading = ref(false);
 
-        const openStatus = ref({
-            0: true,  //wait //不应该是判断检索状态 应该是判断检索结果！
-            1: true,  //suss
-            2: true,  //fail
-            3: true,  //run time
-            4: true   //delete run time
-        })
+        const openStatus = ref([
+            true,  //wait 
+            true,  //suss
+            true,  //fail
+            true,  //run time
+            true   //delete run time
+        ])
 
 
 
@@ -140,6 +146,11 @@ export default defineComponent({
 
         })
 
+        const filterStatusMethod: VxeColumnPropTypes.FilterMethod = ({ value, row }) => {
+            console.log(value)
+            return openStatus.value[row.status]
+        }
+
         const addTaskEvent = () => {
             !(async () => await listen('addTask', (event: any) => {
                 HotLoading.value = true;
@@ -152,10 +163,10 @@ export default defineComponent({
             pool.addTasks(list);
             Tasks.value.reloadData(pool.tasks).then(() => {
                 setTimeout(() => {
-                    ElMessage({
-                        message: '将' + list.length + '条数据加入队列',
-                        type: 'success',
-                    })
+                    // ElMessage({
+                    //     message: '将' + list.length + '条数据加入队列',
+                    //     type: 'success',
+                    // })
                     HotLoading.value = false;
                 }, 200);
 
@@ -198,10 +209,48 @@ export default defineComponent({
                 getSeekSmov();
             })
             addTaskEvent();
-
-
-
         });
+
+        const getFilter = () => {
+            return [
+                { label: '等待', value: 0, checked: openStatus.value[0] },
+                { label: '成功', value: 1, checked: openStatus.value[1] },
+                { label: '错误', value: 2, checked: openStatus.value[2] },
+            ];
+        }
+
+        const ErrChange = (val: any) => {
+            const $table = Tasks.value
+            openStatus.value[2] = val;
+            const column = $table.getColumnByField('status')
+            if (column) {
+                const filter = getFilter();
+                $table.setFilter(column, filter)
+                $table.updateData()
+            }
+        }
+
+        const SussChange = (val: any) => {
+            const $table = Tasks.value
+            openStatus.value[1] = val;
+            const column = $table.getColumnByField('status')
+            if (column) {
+                const filter = getFilter();
+                $table.setFilter(column, filter)
+                $table.updateData()
+            }
+        }
+
+        const WaitChange = (val: any) => {
+            const $table = Tasks.value
+            openStatus.value[0] = val;
+            const column = $table.getColumnByField('status')
+            if (column) {
+                const filter = getFilter();
+                $table.setFilter(column, filter)
+                $table.updateData()
+            }
+        }
 
         const removeAll = () => {
 
@@ -212,6 +261,7 @@ export default defineComponent({
             invoke("remove_smov_seek_status", { id: data }).then((res: any) => {
                 if (res.code == 200) {
                     ElMessage({
+                        showClose: true,
                         message: '将' + data.length + '条数据移出队列',
                         type: 'success',
                     })
@@ -269,7 +319,11 @@ export default defineComponent({
             removeAll,
             HotLoading,
             getSeekSmov,
-            Tasks
+            Tasks,
+            ErrChange,
+            SussChange,
+            WaitChange,
+            filterStatusMethod
         };
     }
 })
@@ -285,18 +339,8 @@ export default defineComponent({
     }
 }
 
-.buttonDiv {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    align-items: center;
-    * {
-        margin: 3px;
-    }
-}
-
 .smov {
-    padding: 8px;
+    padding: 12px;
     height: 30px;
 }
 
@@ -365,6 +409,34 @@ export default defineComponent({
     top: 0;
     left: 0;
     background: #ffe0e0;
+}
+
+.filtersDiv {
+    padding: 10px;
+    display: flex;
+    font-size: 12px;
+}
+
+.buttonDiv {
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.seek {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100vh;
+    flex-direction: column;
+    .smovList {
+        width: 100%;
+        flex-grow: 1;
+    }
+    .zw{
+        height: 10px;
+        width: 100%;
+    }
 }
 </style>
 

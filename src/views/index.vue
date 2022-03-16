@@ -7,6 +7,7 @@
       path: '/test',
     })
   ">跳转至测试</el-button>
+
   <el-button
     type="danger"
     @click="
@@ -15,37 +16,75 @@
       })
     "
   >跳转至设置</el-button>
-  <!-- <el-button type="danger" @click="
-    router.push({
-      path: '/seek',
-    })
-  ">跳转至检索列表</el-button> -->
+
+  <el-button type="danger" @click="Dialog.show = true">显示提示</el-button>
+
+  <!-- 检索提示 -->
+  <el-dialog v-model="Dialog.show" class="dialog" title="回调" width="50%" destroy-on-close center>
+    <p>
+      检索到
+      <span class="number">{{ Dialog.data.add_size }}</span>
+      条新数据
+    </p>
+    <p v-if="Dialog.data.del_smov_file.length != 0">
+      发现
+      <span class="number">{{ Dialog.data.del_smov_file.length }}</span> 条被删除的数据
+    </p>
+    <p>
+      <el-checkbox
+        label="删除已被删除的数据"
+        v-model="Dialog.del"
+        v-if="Dialog.data.del_smov_file.length != 0"
+      />
+    </p>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button type="primary" @click="DialogClick">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, inject, watch, computed } from "vue";
+import { defineComponent, ref, onMounted, inject, watch, computed, render, h } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { invoke } from "@tauri-apps/api/tauri";
+import XEUtils from "xe-utils";
+import 'element-plus/es/components/message/style/css'
 
 export default defineComponent({
   components: {},
   name: "index",
   setup() {
+
     const goBack = () => {
-      // ElMessage.error("Test.");
       invoke("query_unretrieved").then((res) => {
         console.log(res);
       });
     };
+
+    const Dialog = ref({
+      show: false,
+      loading: false,
+      data: {} as any,
+      del: true
+    });
+
     const router = useRouter();
+
     const loading = ref(false);
+
     const toInit = () => {
       loading.value = true;
       invoke("query_new_file_todb")
         .then((res) => {
           const data: any = res;
-          if (data.code != 200) {
+          console.log(data)
+          if (data.code == 200) {
+            Dialog.value.data = data.data;
+            Dialog.value.show = true;
+          } else {
             ElMessage({
               showClose: true,
               message: "出现了一个错误！",
@@ -61,12 +100,15 @@ export default defineComponent({
           });
         })
         .finally(() => {
-          ElMessage({
-            showClose: true,
-            message: "检索成功",
-            type: "success",
-          });
-          loading.value = false;
+          // ElMessage({
+          //   showClose: true,
+          //   message: "检索成功",
+          //   type: "success",
+          // });
+          setTimeout(() => {
+            loading.value = false;
+          }, 500);
+
         });
     };
 
@@ -75,16 +117,50 @@ export default defineComponent({
         path: "/SomvFile",
       });
     };
+
+    const DialogClick = () => {
+      Dialog.value.loading = true;
+      if (Dialog.value.del && Dialog.value.data.del_smov_file.length != 0) {
+        const data: number[] = XEUtils.map(Dialog.value.data.del_smov_file as any[], item => item.id);
+        invoke("delete_smov", { id: data }).then((res: any) => {
+          if (res.code = 200) {
+            ElMessage({
+              showClose: true,
+              message: "检索成功,删除了" + Dialog.value.data.del_smov_file.length + "条数据",
+              type: "success",
+            });
+          }
+
+        }
+        )
+      } else {
+        ElMessage({
+          message: "检索成功!",
+          type: "success",
+        });
+      };
+      Dialog.value.show = false;
+    }
+
     return {
       goBack,
       toInit,
       router,
       toSeek,
       loading,
+      Dialog,
+      DialogClick
     };
   },
 });
 </script>
 
 <style scoped>
+.dialog {
+  line-height: 20px;
+}
+
+.number {
+  font-weight: 600;
+}
 </style>

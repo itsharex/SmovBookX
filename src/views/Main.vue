@@ -98,7 +98,7 @@ body {
 .app .el-main {
   color: var(--el-text-color-primary);
   text-align: center;
-  line-height: 160px;
+  // line-height: 160px;
   flex-grow: 1;
 }
 
