@@ -4,6 +4,9 @@
 
 <script setup lang="ts">
 import { defineComponent, ref, onMounted, provide, watch, computed, reactive, nextTick } from "vue";
+import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
+import { relaunch } from "@tauri-apps/api/process";
+
 const logs = ref('' as any);
 const seek = ref(false);
 //定义一个全局值 ，可以由前端打印日志
@@ -17,6 +20,7 @@ watch(seek, () => {
 provide('seek', seek);
 
 onMounted(() => {
+  test();
   disableMenu();
   // nextTick(() => {
   //   disableMenu();
@@ -40,8 +44,21 @@ const disableMenu = () => {
   }, { capture: true })
 }
 
-
-
+const test = async () => {
+  try {
+    console.log("检查版本更新")
+    const { shouldUpdate, manifest } = await checkUpdate();
+    console.log(shouldUpdate)
+    if (shouldUpdate) {
+      // display dialog
+      await installUpdate();
+      // install complete, restart app
+      await relaunch();
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 </script>
 

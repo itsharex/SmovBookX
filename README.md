@@ -44,6 +44,8 @@ ffmpeg -f concat -i filelist.txt -c copy output.mkv
 
 6.自动更新功能 codeing提供 下载软件 服务器提供返回文本
 
+晚上更新一个切换关闭列表 切换为可用的 功能 0.1.6版本
+
 
 打包方式更改为签名 
 
