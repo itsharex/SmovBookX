@@ -42,5 +42,12 @@ ffmpeg -f concat -i filelist.txt -c copy output.mkv
 
 5.合并视频文件提示
 
+6.自动更新功能 codeing提供 下载软件 服务器提供返回文本
 
+
+打包方式更改为签名 
+
+全局变量修改为 env-cmd
+
+npm install -g env-cmd 安装
 
