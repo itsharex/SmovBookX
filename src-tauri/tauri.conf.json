@@ -49,7 +49,7 @@
       "active": true,
       "dialog": true,
       "endpoints": [
-        "https://gist.githubusercontent.com/214zzl995/2bebf45efb602600c3c26df0050c7e95/raw/36123f32234fcf27a615d3f5755efc25fd3a3f9d/SmovBook"
+        "https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/updater.json?version=latest"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNFNjIwNzZBNEQxQUQ5ODMKUldTRDJScE5hZ2RpUHZjQ2ZOWW5KOEJPU2xmQjhNYzdYWEVVQTcrNjlRNFJ5RnZldnEyS3djTWgK"
     },
