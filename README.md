@@ -42,5 +42,17 @@ ffmpeg -f concat -i filelist.txt -c copy output.mkv
 
 5.合并视频文件提示
 
+6.自动更新功能 codeing提供 下载软件 服务器提供返回文本
 
+晚上更新一个切换关闭列表 切换为可用的 功能 0.1.6版本
+
+
+打包方式更改为签名 
+
+全局变量修改为 env-cmd
+
+npm install -g env-cmd 安装
+
+
+删除数据时需要同时删除检索队列的数据
 

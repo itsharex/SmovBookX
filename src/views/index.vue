@@ -1,48 +1,50 @@
 <template>
-  <!-- <el-button type="danger" @click="goBack">查询未检索信息</el-button> -->
-  <el-button type="danger" @click="toInit" :loading="loading">检索文件系统</el-button>
-  <el-button type="danger" @click="toSeek">跳转至正常检索页面</el-button>
-  <el-button type="danger" @click="
-    router.push({
-      path: '/test',
-    })
-  ">跳转至测试</el-button>
+  <div>
+    <el-button type="danger" @click="toInit" :loading="loading">检索文件系统</el-button>
+    <el-button type="danger" @click="toSeek">跳转至正常检索页面</el-button>
+    <el-button
+      type="danger"
+      @click="
+        router.push({
+          path: '/test',
+        })
+      "
+    >跳转至测试</el-button>
 
-  <el-button
-    type="danger"
-    @click="
-      router.push({
-        path: '/setting',
-      })
-    "
-  >跳转至设置</el-button>
+    <el-button
+      type="danger"
+      @click="
+        router.push({
+          path: '/setting',
+        })
+      "
+    >跳转至设置</el-button>
 
-  <el-button type="danger" @click="Dialog.show = true">显示提示</el-button>
-
-  <!-- 检索提示 -->
-  <el-dialog v-model="Dialog.show" class="dialog" title="回调" width="50%" destroy-on-close center>
-    <p>
-      检索到
-      <span class="number">{{ Dialog.data.add_size }}</span>
-      条新数据
-    </p>
-    <p v-if="Dialog.data.del_smov_file.length != 0">
-      发现
-      <span class="number">{{ Dialog.data.del_smov_file.length }}</span> 条被删除的数据
-    </p>
-    <p>
-      <el-checkbox
-        label="删除已被删除的数据"
-        v-model="Dialog.del"
-        v-if="Dialog.data.del_smov_file.length != 0"
-      />
-    </p>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button type="primary" @click="DialogClick">确定</el-button>
-      </span>
-    </template>
-  </el-dialog>
+    <!-- 检索提示 -->
+    <el-dialog v-model="Dialog.show" title="回调" width="50%" destroy-on-close center>
+      <p>
+        检索到
+        <span class="number">{{ Dialog.data.add_size }}</span>
+        条新数据
+      </p>
+      <p v-if="Dialog.data.del_smov_file.length != 0">
+        发现
+        <span class="number">{{ Dialog.data.del_smov_file.length }}</span> 条被删除的数据
+      </p>
+      <p>
+        <el-checkbox
+          label="删除已被删除的数据"
+          v-model="Dialog.del"
+          v-if="Dialog.data.del_smov_file.length != 0"
+        />
+      </p>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="DialogClick">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script lang="ts">
@@ -100,11 +102,6 @@ export default defineComponent({
           });
         })
         .finally(() => {
-          // ElMessage({
-          //   showClose: true,
-          //   message: "检索成功",
-          //   type: "success",
-          // });
           setTimeout(() => {
             loading.value = false;
           }, 500);

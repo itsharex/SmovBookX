@@ -6,3 +6,5 @@ dist-ssr
 .idea
 .vscode
 *.lock
+.tauri
+.env-cmdrc

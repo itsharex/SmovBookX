@@ -1,7 +1,7 @@
 {
   "package": {
     "productName": "SmovBook",
-    "version": "0.0.5"
+    "version": "0.1.5"
   },
   "build": {
     "distDir": "../dist",
@@ -42,15 +42,19 @@
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+        "timestampUrl": "",
+        "wix":{
+          "language": ["zh-CN"]
+        }
       }
     },
     "updater": {
-      "active": false,
-      "dialog": true,
+      "active": true,
+      "dialog": false,
       "endpoints": [
-        "https://github.com/Hunlongyu/color-picker/releases/{{current_version}}"
-      ]
+        "https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/updater.json?version=latest"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJCNEVBNkZBODc1REVFMzEKUldReDdsMkgrcVpPSzY5aGQ2anFoQ2NLWGhmR28xeDRZNDJ2LzcxNW1YT0t5L29hNXhmdE5WYU0K"
     },
     "allowlist": {
       "all": true

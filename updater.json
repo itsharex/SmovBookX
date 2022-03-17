@@ -1,0 +1,11 @@
+{
+    "name":"v0.1.5",
+    "notes":"版本测试 修复了部分bug 新增了部分bug",
+    "pub_date":"2022-03-16T19:25:57Z",
+    "platforms": {
+        "win64": {
+            "signature":"dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReDdsMkgrcVpPS3pDRCtJY01KeDV6ZlVxTE9VVktkWUxFc1VlZmd0dGJ4VzlTMXZLNWtWY1l5amU5L1Z0SGVNczVHV2F2M2VqeWhlT1VlSmVoNmVjckFwNzVGTGNSTXc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjQ3NTI2NzAwCWZpbGU6RDpcRGV2XHRhdXJpXFNtb3ZCb29rWFxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9TbW92Qm9va18wLjEuNV94NjRfemgtQ04ubXNpLnppcApISDFQMHZnU1N3V1BzYkpURXNWMGtLcE9JZ0pselhKeXZiNjR1NHE5VEZiV2VmWkVJQzJpWVk2V1FKWEsrOUhOS0ZnRzJhUG8wdUhQelYzOFMxcCtCdz09Cg==",
+            "url":"https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/SmovBook_0.1.5_x64_zh-CN.msi.zip?version=0.1.5"
+        }
+    }
+}
