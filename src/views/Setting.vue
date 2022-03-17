@@ -1,7 +1,9 @@
 <template>
-  <el-button type="danger" @click="setSeekFolder">添加检索文件夹</el-button>
-  <el-button type="danger" @click="setTidyFolder">设置整理文件夹</el-button>
-  <el-button type="danger" @click="test">ces</el-button>
+  <div>
+    <el-button type="danger" @click="setSeekFolder">添加检索文件夹</el-button>
+    <el-button type="danger" @click="setTidyFolder">设置整理文件夹</el-button>
+    <el-button type="danger" @click="test">ces</el-button>
+  </div>
 </template>
 
 <script lang="ts">

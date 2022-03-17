@@ -42,16 +42,19 @@
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+        "timestampUrl": "",
+        "wix":{
+          "language": ["zh-CN"]
+        }
       }
     },
     "updater": {
       "active": true,
-      "dialog": true,
+      "dialog": false,
       "endpoints": [
         "https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/updater.json?version=latest"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNFNjIwNzZBNEQxQUQ5ODMKUldTRDJScE5hZ2RpUHZjQ2ZOWW5KOEJPU2xmQjhNYzdYWEVVQTcrNjlRNFJ5RnZldnEyS3djTWgK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJCNEVBNkZBODc1REVFMzEKUldReDdsMkgrcVpPSzY5aGQ2anFoQ2NLWGhmR28xeDRZNDJ2LzcxNW1YT0t5L29hNXhmdE5WYU0K"
     },
     "allowlist": {
       "all": true

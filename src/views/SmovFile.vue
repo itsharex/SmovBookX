@@ -92,7 +92,6 @@ export default defineComponent({
           }
           resolve(null);
           table.loading = false;
-          console.log($table.getData(0))
         }, 300);
       });
     };

@@ -53,3 +53,6 @@ ffmpeg -f concat -i filelist.txt -c copy output.mkv
 
 npm install -g env-cmd 安装
 
+
+删除数据时需要同时删除检索队列的数据
+
