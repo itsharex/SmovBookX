@@ -2,15 +2,17 @@ extern crate kuchiki;
 extern crate lazy_static;
 extern crate reqwest;
 
-use crate::model::smov::SmovFile;
 use crate::model::smov::SmovSeek;
+use crate::serve::file::TidySmov;
 use kuchiki::traits::*;
 use reqwest::header::HeaderMap;
-use std::path::Path;
+use reqwest::Client;
+use std::path::PathBuf;
 use std::{
   fs::File,
   io::{Read, Write},
 };
+use tracing::info;
 lazy_static! {
   static ref VEC: Vec<u8> = vec![0x18u8, 0x11u8];
   static ref HEADER: HeaderMap = {
@@ -41,10 +43,19 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
 
   let url = format!("{}/search?q={}&f=all", *MAIN_URL, format);
 
-  let client = reqwest::Client::new();
-  let res = client.get(url).headers(headers.clone()).send().await?;
+  // let proxy = reqwest::Proxy::all("115.223.195.206:9000").expect("tor proxy should be there");
 
-  let text = res.text().await?;
+  // let client = reqwest::Client::builder().proxy(proxy).build().expect("should be able to build reqwest client");
+
+  let client = reqwest::Client::new();
+  let res = client
+    .get(url)
+    .headers(headers.clone())
+    .send()
+    .await
+    .expect("访问出现错误");
+
+  let text = res.text().await.expect("无法格式化");
 
   let document = kuchiki::parse_html().one(text);
 
@@ -54,6 +65,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
 
   let mut flag = false;
 
+  //这个循环要改的
   for videos_div in videos_main {
     let videos_main = videos_div.as_node();
     let videos = videos_main.select(".grid-item").unwrap();
@@ -62,7 +74,10 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
       let video_item = video.as_node();
       let uid = match video_item.select(".uid").unwrap().next_back() {
         Some(x) => x,
-        None => return Ok(false), // None
+        None => {
+          tracing::warn!(target: "frontend_log",message = "未检索到数据");
+          return Ok(false);
+        } // None
       };
 
       let name = uid.text_contents();
@@ -80,24 +95,27 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
         let thumbs_url = img.attributes.borrow().get("data-src").unwrap().to_string();
         let att = &a.attributes;
         let href = att.borrow().get("href").unwrap().to_string(); //is_some 是否存在？
-        let title = att.borrow().get("title").unwrap().to_string();
+        let _title = att.borrow().get("title").unwrap().to_string();
 
         sava_pic(
           &thumbs_url,
           &(format!("thumbs_{}.jpg", name)),
-          &"C:/Users/Leri/Desktop/新建文件夹".to_string(),
-        ).await.expect("保存图片出现错误");
+          &img_to_path,
+          &client,
+        )
+        .await
+        .expect("保存图片出现错误");
 
         let url = format!("{}{}", *MAIN_URL, &href);
         let res = client
           .get(&url)
           .headers(headers.clone())
           .send()
-          .await?
+          .await
+          .expect("出现错误")
           .text()
-          .await?;
-
-        println!("{}", &url);
+          .await
+          .expect("出现错误");
 
         let document = kuchiki::parse_html().one(res);
 
@@ -121,13 +139,14 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
           .unwrap()
           .to_string();
 
-        println!("{}", smov_img);
-
         sava_pic(
           &smov_img,
-          &(format!("MAIN_{}.jpg", name)),
-          &"C:/Users/Leri/Desktop/新建文件夹".to_string(),
-        ).await.expect("保存图片出现错误");
+          &(format!("main_{}.jpg", name)),
+          &img_to_path,
+          &client,
+        )
+        .await
+        .expect("保存图片出现错误");
 
         let details = video_meta_panel.select(".panel-block").unwrap();
 
@@ -139,46 +158,25 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
           duration: 0,
           publishers: String::new(),
           makers: String::new(),
-          series: String::new(),
+          series: String::from("无系列"),
           directors: String::new(),
           tags: Vec::new(),
           actors: Vec::new(),
         };
 
-        let mut flag_size = 0;
-
+        //有两种情况，一种是有系列12个元素 一种没有系列11个元素 按storge检索
         for detail in details {
-          if flag_size == 0 {
-            // 没用部分
-            // let s = detail
-            //     .as_node()
-            //     .select("a")
-            //     .unwrap()
-            //     .next_back()
-            //     .unwrap()
-            //     .attributes
-            //     .borrow()
-            //     .get("value")
-            //     .unwrap()
-            //     .to_string();
-            // let s = detail
-            //     .as_node()
-            //     .select(".value")
-            //     .unwrap()
-            //     .next_back()
-            //     .unwrap();
-            // println!("1.{}", s.text_contents())
-          } else if flag_size == 1 {
-            let s = detail
-              .as_node()
-              .select(".value")
-              .unwrap()
-              .next_back()
-              .unwrap();
+          let detail_m = detail.as_node();
+          let type_flag = match detail_m.select("strong").expect("成功抛出错误").next() {
+            Some(e) => e.text_contents(),
+            None => continue,
+          };
+
+          if type_flag.eq("日期:") {
+            let s = detail_m.select(".value").unwrap().next_back().unwrap();
             smov_seek.release_time = s.text_contents();
-          } else if flag_size == 2 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq(" 時長:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
@@ -186,79 +184,114 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
               .text_contents()
               .replace(" 分鍾", "");
             smov_seek.duration = s.parse::<i32>().unwrap();
-          } else if flag_size == 3 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq("導演:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.directors = s;
-          } else if flag_size == 4 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq("片商:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.makers = s;
-          } else if flag_size == 5 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq(" 發行:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.publishers = s;
-          } else if flag_size == 6 {
-            let s = detail
-              .as_node()
+          } else if type_flag.eq("系列:") {
+            let s = detail_m
               .select(".value")
               .unwrap()
               .next_back()
               .unwrap()
               .text_contents();
             smov_seek.series = s;
-          } else if flag_size == 8 {
-            let tags = detail.as_node().select("a").unwrap();
+          } else if type_flag.eq("類別:") {
+            let tags = detail_m.select("a").unwrap();
 
             for tag in tags {
               let s = tag.as_node().text_contents();
               smov_seek.tags.push(s);
             }
-          } else if flag_size == 9 {
-            let mut actors = detail.as_node().select("a").unwrap();
-            let actors_size = detail.as_node().select(".female").unwrap().count();
+          } else if type_flag.eq("演員:") {
+            let mut actors = detail_m.select("a").unwrap();
+            let actors_size = detail_m.select(".female").unwrap().count();
             let mut i = 0;
             while i != actors_size {
               let s = actors.next().unwrap().text_contents();
               smov_seek.actors.push(s);
               i += 1;
             }
-            // println!("{:?}",smov_seek);
           }
-          flag_size = flag_size + 1;
         }
+
+        //保存详情图片
+        let screenshots = match document
+          .select(".preview-images")
+          .expect("获取截图块出现错误")
+          .next()
+        {
+          Some(e) => e,
+          None => return Ok(true),
+        };
+
+        let screenshots = screenshots
+          .as_node()
+          .select(".tile-item")
+          .expect("获取详情图片快出现错误");
+
+        let mut counter = 1;
+        for screenshot in screenshots {
+          let screenshot_href = screenshot
+            .attributes
+            .borrow()
+            .get("href")
+            .unwrap()
+            .to_string();
+          // info!("正在保存第{}张图片", &counter);
+          sava_pic(
+            &screenshot_href,
+            &(format!("detail_{}.jpg", counter)),
+            &img_to_path.join("detail"),
+            &client,
+          )
+          .await
+          .expect("保存图片出现错误");
+          counter = counter + 1;
+        }
+
         SmovSeek::insert_by_path_name(smov_seek).unwrap();
+
         flag = true;
       }
     }
   }
+
+  if !flag {
+    tracing::warn!(target: "frontend_log",message = "未检索到数据");
+    return Ok(false);
+  }
+
   Ok(flag)
 }
 
 async fn sava_pic(
   url: &String,
   name: &String,
-  path: &String,
+  path: &PathBuf,
+  client: &Client,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let pic_path = format!("{}/{}", path, name);
-  println!("{}", pic_path);
-  let path = Path::new(&pic_path);
-  let client = reqwest::Client::new();
+  let pic_path = path.join(name);
 
   let mut headers = HeaderMap::new();
   headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());
@@ -270,6 +303,14 @@ async fn sava_pic(
       .unwrap(),
   );
 
+  let msg = format!(
+    "保存图片url:{} => path:{}",
+    url,
+    path.as_os_str().to_str().unwrap_or_else(|| "none")
+  );
+
+  info!(target: "frontend_log",message = msg.as_str());
+
   let res = client
     .get(url)
     .headers(headers)
@@ -278,7 +319,7 @@ async fn sava_pic(
     .bytes()
     .await?;
 
-  let mut file = match File::create(&path) {
+  let mut file = match File::create(&pic_path) {
     Err(why) => panic!("couldn't create {}", why),
     Ok(file) => file,
   };

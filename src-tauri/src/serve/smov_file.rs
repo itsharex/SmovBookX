@@ -1,14 +1,25 @@
+use serde::{Deserialize, Serialize};
+
 use crate::model::folder::Folder;
 use crate::model::smov::SmovFile;
+use anyhow::{anyhow, Result};
 use std::collections::HashSet;
 use std::fs;
+use std::hash::Hash;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[warn(non_upper_case_globals)]
 const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv"];
 
-pub fn smov_file() -> String {
+#[derive(Hash, Debug, Deserialize, Serialize)]
+pub struct SmovFileBack {
+  time: i64,
+  add_size: usize,
+  del_smov_file: Vec<SmovFile>,
+}
+
+pub fn smov_file() -> Result<SmovFileBack> {
   let begin = timestamp(SystemTime::now());
 
   let folders = Folder::query_folder().unwrap();
@@ -24,29 +35,34 @@ pub fn smov_file() -> String {
     let main_path = folder.path;
 
     let mut loa_smov = retrieve_all(&main_path);
-    // for y in loa_smov.iter() {
-    //     smov_file::insert_file_data(y);
-    // }
 
     file_smov.append(&mut loa_smov);
-
-    // for y in &smov {
-    //     smov_file::insert_file_data(y).unwrap();
-    // }
   }
 
   let file_smov: HashSet<SmovFile> = file_smov.into_iter().collect();
 
   let smov = file_smov.difference(&db_smov).collect::<Vec<&SmovFile>>();
 
+  // let smov_del = db_smov.difference(&file_smov).into_iter().map(|x| x.clone()).collect::<Vec<SmovFile>>();
+  let smov_del = db_smov.difference(&file_smov).collect::<Vec<&SmovFile>>();
+
+  let smov_del = match SmovFile::query_by_path_name(smov_del) {
+    Ok(res) => res,
+    Err(err) => {
+      tracing::error!(message = format!("生成已删除文件出现错误:{}", err).as_str());
+      return Err(anyhow!("生成已删除文件出现错误:{}", err));
+    }
+  };
+
   SmovFile::insert_file_data(&smov).unwrap();
 
   let end = timestamp(SystemTime::now());
-  format!(
-    "扫描全部文件用时:{:?}ms，共扫描到{}个差异视频文件",
-    end - begin,
-    &smov.len()
-  )
+
+  Ok(SmovFileBack {
+    time: end - begin,
+    add_size: smov.len(),
+    del_smov_file: smov_del,
+  })
 }
 
 fn timestamp(time: SystemTime) -> i64 {
@@ -69,7 +85,8 @@ fn is_mov_type(extension: &String) -> bool {
   flag
 }
 
-fn retrieve_all(path: &String) -> Vec<SmovFile> {
+///判断是否汉化放到这里
+pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
   let mut smovs: Vec<SmovFile> = Vec::new();
 
   if let Ok(entries) = fs::read_dir(&path) {
@@ -89,8 +106,16 @@ fn retrieve_all(path: &String) -> Vec<SmovFile> {
             .to_os_string()
             .into_string()
             .expect("读取文件时发生错误");
-          let format = name.to_uppercase().replace("-C", "").replace("-", "");
+          let _format = name.to_uppercase().replace("-C", "").replace("-", "");
           if is_mov_type(&extension) {
+            let file_name = String::from(&name);
+            let isch = match file_name.contains("-c")
+              || file_name.contains("-C")
+              || file_name.contains("-ch")
+            {
+              true => 1,
+              false => 0,
+            };
             let res = SmovFile {
               id: 0,
               realname: String::from(&name),
@@ -101,6 +126,8 @@ fn retrieve_all(path: &String) -> Vec<SmovFile> {
               modified: timestamp(mat.modified().expect("文件修改日期读取错误")),
               extension,
               format: String::from(""),
+              isch,
+              is_active: 0,
             };
             smovs.push(res);
           }

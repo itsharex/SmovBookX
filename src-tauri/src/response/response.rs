@@ -10,6 +10,7 @@ pub struct Response<T> {
 
 impl<T> Response<T> {
     pub fn new(code: i32, data: T, msg: &str) -> Response<T> {
+        
         Response {
             code,
             data,
@@ -22,7 +23,7 @@ impl<T> Response<T> {
     pub fn err(data: T, msg: &str) -> Self {
         Self::new(300, data, msg)
     }
-    pub fn not_found(data: T) -> Self {
+    pub fn _not_found(data: T) -> Self {
         Self::new(404, data, "未找到数据")
     }
 }

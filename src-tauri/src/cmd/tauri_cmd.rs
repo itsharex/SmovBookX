@@ -1,4 +1,6 @@
 use serde::Deserialize;
+use tracing::info;
+use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::mpsc::channel;
@@ -6,6 +8,8 @@ use std::sync::mpsc::channel;
 use tauri::api::dialog;
 use tauri::command;
 
+extern crate toml;
+use crate::app::Conf;
 use crate::response::response::Response;
 
 #[derive(Deserialize)]
@@ -67,13 +71,35 @@ pub fn open_folder_select() -> Response<String> {
 #[command]
 pub fn open_in_explorer(path: String) {
   Command::new("explorer")
-    .arg(".") // <- Specify the directory you'd like to open.
+    .arg(path) // <- Specify the directory you'd like to open.
     .spawn()
     .unwrap();
 }
 
 pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
   pathbuf.to_str().map(|st| String::from(st))
+}
+
+//测试
+#[command]
+pub fn test()  {
+  info!(target: "frontend_log",message = "test msg" );
+}
+
+///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据
+#[command]
+pub fn update_tidy_folder(path: String) {
+  let mut conf = crate::app::CONF.lock();
+  conf.tidy_folder = PathBuf::from(&path);
+  let to_path = &crate::app::APP.lock().app_dir.join("conf.toml");
+  let a = Conf {
+    tidy_folder: PathBuf::from(&path),
+  };
+  if let Ok(_) = File::create(to_path) {
+    //写入一个数据
+    let c = toml::to_string(&a).unwrap();
+    write(to_path, c).unwrap();
+  }
 }
 
 pub type MaybeString = Option<String>;

@@ -1,55 +1,39 @@
 <template>
-  <div>
-    <!-- <el-empty description="未检测到文件" v-if="FileData === undefined || FileData.length === 0"></el-empty>
-    <el-skeleton v-if="skeleton" />-->
-    <!-- <smov-list v-for="(data,index) in FileData "
-               :data="data"
-               :index="index"
-               :key="index"
-               @ChangeStatus="ParenStatus"
-               @ChangeName="changeName">
-    </smov-list>-->
-
-    <!-- <el-table :data="FileData" style="width: 100%" :row-key="id">
-      <el-table-column type="selection" width="55" />
-      <el-table-column type="index" fixed prop="realname" label="检索名" width="300" >
-         <template #default="scope">
-          <span>{{scope.row.realname}}</span>
-          <el-input v-model="FileData[scope.$index].realname" placeholder="Please input" />
-        </template>
-        </el-table-column>
-      <el-table-column prop="path" label="路径" />
-      <el-table-column prop="len" label="文件大小" />
-      <el-table-column fixed="right" label="操作">
-        <template #default="scope">
-          <el-button type="text" size="small" @click="handleClick">详情</el-button>
-          <el-button type="text" size="small" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
-        </template>
-      </el-table-column>
-    </el-table>-->
-
-    <vxe-toolbar export :refresh="{ query: findList }">
-      <template #buttons>
-        <vxe-button @click="getSelectEvent">获取选中</vxe-button>
-      </template>
-    </vxe-toolbar>
+  <div class="fileMain">
+    <div class="toolBar">
+      <el-button type="primary" :icon="Files" :loading="false" @click="getSelectEvent">剑气纵横三万里</el-button>
+      <el-button type="warning" :icon="Close" :loading="false" @click="changeStatusAll">一剑光寒十九洲</el-button>
+      <el-button type="primary" :icon="Refresh" @click="initFn">重载</el-button>
+      <el-input
+        v-model="search"
+        class="search"
+        placeholder="全表检索"
+        :suffix-icon="Search"
+        @input="searchEvent"
+      />
+    </div>
 
     <vxe-table
       resizable
       show-overflow
       keep-source
       ref="xTable"
-      height="500"
+      class="fileTable"
+      height="92%"
       :export-config="{}"
       :loading="table.loading"
       :checkbox-config="{ checkField: 'checked' }"
-      :edit-config="{ trigger: 'click', mode: 'row', showStatus: true }"
+      :edit-config="{ trigger: 'dblclick', mode: 'row', showStatus: true }"
       @edit-closed="editClosedEvent"
+      :scroll-y="{ gt: 100 }"
     >
-      <vxe-column type="seq" width="100"></vxe-column>
+      <template #empty>
+        <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
+      </template>
+      <vxe-column type="seq" width="60"></vxe-column>
       <vxe-column type="checkbox" width="60"></vxe-column>
       <vxe-column field="realname" title="文件名称"></vxe-column>
-      <vxe-column field="extension" title="拓展名"></vxe-column>
+      <vxe-column field="extension" title="拓展名" width="100"></vxe-column>
       <vxe-column
         field="seekname"
         title="检索名称"
@@ -60,57 +44,33 @@
           <vxe-input v-model="row.seekname" type="text"></vxe-input>
         </template>
       </vxe-column>
+      <vxe-column field="is_active" title="可用" width="60">
+        <template #default="{ row }">
+          <span>{{ row.is_active == 1 ? "是" : "否" }}</span>
+        </template>
+      </vxe-column>
+      <vxe-column title="操作" width="60">
+        <template #default="{ row }">
+          <el-button type="warning" :icon="Close" size="small" circle @click="changActive(row)"></el-button>
+        </template>
+      </vxe-column>
     </vxe-table>
-
-    <!-- <el-dialog v-model="centerDialogVisible" title="Tips" width="30%" :before-close="handleClose">
-      <template #footer>  
-        <span class="dialog-footer">
-          <el-button @click="centerDialogVisible = false">Cancel</el-button>
-          <el-button type="primary" @click="dialogFinish">Confirm</el-button>
-        </span>
-      </template>
-    </el-dialog>-->
-
-    <div class="SmovFileNav"></div>
-
-    <div class="navBottom">
-      <el-input
-        size="small"
-        style="width: 200px"
-        v-model="search"
-        v-if="false"
-      />
-      <!-- <el-button size="small" @click="initFn">检索全部</el-button>
-
-      <el-button size="small" @click="SearchFile">db数据检索</el-button>-->
-    </div>
   </div>
 </template>
 
 <script lang="ts">
-import {
-  defineComponent,
-  ref,
-  onMounted,
-  watch,
-  computed,
-  h,
-  reactive,
-} from "vue";
+import { defineComponent, ref, onMounted, reactive } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
-import SmovList from "../components/SmovList.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { ElNotification } from "element-plus";
+import XEUtils from 'xe-utils';
+import { ElMessage } from "element-plus";
+import { Files, Refresh, Search, Close } from '@element-plus/icons-vue';
 
 export default defineComponent({
-  components: { SmovList },
+  components: {},
   setup: function () {
-    const skeleton = ref(false);
-    const empty = ref(false);
     let FileData: any[] = reactive([]);
     const search = ref();
-    const singleData = ref({});
-    const centerDialogVisible = ref(false);
 
     const table = reactive({
       loading: false,
@@ -118,29 +78,13 @@ export default defineComponent({
 
     const xTable = ref({} as VxeTableInstance);
 
-    const mockList = (size: number) => {
-      const list: any[] = [];
-      for (let index = 0; index < size; index++) {
-        list.push({
-          checked: false,
-          realname: `名称${index}`,
-          sex: "0",
-          num: 123,
-          age: 18,
-          num2: 234,
-          rate: 3,
-          address: "shenzhen",
-        });
-      }
-      return list;
-    };
-
     const findList = () => {
       table.loading = true;
-      console.log(FileData);
       return new Promise((resolve) => {
         setTimeout(() => {
           const data = FileData;
+
+          console.log(FileData)
           // 阻断 vue 对大数组的监听，避免 vue 绑定大数据造成短暂的卡顿
           const $table = xTable.value;
           if ($table) {
@@ -152,58 +96,133 @@ export default defineComponent({
       });
     };
 
+    const searchEvent = () => {
+      const $table = xTable.value;
+      const searchs = XEUtils.toValueString(search.value).trim().toLowerCase();
+      const backdata = $table.getTableData().fullData;
+      if (searchs) {
+        const filterRE = new RegExp(searchs, 'gi')
+        const searchProps = ['seekname', 'realname', 'extension']
+        const rest = $table.getTableData().fullData.filter(item => searchProps.some(key => XEUtils.toValueString(item[key]).toLowerCase().indexOf(searchs) > -1))
+        console.log(rest)
+        const data = rest.map(row => {
+          const item = Object.assign({}, row)
+          searchProps.forEach(key => {
+            item[key] = XEUtils.toValueString(item[key]).replace(filterRE, match => `${match}`)
+          })
+          return item
+        })
+        $table.loadData(data);
+      } else {
+        $table.loadData(FileData);
+      }
+    }
+
     const getSelectEvent = () => {
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
-      // const allRecords = $table.getTableData().fullData;//获取全部数据
+      let tasks: any[] = [];
 
-      // VXETable.modal.alert(`${selectRecords.length}条数据`)
+      if (selectRecords.length != 0) {
+        table.loading = true;
+        for (let select of selectRecords) {
+          tasks.push(
+            {
+              id: 0,
+              smov_id: select.id,
+              seek_name: select.seekname,
+              status: 0
+            }
+          )
+        }
 
-      for (let select of selectRecords) {
-        retrieveData(select.seekname, select.id);  //await 关键词 等待完成
+        console.log("发送数据")
+        console.log(Date.now())
+
+        invoke("change_seek_status", { smov: tasks }).then((res: any) => {
+          if (res.code == 200) {
+            ElMessage({
+              message: '共' + tasks.length + '条加入到检索队列',
+              type: 'success',
+            })
+          } else {
+            ElMessage.error('插入到检索队列出现错误,' + res.msg)
+          }
+        }
+        ).finally(() => {
+          table.loading = false;
+          //使用XEUtil进行删除
+          selectRecords.forEach(item => {
+            XEUtils.remove(FileData, toitem => toitem === item)
+          })
+          $table.removeCheckboxRow();
+        })
       }
     };
 
-    async function retrieveData(seekName, id) {
-      invoke("retrieve_data", {
-        seekName: seekName,
-        smovId: id,
-      }).then((res) => {
-        console.log(res);
-      });
+    //批量修改 需要优化！ 批量是否重新渲染的代价比较低
+    const changeStatusAll = async () => {
+      table.loading = true;
+      const $table = xTable.value;
+      const selectRecords = $table.getCheckboxRecords();
+
+      const data = XEUtils.map(selectRecords, item => item.id);
+
+      invoke("disable_smov", { id: data }).then((res: any) => {
+        if (res.code == 200) {
+          table.loading = false;
+          $table.removeCheckboxRow();
+
+          ElMessage({
+            message: '共' + selectRecords.length + '条数据被关闭',
+            type: 'success',
+          })
+        }
+      })
     }
-    
+
+    const changActive = (row: any) => {
+
+      invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
+        if (res.code == 200) {
+          const $table = xTable.value;
+          $table.remove(row);
+          //$table.reloadRow(row, null,undefined)
+          XEUtils.remove(FileData, toitem => toitem === row)
+        } else {
+          ElMessage.error('关闭出现了一个问题' + res.msg)
+        }
+      }).finally(() => {
+
+      })
+    }
+
     onMounted(() => {
       initFn();
     });
 
     const initFn = () => {
+      table.loading = true;
       invoke("query_unretrieved").then((res) => {
+        // console.log(res)
         let data: any = res;
         if (data.code == 200) {
           FileData = data.data;
           findList();
         }
+      }).finally(() => {
+        setTimeout(() => {
+          table.loading = false;
+        }, 1000);
+
       });
     };
 
-    const ParenStatus = (index, status) => {
-      FileData[index].status = status;
-    };
-
-    const changeName = (index, name) => {
-      console.log(name);
-      FileData[index].formatCode = name;
-    };
-    const filter = () => {
-      return FileData.filter((item) => item.name.indexOf(search) < 0);
-    };
-
-    //局部保存 直接修改元数据
+    //局部保存 直接修改元数据  经过测试 除了删除其他操作数据都会同步到元数据
     const editClosedEvent: VxeTableEvents.EditClosed = ({ row, column }) => {
       const $table = xTable.value;
-      const field = column.property;
-      const cellValue = row[field];
+      const field = column.field;  //旧值 
+      const cellValue = row[field]; //新值
 
       //更新数据库中的数据
       invoke("update_seekname", { id: row.id, seekName: row.seekname }).then(
@@ -216,7 +235,6 @@ export default defineComponent({
                   content: `局部保存成功！ ${field}=${cellValue}`,
                   status: "success",
                 });
-                // 局部更新单元格为已保存状态
                 $table.reloadRow(row, null, field);
               }, 300);
             }
@@ -226,50 +244,56 @@ export default defineComponent({
       // 判断单元格值是否被修改
     };
 
-    const handleEdit = (index, row) => {
-      const data = {
-        index: index,
-        data: row,
-      };
-
-      singleData.value = data;
-
-      centerDialogVisible.value = true;
-
-      ElNotification({
-        title: "Title",
-        message: h("i", { style: "color: teal" }, "This is a reminder"),
-      });
-    };
-
-    const dialogFinish = () => {
-      centerDialogVisible.value = false;
-    };
-
     return {
-      skeleton,
-      empty,
-      FileData,
-      ParenStatus,
-      changeName,
-      filter,
       search,
-      initFn,
-      handleEdit,
-      centerDialogVisible,
-      dialogFinish,
       table,
       findList,
       xTable,
       editClosedEvent,
+      searchEvent,
       getSelectEvent,
+      Files,
+      Refresh,
+      initFn,
+      Search,
+      changActive,
+      Close,
+      changeStatusAll
     };
   },
 });
 </script>
 
-<style>
-/* .vxe-table--empty-placeholder /deep/ .vxe-loading {
-  background-color: none;
-} */
+<style scoped lang="less">
+.fileMain {
+  height: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.fileTable {
+  flex-grow: 1;
+}
+.toolBar {
+  padding: 10px;
+  border: 1px solid #e8e9eb;
+  background-color: #f8f8f9;
+  display: flex;
+  z-index: 999;
+  align-items: center;
+}
 </style>
+
+<style lang="less">
+.search {
+  flex: 1;
+  display: flex;
+  justify-content: right;
+
+  input {
+    width: 250px;
+  }
+}
+</style>
+
+

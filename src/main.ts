@@ -1,9 +1,10 @@
 import { createApp } from 'vue'
-import App from './App.vue'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
+import App from './layout/index.vue'
 import router from "./router/router";
 import VXETable from 'vxe-table'
 import 'vxe-table/lib/style.css'
+import "./global_event"
 
-createApp(App).use(ElementPlus).use(router).use(VXETable).mount('#app')
+console.log(process.env);
+
+createApp(App).use(router).use(VXETable).mount('#app');
