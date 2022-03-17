@@ -1,6 +1,6 @@
 {
   "name": "smovbook",
-  "version": "0.0.5",
+  "version": "0.1.5",
   "scripts": {
     "dev": "cross-env NODE_ENV=development vite",
     "build": "cross-env NODE_ENV=production vue-tsc --noEmit && vite build",
