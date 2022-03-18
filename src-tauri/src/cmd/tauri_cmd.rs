@@ -89,7 +89,7 @@ pub fn test() {
 ///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据
 #[command]
 pub fn update_tidy_folder(path: String) {
-  let mut conf = crate::app::CONF.lock();
+  let mut conf = &mut crate::app::APP.lock().conf;
   conf.tidy_folder = PathBuf::from(&path);
   let to_path = &crate::app::APP.lock().app_dir.join("conf.toml");
   let a = Conf {

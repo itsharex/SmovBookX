@@ -28,9 +28,6 @@ async fn main() {
       if !app::init_app_dir() {
         panic!("工作目录初始化失败！");
       }
-      if !app::init_app_conf() {
-        panic!("配置文件初始化失败！");
-      }
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())
     })

@@ -4,6 +4,8 @@
  */
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap};
+use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
 use std::io::{Read, Write};
@@ -48,7 +50,6 @@ use tracing_subscriber::{
 
 lazy_static! {
   pub static ref APP: Mutex<App> = Mutex::new(App::new());
-  pub static ref CONF: Mutex<Conf> = Mutex::new(Conf::new());
 }
 
 struct JsonVisitor<'a>(&'a mut BTreeMap<String, serde_json::Value>);
@@ -133,31 +134,57 @@ where
 ///初始化app文件夹
 pub fn init_app_dir() -> bool {
   if !Path::new(&crate::app::APP.lock().app_dir).exists() {
-    if let Ok(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
-      return true;
+    if let Err(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
+      return false;
     }
-    return false;
   }
-  true
-}
 
-pub fn init_app_conf() -> bool {
+  // println!("{}", &crate::app::APP.lock().msg);
   let conf = &crate::app::APP.lock().app_dir.join("conf.toml");
   if !conf.exists() {
-    let path = &crate::app::APP.lock().app_dir.join("conf.toml");
-    if let Ok(_) = File::create(path) {
+    if let Ok(_) = File::create(conf) {
       //写入一个数据
       let a = Conf {
         tidy_folder: PathBuf::new(),
         thread: 1,
       };
       let c = toml::to_string(&a).unwrap();
-      write(path, c).unwrap();
+      write(conf, c).unwrap();
       return true;
     }
     return false;
   } else {
-  
+    //如果存在 就 读取数据查看是否有不存在的项
+    let mut file = match File::open(&conf) {
+      Ok(f) => f,
+      Err(e) => panic!("no such file {} exception:{}", conf.to_str().unwrap(), e),
+    };
+
+    let mut str_val = String::new();
+    match file.read_to_string(&mut str_val) {
+      Ok(s) => s,
+      Err(e) => panic!("Error Reading file: {}", e),
+    };
+
+    let mut confs: HashMap<String, Value> = toml::from_str(&str_val).unwrap();
+    let mut flag = false;
+
+    if confs.get("tidy_folder").eq(&None) {
+      confs.insert("tidy_folder".to_string(), Value::String("".to_string()));
+      flag = true;
+    }
+
+    if confs.get("thread").eq(&None) {
+      confs.insert("thread".to_string(), Value::Integer(0));
+      flag = true;
+    }
+
+    if flag {
+      //还是需要处理这个文件被占用的可能性的
+      let confs = toml::to_string(&confs).unwrap();
+      // app.msg =confs;
+      write(conf, &confs).unwrap();
+    };
     return true;
   }
 }
@@ -220,6 +247,8 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
 /// app配置map
 pub struct App {
   pub app_dir: PathBuf,
+  pub conf: Conf,
+  pub msg: String,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -228,10 +257,28 @@ pub struct Conf {
   pub thread: i64, //检索线程数
 }
 
-impl Conf {
-  pub fn new() -> Conf {
-    let conf = &crate::app::APP.lock().app_dir.join("conf.toml");
-    let mut file = match File::open(conf) {
+impl App {
+  pub fn new() -> App {
+    let cfg = tauri::Config::default();
+    let mut app = App {
+      app_dir: PathBuf::new(),
+      conf: Conf {
+        tidy_folder: PathBuf::new(),
+        thread: 0,
+      },
+      msg: String::from(""),
+    };
+    match tauri::api::path::app_dir(&cfg) {
+      None => app.app_dir = PathBuf::new(),
+      Some(p) => app.app_dir = p.join("smovbook"),
+    };
+
+    //此时文件可能不存在 调用一次app new 在懒加载不能做这个处理，，
+    let conf = app.app_dir.join("conf.toml").clone();
+    // if !conf.exists(){
+    //   App::new();
+    // }
+    let mut file = match File::open(&conf) {
       Ok(f) => f,
       Err(e) => panic!("no such file {} exception:{}", conf.to_str().unwrap(), e),
     };
@@ -242,25 +289,11 @@ impl Conf {
       Err(e) => panic!("Error Reading file: {}", e),
     };
 
-    //试试在这里初始化设置吧
+    let config = toml::from_str(&str_val).unwrap();
 
-    let config: Conf = toml::from_str(&str_val).unwrap();
+    app.conf = config;
 
-    config
-  }
-}
-
-impl App {
-  pub fn new() -> App {
-    let cfg = tauri::Config::default();
-    match tauri::api::path::app_dir(&cfg) {
-      None => App {
-        app_dir: PathBuf::new(),
-      },
-      Some(p) => App {
-        app_dir: p.join("smovbook"),
-      },
-    }
+    app
   }
 }
 
