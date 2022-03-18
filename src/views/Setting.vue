@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div class="setting">
+    <p align="left" class="title">设置</p>
+    <div>
+      
+    </div>
     <el-button type="danger" @click="setSeekFolder">添加检索文件夹</el-button>
     <el-button type="danger" @click="setTidyFolder">设置整理文件夹</el-button>
     <el-button type="danger" @click="test">ces</el-button>
@@ -52,3 +56,18 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="less" scoped>
+.title {
+  font-size: 30px;
+  font-weight: 700;
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+}
+
+.setting {
+  display: flex;
+  flex-wrap: wrap;
+}
+</style>

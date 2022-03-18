@@ -1,9 +1,9 @@
 use serde::Deserialize;
-use tracing::info;
 use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::mpsc::channel;
+use tracing::info;
 
 use tauri::api::dialog;
 use tauri::command;
@@ -82,7 +82,7 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 
 //测试
 #[command]
-pub fn test()  {
+pub fn test() {
   info!(target: "frontend_log",message = "test msg" );
 }
 
@@ -94,6 +94,7 @@ pub fn update_tidy_folder(path: String) {
   let to_path = &crate::app::APP.lock().app_dir.join("conf.toml");
   let a = Conf {
     tidy_folder: PathBuf::from(&path),
+    thread: conf.thread,
   };
   if let Ok(_) = File::create(to_path) {
     //写入一个数据

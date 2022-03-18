@@ -1,8 +1,9 @@
 <template>
     <div class="Navigation">
-        <el-button type="primary" :icon="ArrowLeftBold" @click="back" circle></el-button>
+        <el-button type="primary" color = "#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
         <el-button
             type="primary"
+            color = "#C7415B"
             :class="onLoad === true ? 'onLoad' : ''"
             :icon="onLoad === true ? Loading : Download"
             @click="goSeek"

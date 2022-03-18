@@ -142,20 +142,24 @@ pub fn init_app_dir() -> bool {
 }
 
 pub fn init_app_conf() -> bool {
-  if !Path::new(&crate::app::APP.lock().app_dir.join("conf.toml")).exists() {
+  let conf = &crate::app::APP.lock().app_dir.join("conf.toml");
+  if !conf.exists() {
     let path = &crate::app::APP.lock().app_dir.join("conf.toml");
     if let Ok(_) = File::create(path) {
       //写入一个数据
       let a = Conf {
         tidy_folder: PathBuf::new(),
+        thread: 1,
       };
       let c = toml::to_string(&a).unwrap();
       write(path, c).unwrap();
       return true;
     }
     return false;
+  } else {
+  
+    return true;
   }
-  true
 }
 
 pub fn init_app_log(app: &mut tauri::App) -> bool {
@@ -191,8 +195,7 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
     .with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
       !metadata.target().starts_with("frontend_log") //不存在的
-    }))
-  ;
+    }));
 
   let cus = CustomLayer {
     window: match app.get_window("main") {
@@ -205,7 +208,8 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
     .with(now_log)
     .with(cus.with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！ || metadata.level().eq(&tracing::Level::WARN)
-      metadata.target().starts_with("frontend_log")  || metadata.level().eq(&tracing::Level::ERROR)  //存在的
+      metadata.target().starts_with("frontend_log") || metadata.level().eq(&tracing::Level::ERROR)
+      //存在的
     })))
     .init();
 
@@ -221,6 +225,7 @@ pub struct App {
 #[derive(Deserialize, Serialize)]
 pub struct Conf {
   pub tidy_folder: PathBuf,
+  pub thread: i64, //检索线程数
 }
 
 impl Conf {
@@ -236,6 +241,8 @@ impl Conf {
       Ok(s) => s,
       Err(e) => panic!("Error Reading file: {}", e),
     };
+
+    //试试在这里初始化设置吧
 
     let config: Conf = toml::from_str(&str_val).unwrap();
 

@@ -5,6 +5,7 @@ use crate::model::smov::RetrievingSmov;
 use crate::model::smov::Smov;
 use crate::model::smov::SmovFile;
 use crate::model::smov::SmovFileSeek;
+use crate::model::smov::SmovPl;
 use crate::response::response::Response;
 use crate::serve::smov;
 use crate::serve::smov_file;
@@ -170,7 +171,7 @@ pub async fn remove_smov_seek_status(id: Vec<i64>) -> Response<Option<bool>> {
 }
 
 #[command]
-pub async fn disable_smov(id: Vec<i64>) -> Response<Option<bool>> {
+pub async fn disable_smov(id: Vec<SmovPl>) -> Response<Option<bool>> {
   match SmovFile::disable(id) {
     Ok(_) => return Response::new(200, Some(true), "success"),
     Err(err) => {
