@@ -133,12 +133,13 @@ where
 
 ///初始化app文件夹
 pub fn init_app_dir() -> bool {
+  println!("1");
   if !Path::new(&crate::app::APP.lock().app_dir).exists() {
     if let Err(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
       return false;
     }
   }
-
+  println!("2");
   // println!("{}", &crate::app::APP.lock().msg);
   let conf = &crate::app::APP.lock().app_dir.join("conf.toml");
   if !conf.exists() {
@@ -151,9 +152,11 @@ pub fn init_app_dir() -> bool {
       let c = toml::to_string(&a).unwrap();
       write(conf, c).unwrap();
       return true;
+    }else {
+      return false; 
     }
-    return false;
   } else {
+    println!("3");
     //如果存在 就 读取数据查看是否有不存在的项
     let mut file = match File::open(&conf) {
       Ok(f) => f,
