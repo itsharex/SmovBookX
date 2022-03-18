@@ -14,7 +14,6 @@
     </div>
 
     <vxe-table
-      resizable
       show-overflow
       keep-source
       ref="xTable"
@@ -30,28 +29,41 @@
       <template #empty>
         <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
       </template>
-      <vxe-column type="seq" width="60"></vxe-column>
-      <vxe-column type="checkbox" width="60"></vxe-column>
-      <vxe-column field="realname" title="文件名称"></vxe-column>
-      <vxe-column field="extension" title="拓展名" width="100"></vxe-column>
+      <vxe-column type="seq" width="5%"></vxe-column>
+      <vxe-column type="checkbox" width="5%"></vxe-column>
+      <vxe-column field="realname" title="文件名称" width="26%"></vxe-column>
+      <vxe-column field="extension" title="拓展名" width="10%"></vxe-column>
       <vxe-column
         field="seekname"
-        title="检索名称"
+        title="检索名称(双击修改)"
         sortable
+        width="33%"
         :edit-render="{ autofocus: '.vxe-input--inner' }"
       >
         <template #edit="{ row }">
           <vxe-input v-model="row.seekname" type="text"></vxe-input>
         </template>
       </vxe-column>
-      <vxe-column field="is_active" title="可用" width="60">
+      <vxe-column
+        field="is_active"
+        title="可用"
+        width="10%"
+        :filter-multiple="false"
+        :filters="[{ label: '可用', value: 1, checked: true }, { label: '不可用', value: 0, checked: false }]"
+      >
         <template #default="{ row }">
           <span>{{ row.is_active == 1 ? "是" : "否" }}</span>
         </template>
       </vxe-column>
-      <vxe-column title="操作" width="60">
+      <vxe-column title="操作" wwidth="5%">
         <template #default="{ row }">
-          <el-button type="warning" :icon="Close" size="small" circle @click="changActive(row)"></el-button>
+          <el-button
+            :type="row.is_active == 1 ? 'warning' : 'success'"
+            :icon="row.is_active == 1 ? Close : Select"
+            size="small"
+            circle
+            @click="changActive(row)"
+          ></el-button>
         </template>
       </vxe-column>
     </vxe-table>
@@ -59,12 +71,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, reactive } from "vue";
+import { defineComponent, ref, onMounted, reactive, inject } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
 import XEUtils from 'xe-utils';
 import { ElMessage } from "element-plus";
-import { Files, Refresh, Search, Close } from '@element-plus/icons-vue';
+import { Files, Refresh, Search, Close, Select } from '@element-plus/icons-vue';
+import { Log } from "../type/log";
+import { CurentTime } from "../util/time";
 
 export default defineComponent({
   components: {},
@@ -77,6 +91,8 @@ export default defineComponent({
     });
 
     const xTable = ref({} as VxeTableInstance);
+
+    let logs = inject('log') as any;
 
     const findList = () => {
       table.loading = true;
@@ -162,33 +178,64 @@ export default defineComponent({
 
     //批量修改 需要优化！ 批量是否重新渲染的代价比较低
     const changeStatusAll = async () => {
-      table.loading = true;
       const $table = xTable.value;
       const selectRecords = $table.getCheckboxRecords();
 
-      const data = XEUtils.map(selectRecords, item => item.id);
+      if (selectRecords.length > 0) {
+        table.loading = true;
+        const data = XEUtils.map(selectRecords, item => {
+          const a = {
+            id: item.id,
+            is_active: item.is_active === 0 ? 1 : 0
+          };
+          return a
+        });
 
-      invoke("disable_smov", { id: data }).then((res: any) => {
-        if (res.code == 200) {
-          table.loading = false;
-          $table.removeCheckboxRow();
+        invoke("disable_smov", { id: data }).then((res: any) => {
+          if (res.code == 200) {
+            let enable = 0;
+            let isActive = 0;
+            XEUtils.arrayEach(selectRecords, (item, key) => {
+              if (item.is_active === 0) {
+                enable = enable + 1;
+                isActive = 1;
+              } else {
+                isActive = 0;
+              }
+              item.is_active = isActive;
+              $table.reloadRow(item, null, "is_active");
+            })
+            table.loading = false;
+            let msg = "共" + (selectRecords.length - enable) + "条数据被关闭," + enable + "条数据开启";
+            const log: Log = {
+              time: CurentTime(),
+              thread: 'SmovFile.vue',
+              msg: msg,
+              level: 'INFO'
+            }
+            logs.value = log;
+            ElMessage({
+              message: msg,
+              type: 'success',
+            })
+          }
+        })
 
-          ElMessage({
-            message: '共' + selectRecords.length + '条数据被关闭',
-            type: 'success',
-          })
-        }
-      })
+      }
+
     }
 
     const changActive = (row: any) => {
 
-      invoke("change_active_status", { id: row.id, status: 0 }).then((res: any) => {
+      const isActive = row.is_active == 1 ? 0 : 1;
+
+      invoke("change_active_status", { id: row.id, status: isActive }).then((res: any) => {
         if (res.code == 200) {
           const $table = xTable.value;
-          $table.remove(row);
-          //$table.reloadRow(row, null,undefined)
-          XEUtils.remove(FileData, toitem => toitem === row)
+          // $table.remove(row);
+          row.is_active = isActive;
+          $table.reloadRow(row, null, undefined)
+          // XEUtils.remove(FileData, toitem => toitem === row)
         } else {
           ElMessage.error('关闭出现了一个问题' + res.msg)
         }
@@ -222,6 +269,7 @@ export default defineComponent({
     const editClosedEvent: VxeTableEvents.EditClosed = ({ row, column }) => {
       const $table = xTable.value;
       const field = column.field;  //旧值 
+      console.log(field)
       const cellValue = row[field]; //新值
 
       //更新数据库中的数据
@@ -258,7 +306,8 @@ export default defineComponent({
       Search,
       changActive,
       Close,
-      changeStatusAll
+      changeStatusAll,
+      Select
     };
   },
 });

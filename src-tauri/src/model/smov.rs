@@ -44,6 +44,12 @@ pub struct Actor {
   name: String,
 }
 
+#[derive(Hash, Debug, Deserialize, Serialize)]
+pub struct SmovPl {
+  id: i64,
+  is_active: i64,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SmovSeek {
   pub id: i64,
@@ -477,11 +483,14 @@ impl SmovFile {
   }
 
   //正常的标准写法！
-  pub fn disable(id: Vec<i64>) -> Result<()> {
+  pub fn disable(id: Vec<SmovPl>) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
       for y in id {
-        match tx.execute("update smov set is_active = 0 where id = ?1", params![y]) {
+        match tx.execute(
+          "update smov set is_active = ?1 where id = ?2",
+          params![y.is_active, y.id],
+        ) {
           Ok(_) => {}
           Err(err) => return Err(err),
         };
@@ -578,11 +587,12 @@ impl SmovFile {
   }
 
   pub fn query_db_file_id_unseek() -> Result<Vec<SmovFile>, rusqlite::Error> {
+    // and is_active=1
     exec(|conn| {
       let mut stmt = conn.prepare(
         "SELECT id,realname, seekname,path,len,created,modified,extension,format,isch,is_active
             FROM smov
-            where is_retrieve = 0 and is_active=1
+            where is_retrieve = 0 
               and not exists(select 1 from seek_queue where smov_id = smov.id)",
       )?;
       let smov_file_iter = stmt.query_map([], |row| {

@@ -1,9 +1,10 @@
 <template>
   <div>
-    <el-button type="danger" @click="toInit" :loading="loading">检索文件系统</el-button>
-    <el-button type="danger" @click="toSeek">跳转至正常检索页面</el-button>
+    <el-button type="info" color = "#C7415B" @click="toInit" :loading="loading">检索文件系统</el-button>
+    <el-button type="info" color = "#C7415B" @click="toSeek">跳转至正常检索页面</el-button>
     <el-button
-      type="danger"
+      type="info"
+      color = "#C7415B"
       @click="
         router.push({
           path: '/test',
@@ -12,7 +13,8 @@
     >跳转至测试</el-button>
 
     <el-button
-      type="danger"
+      type="info"
+      color = "#C7415B"
       @click="
         router.push({
           path: '/setting',

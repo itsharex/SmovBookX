@@ -3,11 +3,11 @@
     <div class="seek">
         <div class="settingDiv">
             <div class="buttonDiv">
-                <el-button @click="start" type="danger">开始检索</el-button>
-                <el-button @click="stop" type="danger">停止检索</el-button>
+                <el-button @click="start" color = "#C7415B" type="danger">开始检索</el-button>
+                <el-button @click="stop" color = "#C7415B" type="danger">停止检索</el-button>
                 <!-- <el-button @click="close" type="danger">关闭窗口</el-button> -->
-                <el-button @click="getSeekSmov" type="danger">重载数据</el-button>
-                <el-button @click="removeAll" type="danger">雁过不留痕风过不留声</el-button>
+                <el-button @click="getSeekSmov" color = "#C7415B" type="danger">重载数据</el-button>
+                <el-button @click="removeAll" color = "#C7415B" type="danger">雁过不留痕风过不留声</el-button>
             </div>
 
             <div class="filtersDiv">
