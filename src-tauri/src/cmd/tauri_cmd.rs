@@ -86,20 +86,20 @@ pub fn test() {
   info!(target: "frontend_log",message = "test msg" );
 }
 
-///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据
+///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据 需要改bug 这里有一步锁死了
 #[command]
 pub fn update_tidy_folder(path: String) {
   let app = &mut crate::app::APP.lock();
   app.conf.tidy_folder = PathBuf::from(&path);
-  let to_path = &crate::app::APP.lock().app_dir.join("conf.toml");
+  let to_path = app.app_dir.join("conf.toml");
   let a = Conf {
     tidy_folder: PathBuf::from(&path),
     thread: app.conf.thread,
   };
-  if let Ok(_) = File::create(to_path) {
+  if let Ok(_) = File::create(&to_path) {
     //写入一个数据
     let c = toml::to_string(&a).unwrap();
-    write(to_path, c).unwrap();
+    write(&to_path, c).unwrap();
   }
 }
 
