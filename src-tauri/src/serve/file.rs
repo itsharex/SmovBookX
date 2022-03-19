@@ -54,7 +54,7 @@ impl TidySmov<'_> {
 
       match s.to_dest(&tidy_folder_path) {
         Err(err) => {
-          tracing::error!(message = format!("{}", err).as_str());
+          tracing::error!(message = format!("移动文件出现错误:{}", err).as_str());
           return Err(anyhow!("移动文件出现错误:{}", err));
         }
         _ => {}
