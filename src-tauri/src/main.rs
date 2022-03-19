@@ -22,11 +22,11 @@ async fn main() {
       if cfg!(target_os = "windows") {
         app::webview2_is_installed(_app);
       }
-      if !app::init_app_log(_app) {
-        panic!("日志系统初始化失败！");
-      }
       if !app::init_app_dir() {
         panic!("工作目录初始化失败！");
+      }
+      if !app::init_app_log(_app) {
+        panic!("日志系统初始化失败！");
       }
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())

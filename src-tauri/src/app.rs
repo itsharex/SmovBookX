@@ -4,7 +4,7 @@
  */
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap};
+use std::collections::HashMap;
 use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
@@ -15,7 +15,7 @@ use std::{
   collections::BTreeMap,
   fs::{create_dir_all, write, File, OpenOptions},
   io::Read,
-  path::{Path, PathBuf},
+  path::{PathBuf},
   result::Result::Ok,
   sync::Arc,
   thread,
@@ -133,30 +133,33 @@ where
 
 ///初始化app文件夹
 pub fn init_app_dir() -> bool {
-  println!("1");
-  if !Path::new(&crate::app::APP.lock().app_dir).exists() {
-    if let Err(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
+  //lazy 的 处理是在第一次读取的时候 所以这里不能去读取app的值 不然会出现问题 为了让代码更加 简洁 而且在逻辑上更方便一点 我这里选择了 自己去获取一遍 为什么不能在 new方法调用init的原因也是因为会一直相互调用 
+  let cfg = tauri::Config::default();
+  let app_path = match tauri::api::path::app_dir(&cfg) {
+    None => PathBuf::new(),
+    Some(p) => p.join("smovbook"),
+  };
+  if !&app_path.exists() {
+    if let Err(_) = create_dir_all(&app_path) {
       return false;
     }
   }
-  println!("2");
-  // println!("{}", &crate::app::APP.lock().msg);
-  let conf = &crate::app::APP.lock().app_dir.join("conf.toml");
+
+  let conf = app_path.join("conf.toml");
   if !conf.exists() {
-    if let Ok(_) = File::create(conf) {
+    if let Ok(_) = File::create(&conf) {
       //写入一个数据
       let a = Conf {
         tidy_folder: PathBuf::new(),
         thread: 1,
       };
       let c = toml::to_string(&a).unwrap();
-      write(conf, c).unwrap();
+      write(&conf, c).unwrap();
       return true;
-    }else {
-      return false; 
+    } else {
+      return false;
     }
   } else {
-    println!("3");
     //如果存在 就 读取数据查看是否有不存在的项
     let mut file = match File::open(&conf) {
       Ok(f) => f,
