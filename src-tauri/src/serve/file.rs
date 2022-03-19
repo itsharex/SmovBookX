@@ -1,10 +1,11 @@
 use anyhow::{anyhow, Result};
+use tokio::fs::OpenOptions;
 use tracing::info;
 
 use crate::model::smov::SmovFile;
 use crate::serve::smov_file::retrieve_all;
 use std::{
-  fs::{create_dir_all, read_dir, rename},
+  fs::{create_dir_all, read_dir, rename, File},
   path::PathBuf,
 };
 use tauri::api::file::Move;
@@ -19,7 +20,7 @@ pub struct TidySmov<'a> {
 }
 
 impl TidySmov<'_> {
-  pub fn tidy(self: &Self) -> Result<PathBuf> {
+  pub async fn tidy(self: &Self) -> Result<PathBuf> {
     let tidy_path = &crate::app::APP.lock().conf.tidy_folder.clone();
     let smov_file = SmovFile::query_by_id(self.id).expect("查询数据库信息出现错误");
 
@@ -47,17 +48,25 @@ impl TidySmov<'_> {
     if is_single(&smov_file.path) {
       //如果是单文件在整理目录新建文件夹 迁移视频文件
       if !&tidy_folder_path.exists() {
-        create_dir_all::<_>(&tidy_folder_path).expect("创建视频文件夹错误");
+        create_dir_all(&tidy_folder_path).expect("创建视频文件夹错误");
       }
+
       // copy(&file_file_path, &tidy_file_path).expect("复制文件出现错误");
       let s = Move::from_source(&file_file_path);
+
+      // let  test = OpenOptions::new().write (true).open(&tidy_folder_path);
+
+      let mut test = OpenOptions::new();
+      let test = test.write(true).open(&tidy_folder_path).await; //使用 rename 方法 转移文件 全部使用tokio
+
+      // println!("{:?}",test.metadata()?.permissions());
 
       match s.to_dest(&tidy_folder_path) {
         Err(err) => {
           tracing::error!(message = format!("移动文件出现错误:{}", err).as_str());
           return Err(anyhow!("移动文件出现错误:{}", err));
         }
-        _ => {}
+        Ok(_) => todo!(),
       };
 
       // remove_file(&file_file_path).expect("删除原文件出现错误");
