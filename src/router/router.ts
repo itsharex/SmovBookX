@@ -4,6 +4,7 @@ import smovFile from '../views/SmovFile.vue';
 import test from '../views/test.vue';
 import Setting from '../views/Setting.vue';
 import Main from '../views/Main.vue';
+import SmovView from '../views/SmovView.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -20,6 +21,10 @@ const router = createRouter({
                 {
                     path: '/SomvFile',
                     component: smovFile,
+                },
+                {
+                    path: '/SomvView',
+                    component: SmovView,
                 },
                 {
                     path: '/test',

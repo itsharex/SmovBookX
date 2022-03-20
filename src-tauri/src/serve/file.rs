@@ -1,11 +1,10 @@
 use anyhow::{anyhow, Result};
-use tokio::fs::OpenOptions;
 use tracing::info;
 
 use crate::model::smov::SmovFile;
 use crate::serve::smov_file::retrieve_all;
 use std::{
-  fs::{create_dir_all, read_dir, rename, File},
+  fs::{create_dir_all, read_dir, rename},
   path::PathBuf,
 };
 use tauri::api::file::Move;
@@ -40,6 +39,7 @@ impl TidySmov<'_> {
     //判断文件是否还存在
 
     if !file_file_path.exists() {
+      tracing::error!(message = "数据已被物理删除");
       return Err(anyhow!("Missing attribute: {}", "数据已被物理删除"));
     }
     info!("来源文件夹:{:?}", &file_file_path);
@@ -56,17 +56,22 @@ impl TidySmov<'_> {
 
       // let  test = OpenOptions::new().write (true).open(&tidy_folder_path);
 
-      let mut test = OpenOptions::new();
-      let test = test.write(true).open(&tidy_folder_path).await; //使用 rename 方法 转移文件 全部使用tokio
+      // rename(Path::new("C:Users\\Leri\\Videos\\cs\\1.txt"),Path::new("C:Users\\Leri\\Videos\\cs1\\2.txt"));
+
+      // rename(&file_file_path, &tidy_file_path).unwrap();
+       
+
+      // let test = OpenOptions::new().write(true).open(&tidy_folder_path).await;
+      // let test = test; //使用 rename 方法 转移文件 全部使用tokio
 
       // println!("{:?}",test.metadata()?.permissions());
 
-      match s.to_dest(&tidy_folder_path) {
+      match s.to_dest(&tidy_file_path) {
         Err(err) => {
           tracing::error!(message = format!("移动文件出现错误:{}", err).as_str());
           return Err(anyhow!("移动文件出现错误:{}", err));
         }
-        Ok(_) => todo!(),
+        _ => {}
       };
 
       // remove_file(&file_file_path).expect("删除原文件出现错误");

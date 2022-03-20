@@ -9,21 +9,20 @@ use crate::model::smov::SmovPl;
 use crate::response::response::Response;
 use crate::serve::smov;
 use crate::serve::smov_file;
+use crate::serve::smov_file::SmovFileBack;
 use crate::util::smov_format::SmovName;
 use tauri::command;
 use tauri::Manager;
 use tauri::Window;
 use tracing::info;
-use crate::serve::smov_file::SmovFileBack;
 
 //检索新文件到数据库
 #[command]
-pub fn query_new_file_todb() -> Response<Option<SmovFileBack>> {
-  
+pub async fn query_new_file_todb() -> Response<Option<SmovFileBack>> {
   match smov_file::smov_file() {
     Ok(e) => Response::ok(Some(e), "检索成功"),
     Err(e) => Response::err(None, format!("{}", &e).as_str()),
-}
+  }
 }
 
 #[command]
@@ -90,6 +89,7 @@ pub fn update_seekname(id: i32, seek_name: String) -> Response<Option<usize>> {
   };
 }
 
+///需要对这个做一个判定 判定一 是否存在父文件夹 如果存在父文件夹 需要提示添加错误 存在父文件夹
 #[command]
 pub fn insert_folder(path: String) -> Response<Option<i32>> {
   match Folder::insert_folder(path) {
@@ -108,8 +108,17 @@ pub fn query_folder() -> Response<Option<Vec<Folder>>> {
 
 #[command]
 pub async fn get_all_smov() -> Response<Option<Vec<Smov>>> {
+  //检索文件夹 还是放到这里吧
   match Smov::get_all_smov() {
-    Ok(e) => return Response::new(200, Some(e), "success"),
+    Ok(mut res) => {
+      for smov in &mut res {
+        match smov.get_smov_img() {
+          Err(err) => return Response::new(300, None, format!("检索图片时出现了问题{}", err).as_str()),
+          _ => {}
+        };
+      }
+      return Response::new(200, Some(res), "success");
+    }
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
   }
 }
@@ -142,8 +151,8 @@ pub async fn change_seek_status(
       // }
 
       window
-      .emit_to("seek", "addTask", &to_smov)
-      .expect("向另一个窗口传送数据出现错误");
+        .emit_to("seek", "addTask", &to_smov)
+        .expect("向另一个窗口传送数据出现错误");
 
       return Response::new(200, Some(true), "success");
     }

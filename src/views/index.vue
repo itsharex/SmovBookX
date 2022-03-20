@@ -17,6 +17,16 @@
       color = "#C7415B"
       @click="
         router.push({
+          path: '/SomvView',
+        })
+      "
+    >跳转至灵魂</el-button>
+
+    <el-button
+      type="info"
+      color = "#C7415B"
+      @click="
+        router.push({
           path: '/setting',
         })
       "

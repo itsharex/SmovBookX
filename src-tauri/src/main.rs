@@ -32,7 +32,7 @@ async fn main() {
       Ok(())
     })
     .menu(app::create_app_menu())
-    .on_menu_event(app::handle_event_app_menu_event)
+    .on_menu_event(app::handle_event_app_menu_event) 
     .system_tray(app::create_try())
     .on_system_tray_event(app::handle_system_tray_event)
     .invoke_handler(tauri::generate_handler![
@@ -41,7 +41,7 @@ async fn main() {
       cmd::tauri_cmd::perform_request,
       cmd::cmd::query_unretrieved,
       cmd::cmd::query_new_file_todb,
-      cmd::cmd::update_seekname,
+      cmd::cmd::update_seekname, 
       cmd::cmd::insert_folder,
       cmd::cmd::query_folder,
       cmd::cmd::retrieve_data,

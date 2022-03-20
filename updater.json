@@ -1,11 +1,11 @@
 {
     "name":"v0.1.6",
-    "notes":"版本测试 修复了部分bug 新增了部分bug",
+    "notes":"版本测试 修复了部分bug 新增了部分bug 修复bug【检索文件夹时因为整理文件夹不在检索队列出现检索后的文件被判断为已删除，修复单文件视频可能会出现的无权限情况，修复设置整理文件夹闪退的情况，添加了已检索文件的视图】",
     "pub_date":"2022-03-19T13:18:57Z",
     "platforms": {
         "win64": {
             "signature":"dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReDdsMkgrcVpPSzVCcTdUbVJkZHBsenhqVmE2YjlvS2p0RVpkNU51RGtVOHNPTkJOZ3YwS0w3WXBnQnBtdEdhSlR6UStxdWlJS21kWnRkMFA1a2IvQ0tIb3hZb0dtTVFNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjQ3NjY2OTE3CWZpbGU6QzpcVXNlcnNcTGVyaVxEb2N1bWVudHNcRGV2XHRhdXJpXFNtb3ZCb29rWFxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9TbW92Qm9va18wLjEuNl94NjRfemgtQ04ubXNpLnppcApxSUlZYllpc3RsS1h2SGdOTUxvTGZnV2twNGs1MHVsSUVQSTkwbmlkUk1vMFI3aUlmRlplRHN2dHdSRDZXZFU4Uld2a0pLNGZKWFFIVXlTeUczUVlBQT09Cg==",
-            "url":"https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/SmovBook_0.1.6_x64_zh-CN.msi.zip?version=0.1.6"
+            "url":"https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/SmovBook_0.1.7_x64_zh-CN.msi.zip?version=0.1.7"
         }
     }
 }
