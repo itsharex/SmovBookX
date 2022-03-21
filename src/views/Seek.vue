@@ -3,11 +3,22 @@
     <div class="seek">
         <div class="settingDiv">
             <div class="buttonDiv">
-                <el-button @click="start" color = "#C7415B" type="danger">开始检索</el-button>
-                <el-button @click="stop" color = "#C7415B" type="danger">停止检索</el-button>
-                <!-- <el-button @click="close" type="danger">关闭窗口</el-button> -->
-                <el-button @click="getSeekSmov" color = "#C7415B" type="danger">重载数据</el-button>
-                <el-button @click="removeAll" color = "#C7415B" type="danger">雁过不留痕风过不留声</el-button>
+                <el-button
+                    @click="start"
+                    color="#C7415B"
+                    type="danger"
+                    :disabled="pool.delLoading || pool.isRunning() "
+                >开始检索</el-button>
+                <el-button
+                    @click="stop"
+                    color="#C7415B"
+                    type="danger"
+                    :loading="pool.delLoading"
+                    :disabled="!pool.isRunning()"
+                >停止检索</el-button>
+                <el-button @click="getSeekSmov" color="#C7415B" type="danger">重载数据</el-button>
+                <el-button @click="close" color="#C7415B" type="danger">关闭窗口</el-button>
+                <el-button @click="removeAll" color="#C7415B" type="danger">雁过不留痕风过不留声</el-button>
             </div>
 
             <div class="filtersDiv">
@@ -23,6 +34,7 @@
                     未检索
                     <el-switch v-model="openStatus[0]" @change="WaitChange" />
                 </p>
+                <p class="status">当前检索状态:{{ pool.isRunning() ? '是' : '否' }}</p>
             </div>
         </div>
 
@@ -96,7 +108,7 @@
                 <vxe-column
                     field="status"
                     :visible="false"
-                    :filters="[{ label: '错误', value: 2, checked: openStatus[2] }, { label: '等待', value: 0, checked: openStatus[0] }, { label: '成功', value: 1, checked: openStatus[1] }]"
+                    :filters="[{ label: '错误', value: 2, checked: openStatus[2] }, { label: '等待', value: 0, checked: openStatus[0] }, { label: '成功', value: 1, checked: openStatus[1] },{ label: '正在执行', value: 3, checked: openStatus[3] }]"
                 ></vxe-column>
             </vxe-table>
         </div>
@@ -114,6 +126,7 @@ import { listen } from '@tauri-apps/api/event';
 import { Loading, Delete } from '@element-plus/icons-vue';
 import { ElMessage, ElLoading } from 'element-plus';
 import 'element-plus/es/components/message/style/css'
+import 'element-plus/es/components/loading/style/css'
 import XEUtils from 'xe-utils';
 import { VXETable, VxeTableInstance, VxeTableEvents, RecordInfo, VxeColumnPropTypes } from "vxe-table";
 export default defineComponent({
@@ -133,8 +146,6 @@ export default defineComponent({
             true,  //run time
             true   //delete run time
         ])
-
-
 
         let pool = reactive(new ThreadPool.FixedThreadPool({
             size: 1,
@@ -163,10 +174,6 @@ export default defineComponent({
             pool.addTasks(list);
             Tasks.value.reloadData(pool.tasks).then(() => {
                 setTimeout(() => {
-                    // ElMessage({
-                    //     message: '将' + list.length + '条数据加入队列',
-                    //     type: 'success',
-                    // })
                     HotLoading.value = false;
                 }, 200);
 
@@ -216,6 +223,7 @@ export default defineComponent({
                 { label: '等待', value: 0, checked: openStatus.value[0] },
                 { label: '成功', value: 1, checked: openStatus.value[1] },
                 { label: '错误', value: 2, checked: openStatus.value[2] },
+                { label: '正在执行', value: 3, checked: openStatus.value[3] }
             ];
         }
 
@@ -416,8 +424,16 @@ export default defineComponent({
     padding: 10px;
     display: flex;
     font-size: 12px;
+    font-weight: 600;
     * {
         margin-right: 5px;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        line-height: 35px;
+    }
+    .status {
+        font-size: 14px;
+        font-weight: 700;
     }
 }
 
@@ -425,7 +441,10 @@ export default defineComponent({
     padding: 10px;
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-around;
+    .el-button {
+        margin: 7px;
+        line-height: 32px;
+    }
 }
 
 .seek {

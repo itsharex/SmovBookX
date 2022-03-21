@@ -1,9 +1,9 @@
 <template>
     <div class="Navigation">
-        <el-button type="primary" color = "#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
+        <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
         <el-button
             type="primary"
-            color = "#C7415B"
+            color="#C7415B"
             :class="onLoad === true ? 'onLoad' : ''"
             :icon="onLoad === true ? Loading : Download"
             @click="goSeek"
@@ -77,15 +77,21 @@ export default defineComponent({
                 decorations: true
             });
             eventSeekStatus();
-            // linstenUpdate();
+            linstenUpdate();
         });
 
         //增加控制 是否自动检测版本更新
-
-        const eventSeekStatus = async () => {
+        const linstenUpdate = async () => {
             Updater.value = await checkUpdate();
 
             console.log(Updater.value)
+        }
+
+        const eventSeekStatus = async () => {
+             !(async () => await listen('seek_status', (event: any) => {
+                console.log(event.payload);
+                onLoad.value =eval(event.payload.toLowerCase());   
+            }))()
         }
 
         const install = async () => {

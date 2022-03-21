@@ -6,7 +6,7 @@
 import { defineComponent, ref, onMounted } from 'vue';
 export default defineComponent({
     name: 'test3',
-    props: [],
+    props: ['data'],
     setup(props, { emit }) {
 
         let time = ref(0);

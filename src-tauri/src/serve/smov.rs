@@ -96,7 +96,10 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
 
         let img_to_path = match s.tidy().await {
           Ok(n) => n,
-          Err(e) => return Err(e),
+          Err(err) => {
+            tracing::warn!(message = format!("处理文件出现错误:{}", err).as_str());
+            return Err(err)
+          } ,
         };
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
@@ -104,7 +107,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
         let thumbs_url = img.attributes.borrow().get("data-src").unwrap().to_string();
         let att = &a.attributes;
         let href = att.borrow().get("href").unwrap().to_string(); //is_some 是否存在？
-        let _title = att.borrow().get("title").unwrap().to_string();
+        let title = att.borrow().get("title").unwrap().to_string();
 
         sava_pic(
           &thumbs_url,
@@ -162,6 +165,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
         let mut smov_seek = SmovSeek {
           id,
           name: name,
+          title,
           format: name_f,
           release_time: String::new(),
           duration: 0,

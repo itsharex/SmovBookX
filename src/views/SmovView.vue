@@ -1,5 +1,9 @@
 <template>
-    <div></div>
+    <div>
+        <div class="smovList">
+            <SmovItem v-for="(item, index) in smovList" :key="index" :data="item" />
+        </div>
+    </div>
 </template>
 
 <script lang='ts'>
@@ -14,18 +18,28 @@ export default defineComponent({
             getSmov();
         })
 
+        const smovList = ref([] as any[]);
+
         const getSmov = () => {
             invoke("get_all_smov").then((res: any) => {
-                 console.log(res)
+                if (res.code = 200) {
+                    smovList.value = res.data;
+                }
             }).finally(() => {
 
             })
         }
         return {
+            smovList
         };
     }
 })
 
 </script>
 <style lang='less' scoped>
+.smovList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 </style>

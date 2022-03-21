@@ -14,16 +14,19 @@ export module ThreadPool {
         runningProcessorCount: number;
         tasks: any[];
         size: any;
-        loading: boolean;
+        delLoading: boolean;
         index: number;
         window: any;
         autoRun: boolean;
+        loading:boolean;
         constructor({ size, runningFlag, autoRun }) {
             this.size = size;
 
             this.tasks = [] as any[];
 
-            this.loading = false;
+            this.delLoading = false;
+
+            this.loading = true;
 
             this.runningFlag = runningFlag;
             this.runningProcessorCount = 0;  //正在执行中的线程
@@ -56,9 +59,11 @@ export module ThreadPool {
 
         stop() {
             this.runningFlag = false;
+            this.delLoading=true;
             setInterval(()=>{
                if(!this.isRunning()){
                 this.window.emit("seek_status", this.runningFlag);
+                this.delLoading=false;
                }
             },200)
             
