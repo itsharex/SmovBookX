@@ -6,7 +6,7 @@
         />
         <p class="name">{{ data.name }}</p>
 
-        <el-popover placement="bottom" :width="200" trigger="hover" :content="data.title">
+        <el-popover placement="bottom" :width="200" trigger="click" :content="data.title" :visible ="false">
             <template #reference>
                 <div class="titleDiv">
                     <p class="title">
@@ -44,7 +44,7 @@ export default defineComponent({
 }
 .smovItem {
     height: 280px;
-    width: 170px;
+    width: 160px;
     border-radius: 6px;
     box-shadow: var(--el-box-shadow-light);
     margin: 10px;
@@ -64,7 +64,8 @@ export default defineComponent({
 }
 
 .titleDiv {
-    width: 100%;
+    // width: 100%;
+    max-width: 160px;
     display: flex;
     justify-content: center;
 }

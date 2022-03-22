@@ -3,13 +3,14 @@
         <el-button type="danger" @click="test1">cs</el-button>
         <el-button type="danger" @click="test2">csss</el-button>
         <el-button type="danger" @click="test3">文件检索测试</el-button>
-        <img :src="src" alt="">
+        <el-button type="danger" @click="test4">即时渲染测试</el-button>
+        <smov-detail />
         <router-view></router-view>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref, inject } from 'vue'
+import { defineComponent, reactive, ref, inject, h, render, createApp,Transition, withCtx } from 'vue'
 import { ThreadPool } from '../ts/ThreadPool'
 import { useRouter } from 'vue-router';
 import { Log } from '../type/log'
@@ -71,16 +72,57 @@ export default defineComponent({
         }
 
 
+        const test4_1 = {
+            name: "test4_1",
+            setup() {
+                return () => {
+                    return h(
+                        // 1. 要渲染的标签名称：第一个参数【必需】
+                        "button",
+                        // 2. 渲染标签的属性：第二个参数【可选】
+                        {
+                            style: {
+                                color: "#333",
+                                border: "1px solid #ccc",
+                            },
+                            class: "wdnmd",
+                            id: "",
+                            onClick: changeNum,
+                        },
+                        // 3. 渲染标签的子元素数组：第三个参数【可选】
+                        [
+                            // "render函数文本" 文本内容可以直接写入
+                            h("p", num.value), // h()创建的VNodes
+                        ]
+                    );
+                }  
+            }
+        };
+
+        let num = ref(0);  // vue3中需要使用ref或reactive声明变量，否则无法实现双向数据绑定
+        const changeNum = () => {
+            num.value++    // 改变ref定义的变量值需要使用.value , reactive不需要 
+        }
+
+
+
+        const test4 = () => {
+            createApp(test4_1).mount(document.createElement("div"));
+        }
+
+
 
         return {
             test,
             test1,
             test2,
             test3,
+            test4,
             src
         }
     }
 })
+
 </script>
 
 <style>

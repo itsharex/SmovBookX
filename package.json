@@ -5,13 +5,14 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri:dev": "env-cmd -r .env-cmdrc -e development tauri dev",  
+    "tauri:dev": "env-cmd -r .env-cmdrc -e development tauri dev",
     "tauri:build": "env-cmd -r .env-cmdrc -e production tauri build"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^1.0.0",
     "@tauri-apps/api": "^1.0.0-rc.2",
     "@types/sharp": "^0.29.5",
+    "artplayer": "^4.3.3",
     "element-plus": "2.1.2",
     "vue": "^3.2.31",
     "vue-router": "^4.0.0-0",

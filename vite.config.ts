@@ -12,6 +12,9 @@ export default defineConfig({
     }),
     Components({
       extensions: ['vue', 'md'],
+      // ,"node_modules/artplayer/examples/vue"
+      dirs: ["src/components"],
+      deep: true,
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
       resolvers: [
         ElementPlusResolver(),
