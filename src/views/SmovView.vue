@@ -23,6 +23,7 @@ export default defineComponent({
         const getSmov = () => {
             invoke("get_all_smov").then((res: any) => {
                 if (res.code = 200) {
+                    console.log(res)
                     smovList.value = res.data;
                 }
             }).finally(() => {
