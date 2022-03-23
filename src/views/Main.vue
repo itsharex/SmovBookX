@@ -4,7 +4,7 @@
       <el-header>
         <Navigation />
       </el-header>
-      <el-main>
+      <el-main id="smovMain">
         <router-view />
       </el-main>
       <el-footer></el-footer>

@@ -4,7 +4,6 @@
         <el-button type="danger" @click="test2">csss</el-button>
         <el-button type="danger" @click="test3">文件检索测试</el-button>
         <el-button type="danger" @click="test4">即时渲染测试</el-button>
-        <smov-detail />
         <router-view></router-view>
     </div>
 </template>

@@ -1,12 +1,18 @@
 <template>
-    <div class="smovItem">
+    <div class="smovItem" @click="openDetail()">
         <img
             :src="data.thumbs_img == '' ? nonePic : convertFileSrc(data.thumbs_img)"
             class="smovImg"
         />
         <p class="name">{{ data.name }}</p>
 
-        <el-popover placement="bottom" :width="200" trigger="click" :content="data.title" :visible ="false">
+        <el-popover
+            placement="bottom"
+            :width="200"
+            trigger="click"
+            :content="data.title"
+            :visible="false"
+        >
             <template #reference>
                 <div class="titleDiv">
                     <p class="title">
@@ -22,13 +28,25 @@
 import { defineComponent, ref } from 'vue';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import nonePic from "../assets/none_pic.png";
+// import mountDialog from './dialog/dialog'
+import mountDetail from './SmovDetail/SmovDetail'
+import XEUtils from 'xe-utils';
 export default defineComponent({
     name: 'SmovItem',
     props: ['data'],
     setup(props, { emit }) {
+
+        const openDetail = () => {
+            
+            // mountDialog({ title: '自定义标题', content: '自定义内容' })
+            const data= XEUtils.clone(props.data, true)
+            // console.log(data)
+            mountDetail({data:data})
+        }
         return {
             convertFileSrc,
-            nonePic
+            nonePic,
+            openDetail
         };
     }
 })

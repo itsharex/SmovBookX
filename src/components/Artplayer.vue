@@ -21,8 +21,8 @@ export default defineComponent({
         let instance = {};
 
         const fullscreen = (args) => {
-            if (args) {
-                console.log(args)
+            if (args === true) {
+                getCurrent().fullscreen = true;
             }
         }
 

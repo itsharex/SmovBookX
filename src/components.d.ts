@@ -5,6 +5,7 @@
 declare module 'vue' {
   export interface GlobalComponents {
     Artplayer: typeof import('./components/Artplayer.vue')['default']
+    Dialog: typeof import('./components/dialog/dialog.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
@@ -20,9 +21,8 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     Log: typeof import('./components/Log.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
-    SmovDetail: typeof import('./components/SmovDetail.vue')['default']
+    SmovDetail: typeof import('./components/SmovDetail/SmovDetail.vue')['default']
     SmovItem: typeof import('./components/SmovItem.vue')['default']
-    VideoPlayer: typeof import('./components/videoPlayer.vue')['default']
   }
 }
 
