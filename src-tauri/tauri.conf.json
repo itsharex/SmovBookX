@@ -61,6 +61,10 @@
       "protocol": {
         "asset": true,
         "assetScope": ["*"]
+      },
+      "shell":{
+        "all":true,
+        "open":".*"
       }
     },
     "windows": [
@@ -80,7 +84,7 @@
       "iconAsTemplate": true
     },
     "security": {
-      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self' asset: https://asset.localhost" 
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: file: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self' asset: https://asset.localhost" 
     }
   }
 }

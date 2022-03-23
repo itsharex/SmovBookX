@@ -1,12 +1,16 @@
 <template>
     <div>
+        <!-- tauri不能打开本地文件  这个播放器的体验非常差 不知道别人用不用 反正我不用  -->
         <Artplayer @get-instance="getInstance" :option="option" :style="style" />
+        
+        <el-button type="info" color="#C7415B" @click="toOpen">由本地播放器打开</el-button>
     </div>
 </template>
 
 <script lang='ts'>
+import { shell } from '@tauri-apps/api';
+import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { defineComponent, onMounted, ref } from 'vue';
-import Artplayer from 'artplayer/examples/vue/Artplayer.vue'
 
 export default defineComponent({
     name: 'test1',
@@ -14,8 +18,11 @@ export default defineComponent({
 
     setup(props, { emit }) {
         const option = {
-            url: "https://artplayer.org/assets/sample/video.mp4",
-        };
+            url: convertFileSrc("C:\\Users\\Leri\\Desktop\\4K Istanbul City.webm"),
+            fullscreen: true,
+            fullscreenWeb: true,
+            theme: '#ffad00',
+        } ;
         const style = {
             width: "600px",
             height: "400px",
@@ -26,11 +33,16 @@ export default defineComponent({
             console.log(art);
         };
 
+        const toOpen = async () => {
+           shell.open("C:\\Users\\Leri\\Desktop\\4K Istanbul City.webm");
+        }
+
         return {
             option,
             style,
-            getInstance
-
+            getInstance,
+            convertFileSrc,
+            toOpen
         };
     }
 })

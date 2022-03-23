@@ -195,7 +195,7 @@ pub fn init_app_dir() -> bool {
   }
 }
 
-pub fn init_app_log(app: &mut tauri::App) -> bool {
+pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
   let file = &crate::app::APP.lock().app_dir.join("log");
 
   if !file.exists() {

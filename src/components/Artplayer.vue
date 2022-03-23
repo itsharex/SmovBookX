@@ -2,7 +2,7 @@
     <div ref="artRef"></div>
 </template>
 
-<script lang='ts'>
+<script>
 import { defineComponent, nextTick, onMounted, ref } from 'vue';
 import Artplayer from 'artplayer'
 
@@ -16,13 +16,28 @@ export default defineComponent({
     },
     setup(props, { emit }) {
 
-        const artRef = ref({} as any);
+        const artRef = ref();
+
+        let instance = {};
+
+        const fullscreen = (args) => {
+            if (args) {
+                console.log(args)
+            }
+        }
+
+        const eventFull = async () => {
+            !(async () => await instance.on('fullscreen', (event) => {
+                console.log(event);
+            }))()
+        }
 
         onMounted(() => {
-            const instance = new Artplayer({ ...props.option, container: artRef.value });
+            instance = new Artplayer({ ...props.option, container: artRef.value });
             nextTick(() => {
-                emit('get-instance', instance);
+                // emit('get-instance', instance);
             });
+            eventFull();
         });
 
 
