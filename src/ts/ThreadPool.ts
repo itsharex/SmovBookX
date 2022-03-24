@@ -18,7 +18,7 @@ export module ThreadPool {
         index: number;
         window: any;
         autoRun: boolean;
-        loading:boolean;
+        loading: boolean;
         constructor({ size, runningFlag, autoRun }) {
             this.size = size;
 
@@ -59,14 +59,15 @@ export module ThreadPool {
 
         stop() {
             this.runningFlag = false;
-            this.delLoading=true;
-            setInterval(()=>{
-               if(!this.isRunning()){
-                this.window.emit("seek_status", this.runningFlag);
-                this.delLoading=false;
-               }
-            },200)
-            
+            this.delLoading = true;
+            const seek = setInterval(() => {
+                if (!this.isRunning()) {
+                    this.window.emit("seek_status", this.runningFlag);
+                    this.delLoading = false;
+                    window.clearInterval(seek);
+                }
+            }, 200)
+
         }
 
         addTasks(tasks: any[]) {
@@ -100,7 +101,7 @@ export module ThreadPool {
                 this.stop();
             } else {
                 const task: any = this.tasks[this.index];
-                console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index,",当前正在运行数量为" + this.runningProcessorCount);
+                console.log("当前池剩余数量：" + this.tasks.length + ",当前下标为" + this.index, ",当前正在运行数量为" + this.runningProcessorCount);
                 if (task) {
                     this.runningProcessorCount++;
                     this.index++;

@@ -28,7 +28,6 @@
 import { defineComponent, ref } from 'vue';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import nonePic from "../assets/none_pic.png";
-// import mountDialog from './dialog/dialog'
 import mountDetail from './SmovDetail/SmovDetail'
 import XEUtils from 'xe-utils';
 export default defineComponent({
