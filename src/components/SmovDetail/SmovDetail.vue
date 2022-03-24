@@ -20,7 +20,7 @@
             <!-- <Artplayer @get-instance="getInstance" :option="option" :style="style" /> -->
             <div class="imgDeatil">
                 <div class="imgDiv">
-                    <el-carousel :interval="0" arrow="hover">
+                    <el-carousel :interval="0" arrow="hover"  height="45vh">
                         <el-carousel-item>
                             <img
                                 class="mainImg"
