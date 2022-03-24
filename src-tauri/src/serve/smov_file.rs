@@ -208,10 +208,17 @@ impl Smov {
             _ => {},
         }
        }
-
-      
     }
+    Ok(())
+  }
 
+  pub fn get_smov_thumbs_img(self: &mut Self) -> Result<()> {
+    let path = Path::new(&self.path).join("img");
+    let img = path.join(format!("thumbs_{}.jpg", self.name));
+    if img.exists() {
+      self.thumbs_img = img.to_str().unwrap_or_else(|| "").to_string();
+    };
+    
     Ok(())
   }
 }

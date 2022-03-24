@@ -26,26 +26,83 @@
 
 <script lang='ts'>
 import { defineComponent, ref } from 'vue';
-import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { convertFileSrc, invoke } from '@tauri-apps/api/tauri';
 import nonePic from "../assets/none_pic.png";
 import mountDetail from './SmovDetail/SmovDetail'
 import XEUtils from 'xe-utils';
+import { getAll, WebviewWindow, availableMonitors } from '@tauri-apps/api/window';
+
+import { title } from 'process';
+import { join } from 'path/posix';
+import { ElSteps } from 'element-plus';
 export default defineComponent({
     name: 'SmovItem',
     props: ['data'],
     setup(props, { emit }) {
 
-        const openDetail = () => {
-            
-            // mountDialog({ title: '自定义标题', content: '自定义内容' })
-            const data= XEUtils.clone(props.data, true)
-            // console.log(data)
-            mountDetail({data:data})
+        const openDetail = async () => {
+
+            // // mountDialog({ title: '自定义标题', content: '自定义内容' })
+            // const data= XEUtils.clone(props.data, true)
+            // // console.log(data)
+            // mountDetail({data:data})
+            // loading embedded asset:
+            // let webview = {} as any;
+            // webview = WebviewWindow.getByLabel(props.data.name);
+            // console.log(webview)
+            // if (webview == null) {
+            //     webview = new WebviewWindow(props.data.name, {
+            //         url: '/SmovDetail/' + props.data.id,
+            //         title: props.data.name,
+            //         center:true
+            //     });
+
+            // } else {
+            //     try {
+            //         webview.setAlwaysOnTop(true);
+            //         webview.show();
+            //         setTimeout(() => {
+            //             webview.setAlwaysOnTop(false);
+            //         }, 50)
+            //     } catch {
+            //         webview = new WebviewWindow(props.data.name, {
+            //             url: '/SmovDetail/' + props.data.id,
+            //             title: props.data.name
+            //         });
+
+            //     }
+            // }
+
+            const webview = new WebviewWindow(props.data.name, {
+                url: '/SmovDetail/' + props.data.id,
+                title: props.data.name,
+                center: true
+            });
+
+            invoke("set_focus", { label: props.data.name});
+
+            // emit(props.data.name+"_single","");
+
+
+            webview.once('tauri://created', function () {
+
+            })
+            webview.once('tauri://close-requested', function (e) {
+                console.log(e.windowLabel)
+            })
+
+            // // emit an event to the backend
+            // await webview.emit("some event", "data")
+            // // listen to an event from the backend
+            // const unlisten = await webview.listen("event name", e => { })
+            // unlisten()
+
         }
         return {
             convertFileSrc,
             nonePic,
-            openDetail
+            openDetail,
+
         };
     }
 })

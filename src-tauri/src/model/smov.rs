@@ -351,9 +351,124 @@ impl Smov {
           smov.actors.push(actor1);
         }
 
+        smov.get_smov_thumbs_img().unwrap();
+
         smov_list.push(smov);
       }
       Ok(smov_list)
+    })
+  }
+
+  pub fn get_smov_by_id(id: i64) -> Result<Smov> {
+    exec(|conn| {
+      let tx = conn.transaction()?;
+
+      let mut smov = tx
+        .query_row_and_then(
+          "select id, name,title, path, realname, len, created, modified, extension, 
+        format, release_time, duration,makers_id, publisher_id, series_id, directors_id, 
+         isch from smov where is_retrieve = 1 and id= ?1",
+          params![id],
+          |row| -> Result<Smov, rusqlite::Error> {
+            Ok(Smov {
+              id: row.get(0)?,
+              name: row.get(1)?,
+              title: row.get(2)?,
+              path: row.get(3)?,
+              realname: row.get(4)?,
+              len: row.get(5)?,
+              created: row.get(6)?,
+              modified: row.get(7)?,
+              extension: row.get(8)?,
+              format: row.get(9)?,
+              release_time: row.get(10)?,
+              duration: row.get(11)?,
+              maker: String::from(""),
+              maker_id: row.get(12)?,
+              publisher: String::from(""),
+              publisher_id: row.get(13)?,
+              serie: String::from(""),
+              serie_id: row.get(14)?,
+              director: String::from(""),
+              director_id: row.get(15)?,
+              tags: Vec::new(),
+              actors: Vec::new(),
+              isch: row.get(16)?,
+              thumbs_img: String::from(""),
+              main_img: String::from(""),
+              detail_img: Vec::new(),
+            })
+          },
+        )
+        .unwrap();
+
+      smov.maker = tx
+        .query_row_and_then(
+          "SELECT name from maker where id = ?1",
+          params![&smov.maker_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      smov.publisher = tx
+        .query_row_and_then(
+          "SELECT name from publisher where id = ?1",
+          params![&smov.publisher_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      smov.serie = tx
+        .query_row_and_then(
+          "SELECT name from serie where id = ?1",
+          params![&smov.serie_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      smov.director = tx
+        .query_row_and_then(
+          "SELECT name from director where id = ?1",
+          params![&smov.director_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      let mut stmt = tx.prepare(
+          "select tag.id,tag.name from tag,smov_tag where tag.id = smov_tag.tag_id and smov_tag.smov_id = ?1",
+        )?;
+
+      let tag_iter = stmt.query_map([smov.id], |row| {
+        Ok(Tag {
+          id: row.get(0)?,
+          name: row.get(1)?,
+        })
+      })?;
+
+      for tag in tag_iter {
+        let tag1 = tag.unwrap();
+        smov.tags.push(tag1);
+      }
+
+      let mut stmt = tx.prepare(
+          "select actor.id,actor.name from actor,smov_actor where actor.id = smov_actor.actor_id and smov_actor.smov_id = ?1",
+        )?;
+
+      let actor_iter = stmt.query_map([smov.id], |row| {
+        Ok(Actor {
+          id: row.get(0)?,
+          name: row.get(1)?,
+        })
+      })?;
+
+      for actor in actor_iter {
+        let actor1 = actor.unwrap();
+        smov.actors.push(actor1);
+      }
+
+      smov.get_smov_img().unwrap();
+
+      Ok(smov)
     })
   }
 }

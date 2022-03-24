@@ -52,6 +52,10 @@ const router = createRouter({
             path: '/seek',
             component: () => import("../views/Seek.vue")
         },
+        {
+            path: '/SmovDetail/:Id',
+            component: () => import("../views/SmovDetail.vue")
+        },
     ]
 })
 export default router;

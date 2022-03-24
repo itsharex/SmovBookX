@@ -78,7 +78,7 @@ pub fn query_unretrieved() -> Response<Option<Vec<SmovFile>>> {
   match SmovFile::query_db_file_id_unseek() {
     Ok(e) => return Response::new(200, Some(e), "success"),
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
-  };
+  }
 }
 
 #[command]
@@ -86,7 +86,7 @@ pub fn update_seekname(id: i32, seek_name: String) -> Response<Option<usize>> {
   match SmovFile::update_seekname(id, seek_name) {
     Ok(e) => return Response::new(200, Some(e), "success"),
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
-  };
+  }
 }
 
 ///需要对这个做一个判定 判定一 是否存在父文件夹 如果存在父文件夹 需要提示添加错误 存在父文件夹
@@ -110,16 +110,29 @@ pub fn query_folder() -> Response<Option<Vec<Folder>>> {
 pub async fn get_all_smov() -> Response<Option<Vec<Smov>>> {
   //检索文件夹 还是放到这里吧
   match Smov::get_all_smov() {
-    Ok(mut res) => {
-      for smov in &mut res {
-        match smov.get_smov_img() {
-          Err(err) => return Response::new(300, None, format!("检索图片时出现了问题{}", err).as_str()),
-          _ => {}
-        };
-      }
+    Ok(res) => {
+      // for smov in &mut res {
+      //   // match smov.get_smov_img() {
+      //   //   Err(err) => {
+      //   //     return Response::new(300, None, format!("检索图片时出现了问题{}", err).as_str())
+      //   //   }
+      //   //   _ => {}
+      //   // };
+      // }
       return Response::new(200, Some(res), "success");
     }
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+  }
+}
+
+#[command]
+pub async fn get_smov_by_id(id: i64) -> Response<Option<Smov>> {
+  match Smov::get_smov_by_id(id) {
+    Ok(res) => return Response::new(200, Some(res), "success"),
+    Err(err) => {
+      tracing::error!(message = format!("{}", err).as_str());
+      return Response::new(300, None, format!("{}", err).as_str());
+    }
   }
 }
 
@@ -157,7 +170,7 @@ pub async fn change_seek_status(
       return Response::new(200, Some(true), "success");
     }
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
-  };
+  }
 }
 
 #[command]
@@ -165,7 +178,7 @@ pub async fn get_seek_smov() -> Response<Option<Vec<RetrievingSmov>>> {
   match SmovFileSeek::get_seek_smov() {
     Ok(e) => return Response::new(200, Some(e), "success"),
     Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
-  };
+  }
 }
 
 #[command]
@@ -176,7 +189,7 @@ pub async fn remove_smov_seek_status(id: Vec<i64>) -> Response<Option<bool>> {
       tracing::error!(message = format!("{}", err).as_str());
       return Response::new(300, None, format!("{}", err).as_str());
     }
-  };
+  }
 }
 
 #[command]
@@ -187,7 +200,7 @@ pub async fn disable_smov(id: Vec<SmovPl>) -> Response<Option<bool>> {
       tracing::error!(message = format!("{}", err).as_str());
       return Response::new(300, None, format!("{}", err).as_str());
     }
-  };
+  }
 }
 
 #[command]
@@ -198,7 +211,7 @@ pub async fn change_active_status(id: i64, status: i32) -> Response<Option<bool>
       tracing::error!(message = format!("{}", err).as_str());
       return Response::new(300, None, format!("{}", err).as_str());
     }
-  };
+  }
 }
 
 #[command]
@@ -209,5 +222,5 @@ pub async fn delete_smov(id: Vec<i64>) -> Response<Option<bool>> {
       tracing::error!(message = format!("{}", err).as_str());
       return Response::new(300, None, format!("{}", err).as_str());
     }
-  };
+  }
 }

@@ -30,7 +30,7 @@
                             />
                         </el-carousel-item>
                         <el-carousel-item v-for="item in data.detail_img" :key="item">
-                            <img class="mainImg" :src="convertFileSrc(item)" />
+                            <img class="detailImg" :src="convertFileSrc(item)" />
                         </el-carousel-item>
                     </el-carousel>
 
@@ -197,6 +197,10 @@ export default defineComponent({
     height: 100%;
     object-fit: cover;
     border-radius: 6px;
+}
+.detailImg{
+    max-width: 100%;
+    background-size:cover;
 }
 
 .smovDetail {

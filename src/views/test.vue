@@ -4,12 +4,13 @@
         <el-button type="danger" @click="test2">csss</el-button>
         <el-button type="danger" @click="test3">文件检索测试</el-button>
         <el-button type="danger" @click="test4">即时渲染测试</el-button>
+        <el-button type="danger" @click="test5">打开界面测试</el-button>
         <router-view></router-view>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref, inject, h, render, createApp,Transition, withCtx } from 'vue'
+import { defineComponent, reactive, ref, inject, h, render, createApp, Transition, withCtx } from 'vue'
 import { ThreadPool } from '../ts/ThreadPool'
 import { useRouter } from 'vue-router';
 import { Log } from '../type/log'
@@ -17,6 +18,7 @@ import { CurentTime } from '../util/time'
 import { dialog, notification } from '@tauri-apps/api';
 import { readDir } from '@tauri-apps/api/fs';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { WebviewWindow } from '@tauri-apps/api/window';
 
 export default defineComponent({
     setup() {
@@ -94,7 +96,7 @@ export default defineComponent({
                             h("p", num.value), // h()创建的VNodes
                         ]
                     );
-                }  
+                }
             }
         };
 
@@ -111,12 +113,40 @@ export default defineComponent({
 
 
 
+        const test5 = async () => {
+
+            // loading embedded asset:
+            const webview = new WebviewWindow('SSNI-126', {
+                url: '/SmovDetail/1'
+            })
+
+
+            webview.once('tauri://created', function () {
+                // webview window successfully created
+            })
+            webview.once('tauri://error', function (e) {
+                // an error happened creating the webview window
+            })
+
+            // emit an event to the backend
+            await webview.emit("some event", "data")
+            // listen to an event from the backend
+            const unlisten = await webview.listen("event name", e => { })
+            unlisten()
+
+            // webview.show();
+
+        }
+
+
+
         return {
             test,
             test1,
             test2,
             test3,
             test4,
+            test5,
             src
         }
     }

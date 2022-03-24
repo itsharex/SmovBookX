@@ -6,7 +6,7 @@ use std::sync::mpsc::channel;
 use tracing::info;
 
 use tauri::api::dialog;
-use tauri::command;
+use tauri::{command, Window, Manager};
 
 extern crate toml;
 use crate::app::Conf;
@@ -101,6 +101,11 @@ pub fn update_tidy_folder(path: String) {
     let c = toml::to_string(&a).unwrap();
     write(&to_path, c).unwrap();
   }
+}
+
+#[command]
+pub fn set_focus(label: String,window:Window) {
+  window.emit_all(format!("{}_single",label).as_str(), "").unwrap();
 }
 
 pub type MaybeString = Option<String>;

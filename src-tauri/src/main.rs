@@ -32,7 +32,7 @@ async fn main() {
       Ok(())
     })
     .menu(app::create_app_menu())
-    .on_menu_event(app::handle_event_app_menu_event) 
+    .on_menu_event(app::handle_event_app_menu_event)
     .system_tray(app::create_try())
     .on_system_tray_event(app::handle_system_tray_event)
     .invoke_handler(tauri::generate_handler![
@@ -41,7 +41,7 @@ async fn main() {
       cmd::tauri_cmd::perform_request,
       cmd::cmd::query_unretrieved,
       cmd::cmd::query_new_file_todb,
-      cmd::cmd::update_seekname, 
+      cmd::cmd::update_seekname,
       cmd::cmd::insert_folder,
       cmd::cmd::query_folder,
       cmd::cmd::retrieve_data,
@@ -52,10 +52,12 @@ async fn main() {
       cmd::cmd::change_active_status,
       cmd::cmd::delete_smov,
       cmd::cmd::remove_smov_seek_status,
+      cmd::cmd::get_smov_by_id,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,
       cmd::tauri_cmd::open_in_explorer,
-      cmd::tauri_cmd::update_tidy_folder
+      cmd::tauri_cmd::update_tidy_folder,
+      cmd::tauri_cmd::set_focus
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

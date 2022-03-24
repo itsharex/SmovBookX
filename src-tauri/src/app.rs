@@ -374,6 +374,7 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
     SystemTrayEvent::LeftClick { .. } => {
       if let Some(window) = app.get_window("main") {
         window.show().unwrap();
+        window.unminimize().unwrap();
         window.set_focus().unwrap();
         info!("handle_system_tray_event at here?");
       }
@@ -526,7 +527,7 @@ pub async fn listen_single(window: Window) {
           }
         }
         if status {
-          let _ = window.emit_all("single", "");
+          let _ = window.emit_all("main_single", "");
         };
       }
     });
