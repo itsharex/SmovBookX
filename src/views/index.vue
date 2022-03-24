@@ -32,6 +32,8 @@
       "
     >跳转至设置</el-button>
 
+    <p>温馨提醒 ： 已经加了图片功能，谨防社死</p>
+
     <!-- 检索提示 -->
     <el-dialog v-model="Dialog.show" title="回调" width="50%" destroy-on-close center>
       <p>

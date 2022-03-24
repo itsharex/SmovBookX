@@ -51,20 +51,7 @@ impl TidySmov<'_> {
         create_dir_all(&tidy_folder_path).expect("创建视频文件夹错误");
       }
 
-      // copy(&file_file_path, &tidy_file_path).expect("复制文件出现错误");
       let s = Move::from_source(&file_file_path);
-
-      // let  test = OpenOptions::new().write (true).open(&tidy_folder_path);
-
-      // rename(Path::new("C:Users\\Leri\\Videos\\cs\\1.txt"),Path::new("C:Users\\Leri\\Videos\\cs1\\2.txt"));
-
-      // rename(&file_file_path, &tidy_file_path).unwrap();
-       
-
-      // let test = OpenOptions::new().write(true).open(&tidy_folder_path).await;
-      // let test = test; //使用 rename 方法 转移文件 全部使用tokio
-
-      // println!("{:?}",test.metadata()?.permissions());
 
       match s.to_dest(&tidy_file_path) {
         Err(err) => {
@@ -73,16 +60,14 @@ impl TidySmov<'_> {
         }
         _ => {}
       };
-
-      // remove_file(&file_file_path).expect("删除原文件出现错误");
     } else {
-      //如果不是单文件，移动文件夹并重命名
-      // copy(&file_folder_path, &tidy_folder_path).expect("复制文件夹出现错误");
-
       let s = Move::from_source(&file_folder_path);
 
       match s.to_dest(&tidy_folder_path) {
-        Err(err) => return Err(anyhow!("移动文件出现错误:{}", err)),
+        Err(err) => {
+          tracing::error!(message = format!("移动文件出现错误:{}", err).as_str());
+          return Err(anyhow!("移动文件出现错误:{}", err));
+        }
         _ => {}
       };
 
@@ -104,7 +89,6 @@ impl TidySmov<'_> {
           }
         }
       }
-      // remove_dir(&file_folder_path).expect("删除原文件夹出现错误");
     }
 
     let img_path = tidy_folder_path.join("img");
@@ -120,7 +104,7 @@ impl TidySmov<'_> {
     )
     .expect("更新数据库出现了错误！,现在没有处理错误，凉凉");
 
-    Ok(img_path) //tidy_folder_path
+    Ok(img_path) 
   }
 }
 

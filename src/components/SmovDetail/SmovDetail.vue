@@ -10,6 +10,7 @@
             </div>
 
             <p class="note">WebView2存在视频内存泄漏的问题 ， 等待后续更新 增加软件内观看的功能 ,当前内置播放体验差 建议不要用</p>
+            <p class="note">(我根本没开放嘿嗨嘿)</p>
             <template #footer>
                 <el-button type="info" color="#C7415B" @click="close">关闭</el-button>
 
@@ -74,7 +75,7 @@ export default defineComponent({
 .note {
     font-weight: 700;
 }
-.imgDiv{
+.imgDiv {
     width: 100%;
     height: 60%;
 }

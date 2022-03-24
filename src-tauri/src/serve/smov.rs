@@ -97,7 +97,6 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
         let img_to_path = match s.tidy().await {
           Ok(n) => n,
           Err(err) => {
-            tracing::warn!(message = format!("处理文件出现错误:{}", err).as_str());
             return Err(err)
           } ,
         };
