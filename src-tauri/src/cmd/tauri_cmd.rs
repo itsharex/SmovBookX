@@ -7,7 +7,6 @@ use tracing::info;
 
 use tauri::api::dialog;
 use tauri::command;
-use tauri::api::shell::open;
 
 extern crate toml;
 use crate::app::Conf;

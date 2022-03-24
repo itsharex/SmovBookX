@@ -70,8 +70,8 @@
     "windows": [
       {
         "title": "SMOVBOOK",
-        "width": 900,
-        "height": 700,
+        "minWidth": 946,
+        "minHeight": 650,
         "alwaysOnTop": false,
         "decorations": true,
         "resizable": true,
