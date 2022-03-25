@@ -26,7 +26,7 @@ export default defineComponent({
         })
 
         const getData = () => {
-            invoke("get_smov_by_id", { id: parseInt(id.value[0]) }).then((res: any) => {
+            invoke("get_smov_by_id", { id: Number(id.value) }).then((res: any) => {
                 if (res.code == 200) {
                    console.log(res)
                 }

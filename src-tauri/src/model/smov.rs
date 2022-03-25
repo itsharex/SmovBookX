@@ -366,8 +366,8 @@ impl Smov {
       let mut smov = tx
         .query_row_and_then(
           "select id, name,title, path, realname, len, created, modified, extension, 
-        format, release_time, duration,makers_id, publisher_id, series_id, directors_id, 
-         isch from smov where is_retrieve = 1 and id= ?1",
+          format, release_time, duration,makers_id, publisher_id, series_id, directors_id, 
+           isch from smov where is_retrieve = 1 and id = ?1",
           params![id],
           |row| -> Result<Smov, rusqlite::Error> {
             Ok(Smov {
