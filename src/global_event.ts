@@ -1,8 +1,8 @@
 import { listen } from '@tauri-apps/api/event';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
+import { request } from './util/invoke';
 
 let label = getCurrent().label;
-console.log(label)
 
 !(async () => await listen(label+'_single', (event) => {
     console.log("aaaa")
@@ -15,6 +15,6 @@ console.log(label)
     }, 50)
 }))()
 
-
+!(async  ()=> await request("listen_single"))()
 
 

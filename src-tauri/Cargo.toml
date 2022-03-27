@@ -31,6 +31,10 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 # ffmpeg-next = "5.0.2" 视频合并 待定项目
 
+[target."cfg(any(target_os = \"windows\", target_os = \"macos\"))".dependencies]
+window-vibrancy = { git = "https://github.com/tauri-apps/window-vibrancy" }
+window-shadows = { git = "https://github.com/tauri-apps/window-shadows" }
+
 [target.'cfg(windows)'.dependencies]
 windows = {version="^0.34", features= [
     "Win32_Foundation",

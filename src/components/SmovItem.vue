@@ -76,16 +76,19 @@ export default defineComponent({
             const webview = new WebviewWindow(props.data.name, {
                 url: '/SmovDetail/' + props.data.id,
                 title: props.data.name,
-                center: true
+                center: true,
+                minHeight: 600,
+                minWidth: 800,
+                decorations: false
             });
 
-            invoke("set_focus", { label: props.data.name});
+            invoke("set_focus", { label: props.data.name });
 
             // emit(props.data.name+"_single","");
 
 
             webview.once('tauri://created', function () {
-
+                invoke("set_style", { effect: "mica", label: props.data.name });
             })
             webview.once('tauri://close-requested', function (e) {
                 console.log(e.windowLabel)

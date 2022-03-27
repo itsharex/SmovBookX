@@ -1,13 +1,19 @@
 <template>
   <div class="app">
     <el-container>
-      <el-header>
-        <Navigation />
-      </el-header>
-      <el-main id="smovMain">
-        <router-view />
-      </el-main>
-      <el-footer></el-footer>
+      <el-header height="6vh">假装有个系统栏</el-header>
+      <el-container>
+        <el-aside class="NavAside" width="170px">
+          <Navigation />
+        </el-aside>
+        <el-container>
+          <el-main class="smovMain" id="smovMain">
+            <router-view />
+          </el-main>
+
+          <el-footer height="3em"></el-footer>
+        </el-container>
+      </el-container>
     </el-container>
     <Log />
   </div>
@@ -37,7 +43,7 @@ function unknow(unknow: any) {
 <style lang="less">
 #app {
   // font-family: Avenir, Helvetica, Arial, sans-serif;
-   font-family: "Microsoft Yahei", "PingFang SC", "system-ui";
+  font-family: "Microsoft Yahei", "PingFang SC", "system-ui";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -76,34 +82,8 @@ body {
   background: rgba(157, 165, 183, 0.4);
 }
 
-.app .el-header,
-.common-layout .el-footer {
-  background-color: #ffffff;
-  color: var(--el-text-color-primary);
-  line-height: 60px;
-  padding: 0;
-}
-.app .el-footer {
-  line-height: 60px;
-  height: 3em;
-}
-
-.app .el-aside {
-  background-color: #d3dce6;
-  color: var(--el-text-color-primary);
-  text-align: center;
-  line-height: 200px;
-}
-
-.app .el-main {
-  color: var(--el-text-color-primary);
-  text-align: center;
-  // line-height: 160px;
-  flex-grow: 1;
-}
-
-.app > .el-container {
-  height: 100%;
+.smovMain {
+   height: 82vh;
 }
 </style>
 

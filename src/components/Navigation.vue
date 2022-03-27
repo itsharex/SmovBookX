@@ -144,6 +144,7 @@ export default defineComponent({
     height: 100%;
     box-shadow: var(--el-box-shadow-light);
     display: flex;
+    flex-direction: column;
     z-index: 99999;
     align-items: center;
     * {

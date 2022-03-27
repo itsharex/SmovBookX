@@ -511,7 +511,7 @@ pub fn webview2_is_installed(app: &mut tauri::App<Wry>) {
 pub async fn listen_single(window: Window) {
   let _: tauri::async_runtime::JoinHandle<anyhow::Result<(), anyhow::Error>> =
     tauri::async_runtime::spawn(async move {
-      let socket = UdpSocket::bind("127.0.0.1:24254").await.expect("连接失败");
+      let socket = UdpSocket::bind("127.0.0.1:24254").await?;
       loop {
         let mut buf = [0; 32];
         let (size, _) = socket.recv_from(&mut buf).await.expect("出现错误");

@@ -5,6 +5,7 @@
         <el-button type="danger" @click="test3">文件检索测试</el-button>
         <el-button type="danger" @click="test4">即时渲染测试</el-button>
         <el-button type="danger" @click="test5">打开界面测试</el-button>
+        <el-button type="danger" @click="test6">后台新建界面测试</el-button>
         <router-view></router-view>
     </div>
 </template>
@@ -19,6 +20,7 @@ import { dialog, notification } from '@tauri-apps/api';
 import { readDir } from '@tauri-apps/api/fs';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { WebviewWindow } from '@tauri-apps/api/window';
+import { request } from '../util/invoke';
 
 export default defineComponent({
     setup() {
@@ -116,25 +118,13 @@ export default defineComponent({
         const test5 = async () => {
 
             // loading embedded asset:
-            const webview = new WebviewWindow('SSNI-126', {
-                url: '/SmovDetail/1'
-            })
 
 
-            webview.once('tauri://created', function () {
-                // webview window successfully created
-            })
-            webview.once('tauri://error', function (e) {
-                // an error happened creating the webview window
-            })
+        }
 
-            // emit an event to the backend
-            await webview.emit("some event", "data")
-            // listen to an event from the backend
-            const unlisten = await webview.listen("event name", e => { })
-            unlisten()
+        const test6 = async () => {
 
-            // webview.show();
+          await request("create_new_window",{label: "IPVR-075", url: "SmovDetail/3"})
 
         }
 
@@ -147,6 +137,7 @@ export default defineComponent({
             test3,
             test4,
             test5,
+            test6,
             src
         }
     }

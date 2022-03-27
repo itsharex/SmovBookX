@@ -5,6 +5,7 @@
             <!-- 有性能问题需要解决 -->
             <SmovItem v-for="(item, index) in smovList" :key="index" :data="item" />
         </div>
+        <div style="width:100%;height:10px"></div>
     </div>
 </template>
 
