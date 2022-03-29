@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[warn(non_upper_case_globals)]
-const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv"];
+const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv","wmv"];
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
 pub struct SmovFileBack {

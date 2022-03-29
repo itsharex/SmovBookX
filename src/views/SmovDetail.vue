@@ -6,7 +6,7 @@
         <el-main class="ImgShow">
             <img
                 class="showImg"
-                :src="focus === -1 ? (data.main_img != undefined ? convertFileSrc(data.main_img) : nonePic) : convertFileSrc(data.detail_img[focus])"
+                :src="focus === -1 ? (data.main_img === undefined ? nonePic : data.main_img === '' ? nonePic : convertFileSrc(data.main_img)) : convertFileSrc(data.detail_img[focus])"
             />
         </el-main>
 
@@ -17,7 +17,9 @@
                 :class="focus == -1 ? 'imgLabelFocus' : ''"
                 @click="focus = -1"
             >
-                <img :src="data.main_img != undefined ? convertFileSrc(data.main_img) : nonePic" />
+                <img
+                    :src="data.main_img === undefined ? nonePic : data.main_img === '' ? nonePic : convertFileSrc(data.main_img)"
+                />
             </div>
             <div
                 class="imgLabel"
@@ -29,7 +31,6 @@
                 <img :src="convertFileSrc(item)" />
             </div>
         </div>
-
 
         <el-drawer
             v-model="detailShow"
@@ -264,8 +265,6 @@ export default defineComponent({
     transform: rotate(270deg) translateX(-45vh);
 }
 
-
-
 .ImgTray::-webkit-scrollbar {
     display: none; /* Chrome Safari */
 }
@@ -315,5 +314,4 @@ export default defineComponent({
 .detailModal {
     background-color: rgba(165, 42, 42, 0);
 }
-
 </style>

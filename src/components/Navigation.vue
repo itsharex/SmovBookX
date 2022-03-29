@@ -10,6 +10,16 @@
             circle
         ></el-button>
 
+        <el-button
+            type="info"
+            color="#C7415B"
+            @click="
+                router.push({
+                    path: '/SomvView',
+                })
+            "
+        >跳转至灵魂</el-button>
+
         <el-popover
             placement="bottom"
             title="更新"
@@ -63,6 +73,13 @@ export default defineComponent({
             show: false
         });
 
+        const nav = ref({
+            choose: 0,
+            list: [
+                { name: "首页", path: "" }
+            ]
+        });
+
         onMounted(() => {
             webview = new WebviewWindow('seek', {
                 url: '/seek',
@@ -88,9 +105,9 @@ export default defineComponent({
         }
 
         const eventSeekStatus = async () => {
-             !(async () => await listen('seek_status', (event: any) => {
+            !(async () => await listen('seek_status', (event: any) => {
                 console.log(event.payload);
-                onLoad.value =eval(event.payload.toLowerCase());   
+                onLoad.value = eval(event.payload.toLowerCase());
             }))()
         }
 
@@ -132,7 +149,8 @@ export default defineComponent({
             Cloudy,
             Updater,
             UpdatePopover,
-            install
+            install,
+            router
         };
     },
 })
