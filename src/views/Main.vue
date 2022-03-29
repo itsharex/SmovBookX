@@ -1,21 +1,21 @@
 <template>
   <div class="app">
     <el-container>
-      <el-header height="6vh">假装有个系统栏</el-header>
+      <el-header height="6vh" data-tauri-drag-region>假装有个系统栏</el-header>
       <el-container>
         <el-aside class="NavAside" width="170px">
           <Navigation />
         </el-aside>
         <el-container>
-          <el-main class="smovMain" id="smovMain">
+          <el-main class="SmovMain" id="SmovMain">
+            <!-- https://blog.csdn.net/m0_37840862/article/details/120764072 -->
             <router-view />
           </el-main>
-
           <el-footer height="3em"></el-footer>
         </el-container>
       </el-container>
     </el-container>
-    <Log />
+    <Log v-if="log" />
   </div>
 </template>
 
@@ -28,7 +28,10 @@ export default defineComponent({
   components: { Navigation, Log },
   setup() {
 
+    const log = ref(false);
+
     return {
+      log
 
     };
   },
@@ -82,8 +85,15 @@ body {
   background: rgba(157, 165, 183, 0.4);
 }
 
-.smovMain {
-   height: 82vh;
+.SmovMain {
+  height: 82vh;
+}
+.NavAside {
+  background-color: rgba(240, 240, 240, 0.459);
+  border-radius: 0 7px 0 0;
+  padding: 2px;
+  // box-shadow: var(--el-box-shadow-light) inset;
+  // border: #2c3e502d solid 2px;
 }
 </style>
 

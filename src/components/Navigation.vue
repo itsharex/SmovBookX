@@ -1,6 +1,6 @@
 <template>
-    <div class="Navigation">
-        <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
+    <div class="Navigation" data-tauri-drag-region>
+        <!-- <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
         <el-button
             type="primary"
             color="#C7415B"
@@ -8,17 +8,21 @@
             :icon="onLoad === true ? Loading : Download"
             @click="goSeek"
             circle
-        ></el-button>
+        ></el-button>-->
 
-        <el-button
-            type="info"
-            color="#C7415B"
-            @click="
-                router.push({
-                    path: '/SomvView',
-                })
-            "
-        >跳转至灵魂</el-button>
+        <div class="title">
+            <p>Smov Book</p>
+        </div>
+
+        <div class="NavItemDiv">
+            <navigation-item
+                v-for="(item, index) in nav.list"
+                :key="index"
+                :choose="nav.choose"
+                :name="item.name"
+                :path="item.path"
+            ></navigation-item>
+        </div>
 
         <el-popover
             placement="bottom"
@@ -76,9 +80,11 @@ export default defineComponent({
         const nav = ref({
             choose: 0,
             list: [
-                { name: "首页", path: "" }
-            ]
-        });
+                { name: "首页", path: "/SomvView" },
+                { name: "检索", path: "/SomvFile" },
+                { name: "首页", path: "/SomvView" }
+            ] as any[]
+        } as any);
 
         onMounted(() => {
             webview = new WebviewWindow('seek', {
@@ -150,7 +156,8 @@ export default defineComponent({
             Updater,
             UpdatePopover,
             install,
-            router
+            router,
+            nav
         };
     },
 })
@@ -160,14 +167,11 @@ export default defineComponent({
 .Navigation {
     width: 100%;
     height: 100%;
-    box-shadow: var(--el-box-shadow-light);
     display: flex;
     flex-direction: column;
     z-index: 99999;
     align-items: center;
-    * {
-        margin-left: 20px;
-    }
+
 }
 
 @keyframes rotating {
@@ -185,5 +189,18 @@ export default defineComponent({
 
 .Version {
     font-weight: 600;
+}
+
+.NavItemDiv {
+    width: 100%;
+}
+
+.title {
+    p {
+        font-size: 1.5rem;
+        font-weight: 600;
+        width: 100%;
+        text-align: center;
+    }
 }
 </style>
