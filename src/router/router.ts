@@ -17,14 +17,23 @@ const router = createRouter({
                 {
                     path: '/index',
                     component: Index,
+                    meta:{
+                        keepAlive: true
+                      }
                 },
                 {
                     path: '/SomvFile',
                     component: smovFile,
+                    meta:{
+                        keepAlive: false
+                      }
                 },
                 {
                     path: '/SomvView',
                     component: SmovView,
+                    meta:{
+                        keepAlive: true
+                      }
                 },
                 {
                     path: '/test',
@@ -56,6 +65,7 @@ const router = createRouter({
             path: '/SmovDetail/:Id',
             component: () => import("../views/SmovDetail.vue")
         },
-    ]
+    ],
+
 })
 export default router;

@@ -11,11 +11,15 @@
                 :choose="nav.choose"
                 :name="item.name"
                 :path="item.path"
+                :index="index"
+                @change-choose="changeChoose"
+                :show="item.show == undefined ? true : item.show"
+                :ico="item.ico"
             ></navigation-item>
         </div>
 
-        <div>
-            <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
+        <div class="QuickButton">
+            <!-- <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button> -->
             <el-button
                 type="primary"
                 color="#C7415B"
@@ -24,30 +28,30 @@
                 @click="goSeek"
                 circle
             ></el-button>
-        </div>
 
-        <el-popover
-            placement="bottom"
-            title="更新"
-            :width="200"
-            trigger="hover"
-            v-model:visible="UpdatePopover.show"
-            v-if="Updater.shouldUpdate"
-        >
-            <p>检测到新的更新，点击当前按钮进行更新</p>
-            <p class="Version">版本号:{{ Updater.manifest.version }}</p>
-            <div style="text-align: right; margin: 0"></div>
-            <template #reference>
-                <el-button
-                    type="danger"
-                    :icon="Cloudy"
-                    @mouseover="UpdatePopover.show = true"
-                    @mouseleave="UpdatePopover.show = false"
-                    @click="install"
-                    circle
-                />
-            </template>
-        </el-popover>
+            <el-popover
+                placement="bottom"
+                title="更新"
+                :width="200"
+                trigger="hover"
+                v-model:visible="UpdatePopover.show"
+                v-if="Updater.shouldUpdate"
+            >
+                <p>检测到新的更新，点击当前按钮进行更新</p>
+                <p class="Version">版本号:{{ Updater.manifest.version }}</p>
+                <div style="text-align: right; margin: 0"></div>
+                <template #reference>
+                    <el-button
+                        type="danger"
+                        :icon="Cloudy"
+                        @mouseover="UpdatePopover.show = true"
+                        @mouseleave="UpdatePopover.show = false"
+                        @click="install"
+                        circle
+                    />
+                </template>
+            </el-popover>
+        </div>
     </div>
 </template>
 
@@ -82,9 +86,10 @@ export default defineComponent({
         const nav = ref({
             choose: 0,
             list: [
-                { name: "首页", path: "/SomvView" },
+                { name: "首页", path: "/SomvView", ico: Download },
                 { name: "检索", path: "/SomvFile" },
-                { name: "首页", path: "/index" }
+                { name: "首页", path: "/index" },
+                { name: "测试", path: "/test", show: process.env.NODE_ENV === "development" }
             ] as any[]
         } as any);
 
@@ -129,6 +134,10 @@ export default defineComponent({
             await relaunch();
         }
 
+        const changeChoose = (index) => {
+            nav.value.choose = index;
+        }
+
         // const linstenUpdate = async () => {
         //     emit("tauri://update");
         //     !(async () => await listen('tauri://update-available', (event) => {
@@ -159,7 +168,8 @@ export default defineComponent({
             UpdatePopover,
             install,
             router,
-            nav
+            nav,
+            changeChoose
         };
     },
 })
@@ -173,6 +183,9 @@ export default defineComponent({
     flex-direction: column;
     z-index: 99999;
     align-items: center;
+    padding: 5px;
+    box-sizing: border-box;
+    height: 100%;
 }
 
 @keyframes rotating {
@@ -203,5 +216,14 @@ export default defineComponent({
         width: 100%;
         text-align: center;
     }
+}
+
+.ChooseItem {
+    position: absolute;
+}
+
+.QuickButton {
+    position: absolute;
+    bottom: 20px;
 }
 </style>

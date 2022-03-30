@@ -3,13 +3,20 @@
     <el-container>
       <el-header height="6vh" data-tauri-drag-region>假装有个系统栏</el-header>
       <el-container>
-        <el-aside class="NavAside" width="170px">
+        <el-aside class="NavAside" width="180px">
           <Navigation />
         </el-aside>
         <el-container>
           <el-main class="SmovMain" id="SmovMain">
             <!-- https://blog.csdn.net/m0_37840862/article/details/120764072 -->
-            <router-view />
+            <!-- <router-view /> -->
+
+            <router-view v-slot="{ Component }">
+              <keep-alive :max="2">
+                <component :is="Component" v-if="$route.meta.keepAlive" :key="$route.name" />
+              </keep-alive>
+              <component :is="Component" v-if="!$route.meta.keepAlive" :key="$route.name" />
+            </router-view>
           </el-main>
           <el-footer height="3em"></el-footer>
         </el-container>
@@ -91,7 +98,7 @@ body {
 .NavAside {
   background-color: rgba(240, 240, 240, 0.459);
   border-radius: 0 7px 0 0;
-  padding: 2px;
+  // padding: 2px;
   // box-shadow: var(--el-box-shadow-light) inset;
   // border: #2c3e502d solid 2px;
 }

@@ -12,7 +12,7 @@
         @input="searchEvent"
       />
     </div>
-
+    <!-- 增加一列合并列 用来放滚动条 -->
     <vxe-table
       show-overflow
       keep-source
@@ -29,9 +29,9 @@
       <template #empty>
         <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
       </template>
-      <vxe-column type="seq" width="5%"></vxe-column>
-      <vxe-column type="checkbox" width="5%"></vxe-column>
-      <vxe-column field="realname" title="文件名称" width="26%"></vxe-column>
+      <vxe-column type="seq"></vxe-column>
+      <vxe-column type="checkbox" width="6%"></vxe-column>
+      <vxe-column field="realname" title="文件名称" width="24%"></vxe-column>
       <vxe-column field="extension" title="拓展名" width="10%"></vxe-column>
       <vxe-column
         field="seekname"
