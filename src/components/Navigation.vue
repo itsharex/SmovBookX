@@ -1,15 +1,5 @@
 <template>
     <div class="Navigation" data-tauri-drag-region>
-        <!-- <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
-        <el-button
-            type="primary"
-            color="#C7415B"
-            :class="onLoad === true ? 'onLoad' : ''"
-            :icon="onLoad === true ? Loading : Download"
-            @click="goSeek"
-            circle
-        ></el-button>-->
-
         <div class="title">
             <p>Smov Book</p>
         </div>
@@ -22,6 +12,18 @@
                 :name="item.name"
                 :path="item.path"
             ></navigation-item>
+        </div>
+
+        <div>
+            <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button>
+            <el-button
+                type="primary"
+                color="#C7415B"
+                :class="onLoad === true ? 'onLoad' : ''"
+                :icon="onLoad === true ? Loading : Download"
+                @click="goSeek"
+                circle
+            ></el-button>
         </div>
 
         <el-popover
@@ -82,7 +84,7 @@ export default defineComponent({
             list: [
                 { name: "首页", path: "/SomvView" },
                 { name: "检索", path: "/SomvFile" },
-                { name: "首页", path: "/SomvView" }
+                { name: "首页", path: "/index" }
             ] as any[]
         } as any);
 
@@ -171,7 +173,6 @@ export default defineComponent({
     flex-direction: column;
     z-index: 99999;
     align-items: center;
-
 }
 
 @keyframes rotating {
