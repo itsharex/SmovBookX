@@ -144,13 +144,12 @@ pub fn set_focus(label: String, window: Window) {
     .unwrap();
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 #[command]
 #[inline]
 pub fn set_style(effect: String, label: String, window: Window) {
   match window.get_window(&label) {
     Some(window) => {
-      #[cfg(any(target_os = "windows", target_os = "macos"))]
       set_shadow(&window, true).unwrap();
       clear_blur(&window).unwrap();
       clear_acrylic(&window).unwrap();

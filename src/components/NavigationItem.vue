@@ -6,7 +6,10 @@
         v-if="show"
     >
         <div class="ChooseItem" :class="choose === index ? 'NavItemChooseT' : ''"></div>
- 
+        <!-- :size="20" -->
+        <el-icon  class="ico">
+            <component :is="ico"></component>
+        </el-icon>
         <span>{{ name }}</span>
     </div>
 </template>
@@ -29,6 +32,8 @@ const em = defineEmits(['changeChoose'])
 const changeChoose = () => {
     em("changeChoose", props.index)
 }
+
+
 
 const props = defineProps({
     name: String as any,
@@ -54,7 +59,7 @@ const props = defineProps({
     margin-bottom: 1px;
     padding: 2px;
     span {
-        margin-left: 0.5rem;
+        margin-left: 0.2rem;
     }
 }
 
@@ -73,5 +78,11 @@ const props = defineProps({
 
 .NavItemChooseT {
     background: rgba(0, 128, 0, 0.322);
+}
+
+.ico {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-left: 0.5rem;
 }
 </style>

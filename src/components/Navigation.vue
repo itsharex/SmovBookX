@@ -1,5 +1,5 @@
 <template>
-    <div class="Navigation" data-tauri-drag-region>
+    <div class="Navigation" >
         <div class="title">
             <p>Smov Book</p>
         </div>
@@ -60,7 +60,7 @@ import { defineComponent, ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
 import { listen, emit } from '@tauri-apps/api/event';
-import { ArrowLeftBold, Loading, Download, Cloudy } from '@element-plus/icons-vue';
+import { ArrowLeftBold, Loading, Download, Cloudy, HomeFilled, Menu } from '@element-plus/icons-vue';
 import { checkUpdate, installUpdate } from '@tauri-apps/api/updater';
 import { relaunch } from '@tauri-apps/api/process';
 import { ElLoading } from 'element-plus';
@@ -86,9 +86,9 @@ export default defineComponent({
         const nav = ref({
             choose: 0,
             list: [
-                { name: "首页", path: "/SomvView", ico: Download },
-                { name: "检索", path: "/SomvFile" },
-                { name: "首页", path: "/index" },
+                { name: "首页", path: "/SomvView", ico: HomeFilled },
+                { name: "检索", path: "/SomvFile", ico: Menu },
+                { name: "首页", path: "/index", show: process.env.NODE_ENV === "development" },
                 { name: "测试", path: "/test", show: process.env.NODE_ENV === "development" }
             ] as any[]
         } as any);

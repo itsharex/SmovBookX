@@ -73,7 +73,7 @@
         "minWidth": 946,
         "minHeight": 650,
         "alwaysOnTop": false,
-        "decorations": true,
+        "decorations": false,
         "resizable": true,
         "fullscreen": false,
         "transparent": false,

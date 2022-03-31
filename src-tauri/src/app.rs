@@ -15,7 +15,7 @@ use std::{
   collections::BTreeMap,
   fs::{create_dir_all, write, File, OpenOptions},
   io::Read,
-  path::{PathBuf},
+  path::PathBuf,
   result::Result::Ok,
   sync::Arc,
   thread,
@@ -133,7 +133,7 @@ where
 
 ///初始化app文件夹
 pub fn init_app_dir() -> bool {
-  //lazy 的 处理是在第一次读取的时候 所以这里不能去读取app的值 不然会出现问题 为了让代码更加 简洁 而且在逻辑上更方便一点 我这里选择了 自己去获取一遍 为什么不能在 new方法调用init的原因也是因为会一直相互调用 
+  //lazy 的 处理是在第一次读取的时候 所以这里不能去读取app的值 不然会出现问题 为了让代码更加 简洁 而且在逻辑上更方便一点 我这里选择了 自己去获取一遍 为什么不能在 new方法调用init的原因也是因为会一直相互调用
   let cfg = tauri::Config::default();
   let app_path = match tauri::api::path::app_dir(&cfg) {
     None => PathBuf::new(),
@@ -450,6 +450,19 @@ pub fn lock_single() {
       crete_pid_file()
     }
   }
+}
+
+///初始化界面阴影
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[inline]
+pub fn init_app_shadows(app: &mut tauri::App<Wry>) {
+  use window_shadows::set_shadow;
+  match app.get_window("main") {
+    Some(window) => {
+      set_shadow(&window, true).unwrap();
+    }
+    None => {}
+  };
 }
 
 /// 发送拉起请求

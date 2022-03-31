@@ -28,6 +28,7 @@ async fn main() {
       if !app::init_app_log(_app) {
         panic!("日志系统初始化失败！");
       }
+      app::init_app_shadows(_app);
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())
     })

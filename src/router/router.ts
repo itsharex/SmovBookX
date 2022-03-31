@@ -12,7 +12,7 @@ const router = createRouter({
         {
             path: '/',
             component: Main,
-            redirect: '/index',
+            redirect: '/SomvView',
             children: [
                 {
                     path: '/index',
