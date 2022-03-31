@@ -84,21 +84,12 @@ export default defineComponent({
 
             invoke("set_focus", { label: props.data.name });
 
-            // emit(props.data.name+"_single","");
-
-
             webview.once('tauri://created', function () {
-                invoke("set_style", { effect: "mica", label: props.data.name });
+                invoke("set_style", { effect: "", label: props.data.name });
             })
             webview.once('tauri://close-requested', function (e) {
                 console.log(e.windowLabel)
             })
-
-            // // emit an event to the backend
-            // await webview.emit("some event", "data")
-            // // listen to an event from the backend
-            // const unlisten = await webview.listen("event name", e => { })
-            // unlisten()
 
         }
         return {
