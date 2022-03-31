@@ -13,7 +13,7 @@
                 :path="item.path"
                 :index="index"
                 @change-choose="changeChoose"
-                :show="item.show == undefined ? true : item.show"
+                :show="item.show"
                 :ico="item.ico"
             ></navigation-item>
         </div>

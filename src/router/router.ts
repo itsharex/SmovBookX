@@ -38,7 +38,7 @@ const router = createRouter({
                 {
                     path: '/test',
                     component: test,
-                    redirect: '/test1',
+                    redirect: '/test2',
                     children: [
                         {
                             path: '/test1',

@@ -7,7 +7,7 @@
     >
         <div class="ChooseItem" :class="choose === index ? 'NavItemChooseT' : ''"></div>
         <!-- :size="20" -->
-        <el-icon  class="ico">
+        <el-icon class="ico">
             <component :is="ico"></component>
         </el-icon>
         <span>{{ name }}</span>
@@ -36,11 +36,26 @@ const changeChoose = () => {
 
 
 const props = defineProps({
-    name: String as any,
-    choose: Number as any,
-    path: String as any,
-    index: Number as any,
-    show: Boolean as any,
+    name: {
+        type: String,
+        default: ""
+    },
+    choose: {
+        type: Number,
+        default: -1
+    },
+    path: {
+        type: String,
+        default: "/"
+    },
+    index: {
+        type: Number,
+        default: 0
+    },
+    show: {
+        type: Boolean,
+        default: true
+    },
     ico: {} as any
 })
 

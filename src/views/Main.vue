@@ -3,7 +3,7 @@
     <el-container>
       <el-header class="WindowHeader" height="40px" data-tauri-drag-region >
         <action-bar data-tauri-drag-region >
-          cesh
+          
           </action-bar>
       </el-header>
       <el-container>
@@ -95,7 +95,8 @@ body {
   // border: #2c3e502d solid 2px;
 }
 .WindowHeader {
-  background: #6a626251;
+  background-color: rgba(240, 240, 240, 0.459);
+  // background: #6a626251;
   padding: 0;
 }
 </style>

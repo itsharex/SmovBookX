@@ -6,6 +6,14 @@
         <el-button type="danger" @click="test4">即时渲染测试</el-button>
         <el-button type="danger" @click="test5">打开界面测试</el-button>
         <el-button type="danger" @click="test6">后台新建界面测试</el-button>
+
+        <el-icon v-if="show" @click="show=!show">
+            <component :is="Bowl"></component>
+        </el-icon>
+        <el-icon v-if="!show" @click="show=!show">
+            <component :is="Box"></component>
+        </el-icon>
+
         <router-view></router-view>
     </div>
 </template>
@@ -21,16 +29,18 @@ import { readDir } from '@tauri-apps/api/fs';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { WebviewWindow } from '@tauri-apps/api/window';
 import { request } from '../util/invoke';
+import { Bowl, Box } from '@element-plus/icons-vue';
 
 export default defineComponent({
     setup() {
         // 任务实体
         const router = useRouter();
 
+        const show = ref(false)
+
         const test = () => {
 
         }
-
         const src = ref(convertFileSrc("E:\\ccccc\\zl\\SSNI-107\\img\\thumbs_SSNI-107.jpg"))
 
         let logs = inject('log') as any;
@@ -124,7 +134,7 @@ export default defineComponent({
 
         const test6 = async () => {
 
-          await request("create_new_window",{label: "IPVR-075", url: "SmovDetail/3"})
+            await request("create_new_window", { label: "IPVR-075", url: "SmovDetail/3" })
 
         }
 
@@ -138,7 +148,10 @@ export default defineComponent({
             test4,
             test5,
             test6,
-            src
+            src,
+            Bowl,
+            Box,
+            show
         }
     }
 })

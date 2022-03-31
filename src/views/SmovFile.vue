@@ -260,7 +260,7 @@ export default defineComponent({
       }).finally(() => {
         setTimeout(() => {
           table.loading = false;
-        }, 1000);
+        }, 500);
 
       });
     };

@@ -49,7 +49,7 @@ export default defineComponent({
 <style lang='less' scoped>
 .smovView {
     width: 100%;
-    height: 100%;
+
 }
 .smovList {
     display: flex;

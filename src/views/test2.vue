@@ -1,20 +1,12 @@
 <template>
-  <div>
-     test2
- </div>
+    <div>
+        <el-button v-if="show" type="primary" @click="show = !show">Primary</el-button>
+        <el-button v-if="show" type="success" @click="show = !show">Success</el-button>
+    </div>
 </template>
 
-<script lang='ts'>
-import { defineComponent, ref } from 'vue';
-export default defineComponent({
-    name: 'test2',
-    props: [],
-    setup(props, { emit }) {
-        return {
-        };
-    }
-})
-
+<script lang='ts' setup>
+let show = false;
 </script>
 <style lang='less' scoped>
 </style>

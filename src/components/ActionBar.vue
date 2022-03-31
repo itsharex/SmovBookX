@@ -1,8 +1,25 @@
 <template>
-    <div class="ActionBar">
+    <div class="ActionBar" data-tauri-drag-region>
         <slot></slot>
-        <div class="WindowAction" >
-            <el-icon :size="17" class="WindowButton" @click="window.minimize()">
+        <div class="WindowAction">
+            <el-icon
+                v-show="top && !AlwaysOnTop"
+                class="WindowButton"
+                :size="17"
+                @click="ChangeAlwaysOnTop()"
+            >
+                <circle-check />
+            </el-icon>
+            <el-icon
+                v-show="top && AlwaysOnTop"
+                class="WindowButton"
+                :size="17"
+                @click="ChangeAlwaysOnTop()"
+            >
+                <circle-check-filled />
+            </el-icon>
+
+            <el-icon :size="17" v-if="imize" class="WindowButton" @click="window.minimize()">
                 <semi-select />
             </el-icon>
 
@@ -10,23 +27,51 @@
                 <promotion />
             </el-icon>
 
-            <el-icon :size="17" class="WindowButton" @click="window.hide()">
+            <el-icon :size="17" class="WindowButton" @click="once ? window.close() : window.hide()">
                 <close-bold />
             </el-icon>
 
-                        <!-- <smov-ico class="WindowButton" :name="'browser_window'" />
+            <!-- <smov-ico class="WindowButton" :name="'browser_window'" />
             -->
         </div>
     </div>
 </template>
 
 <script lang='ts' setup>
-import { CloseBold, SemiSelect, Promotion } from '@element-plus/icons-vue';
+import { CloseBold, SemiSelect, Promotion, Place, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue';
 import { getCurrent } from '@tauri-apps/api/window';
 
-let WindowMaxSize = false;
-
 const window = getCurrent();
+
+const AlwaysOnTop = ref(false);
+
+const ChangeAlwaysOnTop = () => {
+    AlwaysOnTop.value = !AlwaysOnTop.value;
+    window.setAlwaysOnTop(AlwaysOnTop.value);
+}
+
+const props = defineProps({
+    imize: {
+        type: Boolean,
+        default: true
+    },
+    close: {
+        type: Boolean,
+        default: true
+    },
+    minImize: {
+        type: Boolean,
+        default: true
+    },
+    top: {
+        type: Boolean,
+        default: false
+    },
+    once: {
+        type: Boolean,
+        default: false
+    }
+})
 
 
 </script>
@@ -37,16 +82,21 @@ const window = getCurrent();
     display: flex;
     justify-content: right;
     align-items: center;
+    z-index: 9999;
+    & > * {
+        cursor: pointer;
+    }
 }
 
 .WindowButton {
     width: 2.8rem;
     height: 100%;
+
     // margin-left: 1.1em;
 }
 
 .WindowButton:hover {
-    background-color:rgba(255, 255, 255, 0.388) ;
+    background-color: rgba(0, 0, 0, 0.144);
 }
 
 .WindowAction {

@@ -1,7 +1,14 @@
 <template>
     <el-container class="smovDetail">
         <el-header class="editBar" data-tauri-drag-region>
-            <!-- <el-button type="primary" @click="detailShow = !detailShow">Primary</el-button> -->
+            <action-bar :imize="false" :top="true" :once="true">
+                <div class="detailIco" @click="detailShow=!detailShow">
+                    <el-icon :size="17">
+                        <expand />
+                    </el-icon>
+                    <p>详情</p>
+                </div>
+            </action-bar>
         </el-header>
         <el-main class="ImgShow">
             <img
@@ -99,10 +106,14 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { defineComponent, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import nonePic from "../assets/NoneImages.png";
+import { Menu } from '@element-plus/icons-vue';
 
 export default defineComponent({
     props: {
 
+    },
+    components: {
+        Expand: Menu,
     },
     setup(props) {
 
@@ -307,6 +318,31 @@ export default defineComponent({
 
 .editBar {
     height: 30px;
+    padding: 0;
+}
+
+.detailIco {
+    width: 4rem;
+    height: 100%;
+    display: flex;
+    margin-left: 3%;
+    margin-right: 3%;
+    align-items: center;
+    cursor: pointer;
+    justify-content: center;
+    background-color: #4983aa9f;
+    border-radius: 0 0 5px 5px;
+    box-shadow: var(--el-box-shadow-light);
+    p {
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: "Times New Roman", Times, serif;
+        font-style: normal;
+    }
+}
+
+.detailIco:hover {
+    background-color: #4983aa5b;
 }
 </style>
 
