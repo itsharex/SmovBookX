@@ -96,6 +96,7 @@ body {
 }
 .WindowHeader {
   background: #6a626251;
+  padding: 0;
 }
 </style>
 

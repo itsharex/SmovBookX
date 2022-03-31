@@ -36,12 +36,17 @@ const window = getCurrent();
     height: 100%;
     display: flex;
     justify-content: right;
+    align-items: center;
 }
 
 .WindowButton {
-    width: 1em;
-    height: 1em;
-    margin-left: 1.1em;
+    width: 2.8rem;
+    height: 100%;
+    // margin-left: 1.1em;
+}
+
+.WindowButton:hover {
+    background-color:rgba(255, 255, 255, 0.388) ;
 }
 
 .WindowAction {
@@ -49,6 +54,5 @@ const window = getCurrent();
     display: flex;
     justify-content: center;
     align-items: center;
-   
 }
 </style>
