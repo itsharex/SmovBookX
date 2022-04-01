@@ -19,11 +19,16 @@
                 <circle-check-filled />
             </el-icon>
 
-            <el-icon :size="17" v-if="imize" class="WindowButton" @click="window.minimize()">
+            <el-icon :size="17" v-if="minImize" class="WindowButton" @click="window.minimize()">
                 <semi-select />
             </el-icon>
 
-            <el-icon :size="17" class="WindowButton" @click="window.toggleMaximize()">
+            <el-icon
+                :size="17"
+                v-if="imize"
+                class="WindowButton"
+                @click="window.toggleMaximize()"
+            >
                 <promotion />
             </el-icon>
 

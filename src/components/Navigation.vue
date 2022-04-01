@@ -1,5 +1,5 @@
 <template>
-    <div class="Navigation" >
+    <div class="Navigation">
         <div class="title">
             <p>Smov Book</p>
         </div>
@@ -18,9 +18,9 @@
             ></navigation-item>
         </div>
 
+        <!-- 快捷栏优化 本周 -->
         <div class="QuickButton">
-            <!-- <el-button type="primary" color="#C7415B" :icon="ArrowLeftBold" @click="back" circle></el-button> -->
-            <el-button
+            <!-- <el-button
                 type="primary"
                 color="#C7415B"
                 :class="onLoad === true ? 'onLoad' : ''"
@@ -50,7 +50,66 @@
                         circle
                     />
                 </template>
-            </el-popover>
+            </el-popover>-->
+
+            <div class="setting">
+                <navigation-item
+                    :choose="nav.choose"
+                    :name="'设置'"
+                    :path="'/setting'"
+                    :index="-2"
+                    :show="true"
+                    :ico="Tools"
+                ></navigation-item>
+            </div>
+
+            <div>
+                <navigation-item
+                    :choose="nav.choose"
+                    :name="'列表'"
+                    :index="-2"
+                    :show="true"
+                    @click="goSeek"
+                    :class="onLoad ? 'bg-liuguang' : ''"
+                    :ico="HelpFilled"
+                >
+                    <el-icon
+                        :size="17"
+                        class="loadIco"
+                        :class="onLoad ? 'onLoad' : ''"
+                        v-if="false"
+                    >
+                        <component :is="Loading"></component>
+                    </el-icon>
+                </navigation-item>
+            </div>
+
+            <div class="UploadFilled">
+                <el-popover
+                    placement="right"
+                    title="更新"
+                    :width="200"
+                    trigger="hover"
+                    v-model:visible="UpdatePopover.show"
+                    v-if="Updater.shouldUpdate"
+                >
+                    <p>检测到新的更新，点击当前按钮进行更新</p>
+                    <p class="Version">版本号:{{ Updater.manifest.version }}</p>
+                    <div style="text-align: right; margin: 0"></div>
+                    <template #reference>
+                        <navigation-item
+                            :choose="nav.choose"
+                            :name="'更新'"
+                            :index="-2"
+                            :show="true"
+                            @mouseover="UpdatePopover.show = true"
+                            @mouseleave="UpdatePopover.show = false"
+                            @click="install"
+                            :ico="UploadFilled"
+                        ></navigation-item>
+                    </template>
+                </el-popover>
+            </div>
         </div>
     </div>
 </template>
@@ -60,11 +119,12 @@ import { defineComponent, ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
 import { listen, emit } from '@tauri-apps/api/event';
-import { ArrowLeftBold, Loading, Download, Cloudy, HomeFilled, Menu } from '@element-plus/icons-vue';
+import { ArrowLeftBold, Loading, Download, Cloudy, HomeFilled, Menu, Tools, UploadFilled, HelpFilled } from '@element-plus/icons-vue';
 import { checkUpdate, installUpdate } from '@tauri-apps/api/updater';
 import { relaunch } from '@tauri-apps/api/process';
 import { ElLoading } from 'element-plus';
 import 'element-plus/es/components/loading/style/css'
+import { request } from '../util/invoke';
 export default defineComponent({
     name: "Navigation",
     props: [],
@@ -104,8 +164,13 @@ export default defineComponent({
                 alwaysOnTop: false,
                 skipTaskbar: true,
                 resizable: false,
-                decorations: true
+                decorations: false,
             });
+
+            webview.once('tauri://created', function () {
+                request("set_style", { effect: "", label: 'seek' });
+            })
+
             eventSeekStatus();
             linstenUpdate();
         });
@@ -138,13 +203,6 @@ export default defineComponent({
             nav.value.choose = index;
         }
 
-        // const linstenUpdate = async () => {
-        //     emit("tauri://update");
-        //     !(async () => await listen('tauri://update-available', (event) => {
-        //         console.log(event);
-        //     }))()
-        // }
-
         const onLoad = ref(false);
 
         const goSeek = () => {
@@ -169,7 +227,10 @@ export default defineComponent({
             install,
             router,
             nav,
-            changeChoose
+            changeChoose,
+            Tools,
+            UploadFilled,
+            HelpFilled
         };
     },
 })
@@ -223,7 +284,235 @@ export default defineComponent({
 }
 
 .QuickButton {
-    position: absolute;
-    bottom: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column-reverse;
+    margin-bottom: 12px;
+    width: 100%;
+    .setting {
+        width: 100%;
+    }
+}
+
+.loadIco {
+    margin-left: 1rem;
+}
+</style>
+
+<style>
+.bg-liuguang {
+    animation: liuguang 2s infinite linear;
+}
+
+@keyframes liuguang {
+    0% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 0%,
+            #ffa0ec 100%,
+            #8a8af4 200%,
+            #ffa0ec 300%
+        );
+    }
+
+    5% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -10%,
+            #ffa0ec 90%,
+            #8a8af4 190%,
+            #ffa0ec 290%
+        );
+    }
+
+    10% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -20%,
+            #ffa0ec 80%,
+            #8a8af4 180%,
+            #ffa0ec 280%
+        );
+    }
+
+    15% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -30%,
+            #ffa0ec 70%,
+            #8a8af4 170%,
+            #ffa0ec 270%
+        );
+    }
+
+    20% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -40%,
+            #ffa0ec 60%,
+            #8a8af4 160%,
+            #ffa0ec 260%
+        );
+    }
+
+    25% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -50%,
+            #ffa0ec 50%,
+            #8a8af4 150%,
+            #ffa0ec 250%
+        );
+    }
+
+    30% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -60%,
+            #ffa0ec 40%,
+            #8a8af4 140%,
+            #ffa0ec 240%
+        );
+    }
+
+    35% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -70%,
+            #ffa0ec 30%,
+            #8a8af4 130%,
+            #ffa0ec 230%
+        );
+    }
+
+    40% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -80%,
+            #ffa0ec 20%,
+            #8a8af4 120%,
+            #ffa0ec 220%
+        );
+    }
+
+    45% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -90%,
+            #ffa0ec 10%,
+            #8a8af4 110%,
+            #ffa0ec 210%
+        );
+    }
+
+    50% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -100%,
+            #ffa0ec 0%,
+            #8a8af4 100%,
+            #ffa0ec 200%
+        );
+    }
+
+    55% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -110%,
+            #ffa0ec -10%,
+            #8a8af4 90%,
+            #ffa0ec 190%
+        );
+    }
+
+    60% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -120%,
+            #ffa0ec -20%,
+            #8a8af4 80%,
+            #ffa0ec 180%
+        );
+    }
+
+    65% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -130%,
+            #ffa0ec -30%,
+            #8a8af4 70%,
+            #ffa0ec 170%
+        );
+    }
+
+    70% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -140%,
+            #ffa0ec -40%,
+            #8a8af4 60%,
+            #ffa0ec 160%
+        );
+    }
+
+    75% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -150%,
+            #ffa0ec -50%,
+            #8a8af4 50%,
+            #ffa0ec 150%
+        );
+    }
+
+    80% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -160%,
+            #ffa0ec -60%,
+            #8a8af4 40%,
+            #ffa0ec 140%
+        );
+    }
+
+    85% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -170%,
+            #ffa0ec -70%,
+            #8a8af4 30%,
+            #ffa0ec 130%
+        );
+    }
+
+    90% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -180%,
+            #ffa0ec -80%,
+            #8a8af4 20%,
+            #ffa0ec 120%
+        );
+    }
+
+    95% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -190%,
+            #ffa0ec -90%,
+            #8a8af4 10%,
+            #ffa0ec 110%
+        );
+    }
+
+    100% {
+        background: linear-gradient(
+            to bottom right,
+            #8a8af4 -200%,
+            #ffa0ec -100%,
+            #8a8af4 0%,
+            #ffa0ec 100%
+        );
+    }
 }
 </style>

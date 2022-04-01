@@ -79,7 +79,8 @@ export default defineComponent({
                 center: true,
                 minHeight: 600,
                 minWidth: 800,
-                decorations: false
+                decorations: false,
+                fileDropEnabled: false
             });
 
             invoke("set_focus", { label: props.data.name });

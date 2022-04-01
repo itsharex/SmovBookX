@@ -1,8 +1,8 @@
 <template>
     <el-container class="smovDetail">
         <el-header class="editBar" data-tauri-drag-region>
-            <action-bar :imize="false" :top="true" :once="true">
-                <div class="detailIco" @click="detailShow=!detailShow">
+            <action-bar :minImize="false" :top="true" :once="true">
+                <div class="detailIco" @click="detailShow = !detailShow">
                     <el-icon :size="17">
                         <expand />
                     </el-icon>
@@ -10,11 +10,20 @@
                 </div>
             </action-bar>
         </el-header>
-        <el-main class="ImgShow">
-            <img
-                class="showImg"
-                :src="focus === -1 ? (data.main_img === undefined ? nonePic : data.main_img === '' ? nonePic : convertFileSrc(data.main_img)) : convertFileSrc(data.detail_img[focus])"
-            />
+        <el-main class="ImgShow" id="ImgShow">
+            <!-- :style="img.x === 0 ? img.y === 0 ? '' : 'left' + img.x + 'px;top:' + img.y + 'px;' : 'left' + img.x + 'px;top:' + img.y + 'px;'" -->
+            <div
+                id="ShowImg"
+                class="ShowImg"
+                :style="'transform:translateX(' + img.x + 'px) translateY(' + img.y + 'px);'"
+                @dblclick="resetImg"
+            >
+                <img
+                    :class="ctrl ? 'ShowImgCtrl' : ''"
+                    :style="'transform: scale(' + img.scale + ') translateX(' + 0 + 'px) translateY(' + 0 + 'px);'"
+                    :src="focus === -1 ? (data.main_img === undefined ? nonePic : data.main_img === '' ? nonePic : convertFileSrc(data.main_img)) : convertFileSrc(data.detail_img[focus])"
+                />
+            </div>
         </el-main>
 
         <div class="ImgTray" id="ImgTray">
@@ -33,7 +42,7 @@
                 v-for="(item, index) in data.detail_img"
                 :key="index"
                 :class="focus == index ? 'imgLabelFocus' : ''"
-                @click="focus = index"
+                @click="changeMainImg(index)"
             >
                 <img :src="convertFileSrc(item)" />
             </div>
@@ -107,6 +116,7 @@ import { defineComponent, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import nonePic from "../assets/NoneImages.png";
 import { Menu } from '@element-plus/icons-vue';
+import { getCurrent } from "@tauri-apps/api/window";
 
 export default defineComponent({
     props: {
@@ -129,56 +139,108 @@ export default defineComponent({
 
         const focus = ref(-1);
 
-        // 初始化与绑定监听事件方法 直接竖着给他转个九十度
-        const scrollInit = () => {
-            // 获取要绑定事件的元素
-            const scrollDiv = document.getElementById("ImgTray")!;
-            // document.addEventListener('DOMMouseScroll', handler, false)
-            // 添加滚轮滚动监听事件，一般是用下面的方法，上面的是火狐的写法
-            scrollDiv.addEventListener('mousewheel', handler, false)
-            // 滚动事件的出来函数
-            function handler(event) {
-                event.preventDefault();
-                // 获取滚动方向
+        const ctrl = ref(false);
+
+        const current = getCurrent()
+
+        let img = ref({
+            temp: {},
+            imgTemp: {},
+            scale: 1,
+            step: 0.15,
+            min_scale: 0.3,
+            max_scale: 3,
+            x: 0,
+            y: 0
+        } as any);
+
+        const SizeEvent = async (event: any) => {
+            event.preventDefault();
+            if (ctrl.value) {
                 const detail = event.wheelDelta || event.detail;
-                // 定义滚动方向，其实也可以在赋值的时候写
-                const moveForwardStep = 1;
-                const moveBackStep = -1;
-                let flag = 0;
-                // 定义滚动距离
-                let step = 0;
-                // 判断滚动方向,这里的100可以改，代表滚动幅度，也就是说滚动幅度是自定义的
-                if (detail < 0) {
-                    step = moveForwardStep * 70;
-                    flag = 1;
+                if (detail > 0) {
+
+                    const size = img.value.max_scale - img.value.scale > img.value.step ? img.value.step : img.value.max_scale - img.value.scale;
+                    img.value.scale = img.value.scale + size;
                 } else {
-                    step = moveBackStep * 70;
-                    flag = -1;
+                    const size = img.value.scale - img.value.min_scale > img.value.step ? img.value.step : img.value.min_scale - img.value.scale;
+                    img.value.scale = img.value.scale - size;
                 }
-                // 对需要滚动的元素进行滚动操作
+            }
+        }
 
-                const end = scrollDiv.scrollLeft + step;
-
-                const max = scrollDiv.scrollWidth - scrollDiv.clientWidth;
-
-                const stepOne = flag * 2;
-
-                const inter = setInterval(() => {
-                    console.log(scrollDiv.scrollLeft)
-                    if (scrollDiv.scrollLeft == end || (scrollDiv.scrollLeft == max && flag == 1) || (scrollDiv.scrollLeft == 0 && flag == -1)) {
-                        window.clearInterval(inter);
-                    } else {
-                        scrollDiv.scrollLeft += stepOne;
-                    }
-                }, 1);
-
+        const ctrlDownEvent = async (event: KeyboardEvent) => {
+            if (event.code == 'F12' || event.code == 'F5') {
 
             }
+            else {
+                event.preventDefault();
+            }
+            ctrl.value = event.ctrlKey
+        }
+
+        const resetImg = () => {
+            img.value.x = 0;
+            img.value.y = 0;
+            img.value.scale = 1;
         }
 
         onMounted(() => {
             getData();
-            // scrollInit();
+            const mainImg = document.getElementById("ShowImg")!;
+            const imgDiv = document.getElementById("ImgShow")!;
+            img.value.temp = imgDiv;
+            img.value.imgTemp = mainImg;
+            img.value.temp.addEventListener('mousewheel', SizeEvent, false);
+            current.setResizable(false);
+
+            mainImg.onmousedown = function (ev) {
+                var oEvent = ev;
+                // 阻止默认事件
+                oEvent.preventDefault();
+                const disX = oEvent.clientX - img.value.x;
+                const disY = oEvent.clientY - img.value.y;
+                //取消窗口调整
+
+                imgDiv.onmousemove = function (ev) {
+                    if (ctrl.value) {
+                        oEvent = ev;
+                        oEvent.preventDefault();
+                        // var x = oEvent.clientX - disX;
+                        // var y = oEvent.clientY - disY;
+
+                        // //图形移动的边界判断
+                        // x = x <= 0 ? 0 : x;
+                        // x = x >= imgDiv.offsetWidth - mainImg.offsetWidth ? mainImg.offsetWidth - mainImg.offsetWidth : x;
+                        // y = y <= 0 ? 0 : y;
+                        // y = y >= imgDiv.offsetHeight - mainImg.offsetHeight ? imgDiv.offsetHeight - mainImg.offsetHeight : y;
+
+                        img.value.x = oEvent.clientX - disX;
+                        img.value.y = oEvent.clientY - disY;
+                    }
+                }
+                // 图形移出父盒子取消移动事件,防止移动过快触发鼠标移出事件,导致鼠标弹起事件失效
+                imgDiv.onmouseleave = function () {
+                    imgDiv.onmousemove = null;
+                    imgDiv.onmouseup = null;
+                }
+                // 鼠标弹起后停止移动 窗口可以调整
+                imgDiv.onmouseup = function () {
+                    imgDiv.onmousemove = null;
+                    imgDiv.onmouseup = null;
+                    current.setResizable(true);
+                }
+            }
+
+            document.onkeydown = function (event) {
+                ctrlDownEvent(event);
+            };
+
+            document.onkeyup = function (event) {
+                ctrlDownEvent(event);
+            };
+
+
         })
 
         const getData = () => {
@@ -197,6 +259,13 @@ export default defineComponent({
 
         };
 
+        const changeMainImg = (index: number) => {
+            img.value.scale = 1;
+            img.value.x = 0;
+            img.value.y = 0;
+            focus.value = index
+        }
+
         return {
             convertFileSrc,
             toOpen,
@@ -205,11 +274,16 @@ export default defineComponent({
             data,
             detailShow,
             focus,
-            nonePic
+            nonePic,
+            changeMainImg,
+            img,
+            ctrl,
+            resetImg
         };
     },
 });
 </script>
+
 <style lang='less' scoped>
 .smovDetail {
     width: 100vw;
@@ -310,9 +384,18 @@ export default defineComponent({
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+}
+
+.ShowImgCtrl {
+    cursor: move;
+}
+.ShowImg {
+    position: absolute;
     img {
         max-width: 100%;
         max-height: 100%;
+        transition: all 120ms;
     }
 }
 

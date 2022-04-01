@@ -1,49 +1,55 @@
 <template>
-    <!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
-    <div class="seek">
-        <div class="settingDiv">
-            <div class="buttonDiv">
-                <el-button
-                    @click="start"
-                    color="#C7415B"
-                    type="danger"
-                    :disabled="pool.delLoading || pool.isRunning() "
-                >开始检索</el-button>
-                <el-button
-                    @click="stop"
-                    color="#C7415B"
-                    type="danger"
-                    :loading="pool.delLoading"
-                    :disabled="!pool.isRunning()"
-                >停止检索</el-button>
-                <el-button @click="getSeekSmov" color="#C7415B" type="danger">重载数据</el-button>
-                <el-button @click="close" color="#C7415B" type="danger">关闭窗口</el-button>
-                <el-button @click="removeAll" color="#C7415B" type="danger">雁过不留痕风过不留声</el-button>
-            </div>
+    <el-container>
+        <!-- 检索页面悬浮球 四月份 -->
+        <el-header class="header" height="40px">
+            <action-bar :imize="false" :minImize="false" :top="true" />
+        </el-header>
+        <el-main class="main">
+            <!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
+            <div class="seek">
+                <div class="settingDiv">
+                    <div class="buttonDiv">
+                        <el-button
+                            @click="start"
+                            color="#C7415B"
+                            type="danger"
+                            :disabled="pool.delLoading || pool.isRunning()"
+                        >开始检索</el-button>
+                        <el-button
+                            @click="stop"
+                            color="#C7415B"
+                            type="danger"
+                            :loading="pool.delLoading"
+                            :disabled="!pool.isRunning()"
+                        >停止检索</el-button>
+                        <el-button @click="getSeekSmov" color="#C7415B" type="danger">重载数据</el-button>
+                        <el-button @click="close" color="#C7415B" type="danger">关闭窗口</el-button>
+                        <el-button @click="removeAll" color="#C7415B" type="danger">雁过不留痕风过不留声</el-button>
+                    </div>
 
-            <div class="filtersDiv">
-                <p>
-                    错误
-                    <el-switch v-model="openStatus[2]" @change="ErrChange" />
-                </p>
-                <p>
-                    成功
-                    <el-switch v-model="openStatus[1]" @change="SussChange" />
-                </p>
-                <p>
-                    未检索
-                    <el-switch v-model="openStatus[0]" @change="WaitChange" />
-                </p>
-                <p class="status">当前检索状态:{{ pool.isRunning() ? '是' : '否' }}</p>
-            </div>
-        </div>
+                    <div class="filtersDiv">
+                        <p>
+                            错误
+                            <el-switch v-model="openStatus[2]" @change="ErrChange" />
+                        </p>
+                        <p>
+                            成功
+                            <el-switch v-model="openStatus[1]" @change="SussChange" />
+                        </p>
+                        <p>
+                            未检索
+                            <el-switch v-model="openStatus[0]" @change="WaitChange" />
+                        </p>
+                        <p class="status">当前检索状态:{{ pool.isRunning() ? '是' : '否' }}</p>
+                    </div>
+                </div>
 
-        <div v-if="HotLoading" class="load">
-            <span>Loading...</span>
-        </div>
+                <div v-if="HotLoading" class="load">
+                    <span>Loading...</span>
+                </div>
 
-        <div class="smovList">
-            <!-- 
+                <div class="smovList">
+                    <!-- 
               大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加  
               测试发现四千条数据的传输时间已经到了300ms 这个速度非常不满意 对于用户可能要做 表格loading 加 分批传输 加 进度条的的功能
               但是进度条还有个问题 渲染是个异步的过程 在渲染时很可能会出现 几百条数据一次性 突然出现 这个时肯定的 有没有其他办法优化用户的体验
@@ -59,62 +65,66 @@
               3.传入数据时增加异步loading状态
 
               4.线程池不存方法，方法在每次用的时候生成一个 
-            -->
-            <vxe-table
-                border="none"
-                show-overflow
-                resizable
-                keep-source
-                height="100%"
-                :loading="pool.loading"
-                ref="Tasks"
-                :row-config="{ isHover: false }"
-                :show-header="false"
-            >
-                <template #empty>
-                    <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
-                </template>
-                <vxe-column field="is_active" title="对象">
-                    <template #default="{ row }">
-                        <!-- v-if="openStatus[row.status] == true" -->
-                        <div class="smov">
-                            <el-card
-                                class="smovCard"
-                                :class="row.status == 1 ? 'smovCard_suss' : row.status == 2 ? 'smovCard_fail' : row.status == 3 ? 'smovCard_seeking' : ''"
-                            >
-                                <div class="smovName">{{ row.seek_name }}</div>
-                                <div class="loadingDiv" v-if="row.status == 3">
-                                    <el-icon color="#409EFC" class="is-loading loading">
-                                        <loading />
-                                    </el-icon>
+                    -->
+                    <vxe-table
+                        border="none"
+                        show-overflow
+                        resizable
+                        keep-source
+                        height="100%"
+                        :loading="pool.loading"
+                        ref="Tasks"
+                        :row-config="{ isHover: false, height: 63 }"
+                        :show-header="false"
+                    >
+                        <template #empty>
+                            <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
+                        </template>
+                        <vxe-column
+                            field="is_active"
+                            title="对象"
+                            align="center"
+                            class-name="smovColumn"
+                        >
+                            <template #default="{ row }" class="smovColumn">
+                                <div class="smov">
+                                    <div
+                                        class="smovCard"
+                                        :class="row.status == 1 ? 'smovCard_suss' : row.status == 2 ? 'smovCard_fail' : row.status == 3 ? 'smovCard_seeking' : ''"
+                                    >
+                                        <div class="smovName">{{ row.seek_name }}</div>
+                                        <div class="loadingDiv" v-if="row.status == 3">
+                                            <el-icon color="#409EFC" class="is-loading loading">
+                                                <loading />
+                                            </el-icon>
+                                        </div>
+
+                                        <div class="close">
+                                            <el-button
+                                                type="text"
+                                                @click="deleteTask(row)"
+                                                v-if="row.status != 3"
+                                                :icon="Delete"
+                                                circle
+                                            ></el-button>
+                                        </div>
+                                    </div>
                                 </div>
+                            </template>
+                        </vxe-column>
 
-                                <div class="close">
-                                    <el-button
-                                        type="text"
-                                        @click="deleteTask(row)"
-                                        v-if="row.status != 3"
-                                        :icon="Delete"
-                                        circle
-                                    ></el-button>
-                                </div>
-                            </el-card>
-                        </div>
-                    </template>
-                </vxe-column>
+                        <vxe-column
+                            field="status"
+                            :visible="false"
+                            :filters="[{ label: '错误', value: 2, checked: openStatus[2] }, { label: '等待', value: 0, checked: openStatus[0] }, { label: '成功', value: 1, checked: openStatus[1] }, { label: '正在执行', value: 3, checked: openStatus[3] }]"
+                        ></vxe-column>
+                    </vxe-table>
+                </div>
 
-                <!-- :visible="false"  :filter-method="filterStatusMethod"-->
-
-                <vxe-column
-                    field="status"
-                    :visible="false"
-                    :filters="[{ label: '错误', value: 2, checked: openStatus[2] }, { label: '等待', value: 0, checked: openStatus[0] }, { label: '成功', value: 1, checked: openStatus[1] },{ label: '正在执行', value: 3, checked: openStatus[3] }]"
-                ></vxe-column>
-            </vxe-table>
-        </div>
-
-        <div class="zw"></div>
-    </div>
+                <div class="zw"></div>
+            </div>
+        </el-main>
+    </el-container>
 </template>
 
 <script lang='ts'>
@@ -347,16 +357,26 @@ export default defineComponent({
     }
 }
 
+#app {
+    height: 100vh;
+    .el-container {
+        height: 100%;
+    }
+}
+
 .smov {
-    padding: 12px;
-    height: 30px;
-    width: 450px;
+    padding: 6px;
+    width: 100%;
 }
 
 .smovCard {
     width: 100%;
     height: 40px;
     line-height: 40px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 9px rgba(0, 0, 0, 0.12);
+    font-weight: 600;
+    padding: 1px;
     .el-card__body {
         padding: 0;
         font-size: 14px;
@@ -366,11 +386,11 @@ export default defineComponent({
 }
 
 .smovCard_suss {
-    background: #e4ffef;
+    background: #d1edc4;
 }
 
 .smovCard_fail {
-    background: #ffe0e0;
+    background: #fcd3d3;
 }
 
 .loadingDiv {
@@ -450,8 +470,8 @@ export default defineComponent({
 .seek {
     display: flex;
     flex-wrap: wrap;
-    height: 100vh;
     flex-direction: column;
+    height: 100%;
     .smovList {
         width: 100%;
         flex-grow: 1;
@@ -461,7 +481,14 @@ export default defineComponent({
         width: 100%;
     }
 }
+.header {
+    padding: 0;
+}
+.main {
+    padding: 5px;
+}
 </style>
+
 
 
 

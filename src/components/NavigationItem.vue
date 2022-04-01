@@ -11,6 +11,8 @@
             <component :is="ico"></component>
         </el-icon>
         <span>{{ name }}</span>
+
+        <slot></slot>
     </div>
 </template>
 

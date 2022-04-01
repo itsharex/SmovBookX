@@ -77,7 +77,8 @@
         "resizable": true,
         "fullscreen": false,
         "transparent": false,
-        "focus":true
+        "focus":true,
+        "fileDropEnabled":false
       }
     ],
     "systemTray": {

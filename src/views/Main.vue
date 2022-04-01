@@ -1,10 +1,43 @@
+import { ElLoading } from "element-plus";
+
 <template>
   <div class="app">
     <el-container>
-      <el-header class="WindowHeader" height="40px" data-tauri-drag-region >
-        <action-bar data-tauri-drag-region >
-          
-          </action-bar>
+      <el-header class="WindowHeader" height="40px">
+        <action-bar data-tauri-drag-region>
+          <div class="quickButton" v-if="false">
+            <!-- 更新图标位置 -->
+            <el-popover
+              placement="bottom"
+              title="更新"
+              :width="200"
+              trigger="hover"
+              v-model:visible="UpdatePopover.show"
+              v-if="Updater.shouldUpdate"
+            >
+              <p>检测到新的更新，点击当前按钮进行更新</p>
+              <p class="Version">版本号:{{ Updater.manifest.version }}</p>
+              <div style="text-align: right; margin: 0"></div>
+              <template #reference>
+                <!-- <el-icon
+                  :size="18"
+                  color="#b40000"
+                  @mouseover="UpdatePopover.show = true"
+                  @mouseleave="UpdatePopover.show = false"
+                  @click="install"
+                >
+                  <star-filled />
+                </el-icon>-->
+                <SmovIco
+                  @mouseover="UpdatePopover.show = true"
+                  @mouseleave="UpdatePopover.show = false"
+                  @click="install"
+                  :name="'update'"
+                />
+              </template>
+            </el-popover>
+          </div>
+        </action-bar>
       </el-header>
       <el-container>
         <el-aside class="NavAside" width="180px">
@@ -28,8 +61,37 @@
 </template>
 
 <script lang="ts" setup>
-
+import { ElLoading } from 'element-plus';
+import 'element-plus/es/components/loading/style/css'
+import { checkUpdate, installUpdate } from '@tauri-apps/api/updater';
+import { relaunch } from '@tauri-apps/api/process';
+import { StarFilled } from '@element-plus/icons-vue';
 const log = false;
+
+const Updater: any = ref({})
+
+const UpdatePopover = ref({
+  Loading: false,
+  show: false
+});
+
+//增加控制 是否自动检测版本更新
+const linstenUpdate = async () => {
+  Updater.value = await checkUpdate();
+
+  console.log(Updater.value)
+}
+
+const install = async () => {
+  const loading = ElLoading.service({
+    lock: true,
+    text: '正在下载更新，下载完成后会自动更新',
+  })
+  await installUpdate();
+  await relaunch();
+}
+
+linstenUpdate();
 
 </script>
 
@@ -76,20 +138,20 @@ body {
 }
 
 .SmovMain {
-  max-height: calc(~"100vh - 50px") ;
+  max-height: calc(~"100vh - 50px");
 }
 
 .SmovMainHeightHaslog {
-  max-height: calc(~"100vh - 50px") ;
+  max-height: calc(~"100vh - 50px");
 }
 
 .SmovMainHeightUnlog {
-  max-height: calc(~"100vh - 50px - 3em ") ;
+  max-height: calc(~"100vh - 50px - 3em ");
 }
 
 .NavAside {
   background-color: rgba(240, 240, 240, 0.459);
-  border-radius: 0 7px 0 0;
+  // border-radius: 0 7px 0 0;
   // padding: 2px;
   // box-shadow: var(--el-box-shadow-light) inset;
   // border: #2c3e502d solid 2px;
@@ -98,6 +160,24 @@ body {
   background-color: rgba(240, 240, 240, 0.459);
   // background: #6a626251;
   padding: 0;
+}
+
+.quickButton {
+  height: 100%;
+  width: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 1rem;
+}
+
+.quickButton:hover {
+  background: #9f9f9fba;
+}
+
+.updateIco {
+  height: 100%;
+  width: 20px;
 }
 </style>
 

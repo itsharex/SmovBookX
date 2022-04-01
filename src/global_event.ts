@@ -4,7 +4,7 @@ import { request } from './util/invoke';
 
 let label = getCurrent().label;
 
-!(async () => await listen(label+'_single', (event) => {
+!(async () => await listen(label + '_single', (event) => {
     console.log("aaaa")
     let current = getCurrent()
     current.unminimize()
@@ -15,6 +15,15 @@ let label = getCurrent().label;
     }, 50)
 }))()
 
-!(async  ()=> await request("listen_single"))()
+!(async () => await listen('tauri://file-drop-hover', event => {
+    console.log(event)
+})
+)()
+
+document.addEventListener('dragstart', (event) => {
+    event.preventDefault();
+}, false);
+
+!(async () => await request("listen_single"))()
 
 
