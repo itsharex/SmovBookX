@@ -2,14 +2,99 @@
     <el-container>
         <!-- 检索页面悬浮球 四月份 -->
         <el-header class="header" height="40px">
-            <action-bar :imize="false" :minImize="false" :top="true" />
+            <action-bar :imize="false" :minImize="false" :top="true">
+                <div :size="17" class="barButton">
+                    <el-icon @click="removeAll">
+                        <delete />
+                    </el-icon>
+                </div>
+                <div class="barButton">
+                    <!-- <el-button
+                        color="#626aef"
+                        style="color: white"
+                        size="small"
+                        @click="start"
+                        v-show="!pool.isRunning() && !pool.delLoading"
+                    >开始</el-button>
+
+                    <el-button
+                        size="small"
+                        @click="stop"
+                        v-show="pool.isRunning()"
+                        :loading="pool.delLoading"
+                    >结束</el-button>-->
+
+                    <el-icon
+                        :size="17"
+                        @click="start"
+                        class="control"
+                        v-show="!pool.isRunning() && !pool.delLoading"
+                    >
+                        <grid />
+                    </el-icon>
+
+                    <el-icon :size="17" class="control onLoad" v-show="pool.delLoading">
+                        <loading />
+                    </el-icon>
+
+                    <el-icon
+                        :size="17"
+                        class="control"
+                        @click="stop"
+                        v-show="pool.isRunning() && !pool.delLoading"
+                    >
+                        <remove-filled />
+                    </el-icon>
+
+                    <!-- <el-icon
+                            :size="17"
+                            class="control"
+                            @click="removeAll"
+                        >
+                            <delete />
+                    </el-icon>-->
+                </div>
+
+                <!-- <p class="status">状态:{{ pool.isRunning() ? '是' : '否' }}</p> -->
+            </action-bar>
         </el-header>
         <el-main class="main">
             <!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
             <div class="seek">
                 <div class="settingDiv">
                     <div class="buttonDiv">
-                        <el-button
+                        <!-- 图标 方案一  -->
+                        <!-- <el-icon
+                            :size="30"
+                            @click="start"
+                            class="control"
+                            v-show="!pool.isRunning() && !pool.delLoading"
+                        >
+                            <video-play />
+                        </el-icon>
+
+                        <el-icon :size="29" class="control onLoad" v-show="pool.delLoading">
+                            <loading />
+                        </el-icon>
+
+                        <el-icon
+                            :size="30"
+                            class="control"
+                            v-show="pool.isRunning() && !pool.delLoading"
+                        >
+                            <video-pause />
+                        </el-icon>
+
+                        <el-icon
+                            :size="30"
+                            class="control"
+                            @click="removeAll"
+                        >
+                            <delete />
+                        </el-icon>-->
+
+                        <!-- 最丑的按钮 方案三 -->
+                        <!-- <el-button
                             @click="start"
                             color="#C7415B"
                             type="danger"
@@ -22,13 +107,13 @@
                             :loading="pool.delLoading"
                             :disabled="!pool.isRunning()"
                         >停止检索</el-button>
+
                         <el-button @click="getSeekSmov" color="#C7415B" type="danger">重载数据</el-button>
-                        <el-button @click="close" color="#C7415B" type="danger">关闭窗口</el-button>
-                        <el-button @click="removeAll" color="#C7415B" type="danger">雁过不留痕风过不留声</el-button>
+                        <el-button @click="removeAll" color="#C7415B" type="danger">雁过不留痕风过不留声</el-button>-->
                     </div>
 
                     <div class="filtersDiv">
-                        <p>
+                        <!-- <p>
                             错误
                             <el-switch v-model="openStatus[2]" @change="ErrChange" />
                         </p>
@@ -39,8 +124,7 @@
                         <p>
                             未检索
                             <el-switch v-model="openStatus[0]" @change="WaitChange" />
-                        </p>
-                        <p class="status">当前检索状态:{{ pool.isRunning() ? '是' : '否' }}</p>
+                        </p>-->
                     </div>
                 </div>
 
@@ -76,6 +160,7 @@
                         ref="Tasks"
                         :row-config="{ isHover: false, height: 63 }"
                         :show-header="false"
+                        :tooltip-config ="{showAll:false,enterDelay:9999999}"
                     >
                         <template #empty>
                             <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
@@ -127,224 +212,200 @@
     </el-container>
 </template>
 
-<script lang='ts'>
+<script lang='ts' setup>
 import { defineComponent, ref, reactive, inject, watch, getCurrentScope, onMounted, onUpdated, nextTick } from 'vue';
 import { ThreadPool } from '../ts/ThreadPool';
 import { invoke, } from "@tauri-apps/api/tauri";
 import { getAll, getCurrent } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
-import { Loading, Delete } from '@element-plus/icons-vue';
+import { CircleCheck, Loading, Delete, CaretRight, Remove, RemoveFilled, Grid } from '@element-plus/icons-vue';
 import { ElMessage, ElLoading } from 'element-plus';
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/loading/style/css'
 import XEUtils from 'xe-utils';
 import { VXETable, VxeTableInstance, VxeTableEvents, RecordInfo, VxeColumnPropTypes } from "vxe-table";
-export default defineComponent({
-    name: 'Seek',
-    components: { Loading },
-    props: [],
-    setup(props, { emit }) {
-
-        const Tasks = ref({} as VxeTableInstance)
-
-        const HotLoading = ref(false);
-
-        const openStatus = ref([
-            true,  //wait 
-            true,  //suss
-            true,  //fail
-            true,  //run time
-            true   //delete run time
-        ])
-
-        let pool = reactive(new ThreadPool.FixedThreadPool({
-            size: 1,
-            runningFlag: false,
-            autoRun: false
-        }))
-
-        onUpdated(() => {
-
-        })
-
-        const filterStatusMethod: VxeColumnPropTypes.FilterMethod = ({ value, row }) => {
-            console.log(value)
-            return openStatus.value[row.status]
-        }
-
-        const addTaskEvent = () => {
-            !(async () => await listen('addTask', (event: any) => {
-                HotLoading.value = true;
-                console.log(Date.now());
-                asyncJoin(event.payload)
-            }))()
-        }
-
-        const asyncJoin = async (list: any[]) => {
-            pool.addTasks(list);
-            Tasks.value.reloadData(pool.tasks).then(() => {
-                setTimeout(() => {
-                    HotLoading.value = false;
-                }, 200);
-
-            });
 
 
-            console.log(pool.tasks.length);
-            console.log(Tasks.value.getData().length);
+const Tasks = ref({} as VxeTableInstance)
 
-        }
+const HotLoading = ref(false);
 
-        const getSeekSmov = () => {
-            pool.loading = true;
-            pool.tasks = [];
-            Tasks.value.remove();
-            invoke("get_seek_smov").then((res: any) => {
-                let data: any = res;
-                if (data.code == 200) {
-                    pool.addTasks(data.data);
-                    //获取最后的索引下标
-                    let index = XEUtils.findIndexOf(data.data, item => item.status === 0);
-                    if (index == -1) {
-                        pool.index = 0;
-                    } else {
-                        pool.index = index;
-                    }
-                }
-            }).finally(() => {
-                const $table = Tasks.value;
-                if ($table) {
-                    const data = pool.tasks;
-                    $table.loadData(data);
-                }
-                pool.loading = false;
-            })
-        }
+const openStatus = ref([
+    true,  //wait 
+    true,  //suss
+    true,  //fail
+    true,  //run time
+    true   //delete run time
+])
 
-        onMounted(() => {
-            nextTick(() => {
-                getSeekSmov();
-            })
-            addTaskEvent();
-        });
+let pool = reactive(new ThreadPool.FixedThreadPool({
+    size: 1,
+    runningFlag: false,
+    autoRun: false
+}))
 
-        const getFilter = () => {
-            return [
-                { label: '等待', value: 0, checked: openStatus.value[0] },
-                { label: '成功', value: 1, checked: openStatus.value[1] },
-                { label: '错误', value: 2, checked: openStatus.value[2] },
-                { label: '正在执行', value: 3, checked: openStatus.value[3] }
-            ];
-        }
+onUpdated(() => {
 
-        const ErrChange = (val: any) => {
-            const $table = Tasks.value
-            openStatus.value[2] = val;
-            const column = $table.getColumnByField('status')
-            if (column) {
-                const filter = getFilter();
-                $table.setFilter(column, filter)
-                $table.updateData()
-            }
-        }
-
-        const SussChange = (val: any) => {
-            const $table = Tasks.value
-            openStatus.value[1] = val;
-            const column = $table.getColumnByField('status')
-            if (column) {
-                const filter = getFilter();
-                $table.setFilter(column, filter)
-                $table.updateData()
-            }
-        }
-
-        const WaitChange = (val: any) => {
-            const $table = Tasks.value
-            openStatus.value[0] = val;
-            const column = $table.getColumnByField('status')
-            if (column) {
-                const filter = getFilter();
-                $table.setFilter(column, filter)
-                $table.updateData()
-            }
-        }
-
-        const removeAll = () => {
-
-            pool.loading = true;
-
-            const data: number[] = XEUtils.map(pool.tasks, item => item.id);
-
-            invoke("remove_smov_seek_status", { id: data }).then((res: any) => {
-                if (res.code == 200) {
-                    ElMessage({
-                        showClose: true,
-                        message: '将' + data.length + '条数据移出队列',
-                        type: 'success',
-                    })
-                    Tasks.value.remove();
-                    pool.tasks = [];
-                    pool.index = 0;
-                } else {
-                    ElMessage.error('移除检索队列出现错误');
-                    return;
-                }
-            }).finally(() => {
-                pool.loading = false;
-            });
-        }
-
-
-        const start = () => {
-            pool.start();
-        }
-
-        const stop = () => {
-            pool.stop();
-        }
-
-        const close = () => {
-            getCurrent().hide();
-        }
-
-        const deleteTask = (row: { status: number; id: any; }) => {
-            row.status = 3;
-            invoke("remove_smov_seek_status", { id: [row.id] }).then((res: any) => {
-                if (res.code == 200) {
-                    const $table = Tasks.value;
-                    let index = $table.getRowIndex(row);
-                    $table.remove(row);
-                    XEUtils.remove(pool.tasks, item => item.id === row.id);
-                    if (index + 1 <= pool.index) {
-                        pool.index--;
-                    }
-                } else {
-                    ElMessage.error('移除检索队列出现错误');
-                    return;
-                }
-            });
-        }
-
-        return {
-            start,
-            stop,
-            close,
-            pool,
-            openStatus,
-            Delete,
-            deleteTask,
-            removeAll,
-            HotLoading,
-            getSeekSmov,
-            Tasks,
-            ErrChange,
-            SussChange,
-            WaitChange,
-            filterStatusMethod
-        };
-    }
 })
+
+const filterStatusMethod: VxeColumnPropTypes.FilterMethod = ({ value, row }) => {
+    console.log(value)
+    return openStatus.value[row.status]
+}
+
+const addTaskEvent = () => {
+    !(async () => await listen('addTask', (event: any) => {
+        HotLoading.value = true;
+        console.log(Date.now());
+        asyncJoin(event.payload)
+    }))()
+}
+
+const asyncJoin = async (list: any[]) => {
+    pool.addTasks(list);
+    Tasks.value.reloadData(pool.tasks).then(() => {
+        setTimeout(() => {
+            HotLoading.value = false;
+        }, 200);
+
+    });
+
+
+    console.log(pool.tasks.length);
+    console.log(Tasks.value.getData().length);
+
+}
+
+const getSeekSmov = () => {
+    pool.loading = true;
+    pool.tasks = [];
+    Tasks.value.remove();
+    invoke("get_seek_smov").then((res: any) => {
+        let data: any = res;
+        if (data.code == 200) {
+            pool.addTasks(data.data);
+            //获取最后的索引下标
+            let index = XEUtils.findIndexOf(data.data, item => item.status === 0);
+            if (index == -1) {
+                pool.index = 0;
+            } else {
+                pool.index = index;
+            }
+        }
+    }).finally(() => {
+        const $table = Tasks.value;
+        if ($table) {
+            const data = pool.tasks;
+            $table.loadData(data);
+        }
+        pool.loading = false;
+    })
+}
+
+onMounted(() => {
+    nextTick(() => {
+        getSeekSmov();
+    })
+    addTaskEvent();
+});
+
+const getFilter = () => {
+    return [
+        { label: '等待', value: 0, checked: openStatus.value[0] },
+        { label: '成功', value: 1, checked: openStatus.value[1] },
+        { label: '错误', value: 2, checked: openStatus.value[2] },
+        { label: '正在执行', value: 3, checked: openStatus.value[3] }
+    ];
+}
+
+const ErrChange = (val: any) => {
+    const $table = Tasks.value
+    openStatus.value[2] = val;
+    const column = $table.getColumnByField('status')
+    if (column) {
+        const filter = getFilter();
+        $table.setFilter(column, filter)
+        $table.updateData()
+    }
+}
+
+const SussChange = (val: any) => {
+    const $table = Tasks.value
+    openStatus.value[1] = val;
+    const column = $table.getColumnByField('status')
+    if (column) {
+        const filter = getFilter();
+        $table.setFilter(column, filter)
+        $table.updateData()
+    }
+}
+
+const WaitChange = (val: any) => {
+    const $table = Tasks.value
+    openStatus.value[0] = val;
+    const column = $table.getColumnByField('status')
+    if (column) {
+        const filter = getFilter();
+        $table.setFilter(column, filter)
+        $table.updateData()
+    }
+}
+
+const removeAll = () => {
+
+    pool.loading = true;
+
+    const data: number[] = XEUtils.map(pool.tasks, item => item.id);
+
+    invoke("remove_smov_seek_status", { id: data }).then((res: any) => {
+        if (res.code == 200) {
+            ElMessage({
+                showClose: true,
+                message: '将' + data.length + '条数据移出队列',
+                type: 'success',
+            })
+            Tasks.value.remove();
+            pool.tasks = [];
+            pool.index = 0;
+        } else {
+            ElMessage.error('移除检索队列出现错误');
+            return;
+        }
+    }).finally(() => {
+        pool.loading = false;
+    });
+}
+
+
+const start = () => {
+    pool.start();
+}
+
+const stop = () => {
+    pool.stop();
+}
+
+const close = () => {
+    getCurrent().hide();
+}
+
+const deleteTask = (row: { status: number; id: any; }) => {
+    row.status = 3;
+    invoke("remove_smov_seek_status", { id: [row.id] }).then((res: any) => {
+        if (res.code == 200) {
+            const $table = Tasks.value;
+            let index = $table.getRowIndex(row);
+            $table.remove(row);
+            XEUtils.remove(pool.tasks, item => item.id === row.id);
+            if (index + 1 <= pool.index) {
+                pool.index--;
+            }
+        } else {
+            ElMessage.error('移除检索队列出现错误');
+            return;
+        }
+    });
+}
 
 </script>
 <style lang='less'>
@@ -441,7 +502,7 @@ export default defineComponent({
 }
 
 .filtersDiv {
-    padding: 10px;
+    // padding: 10px;
     display: flex;
     font-size: 12px;
     font-weight: 600;
@@ -451,25 +512,40 @@ export default defineComponent({
         margin-bottom: 0px;
         line-height: 35px;
     }
-    .status {
-        font-size: 14px;
-        font-weight: 700;
-    }
+}
+
+.status {
+    font-size: 14px;
+    font-weight: 700;
+    margin-right: 20px;
 }
 
 .buttonDiv {
-    padding: 10px;
+    // padding: 10px;
     display: flex;
     flex-wrap: wrap;
+    justify-content: left;
     .el-button {
         margin: 7px;
         line-height: 32px;
+    }
+    .control {
+        height: 100%;
+        border-radius: 50%;
+        margin-left: 20px;
+        height: 2rem;
+        width: 2rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+    .control:hover {
+        background-color: rgba(0, 0, 0, 0);
     }
 }
 
 .seek {
     display: flex;
-    flex-wrap: wrap;
+    // flex-wrap: wrap;
     flex-direction: column;
     height: 100%;
     .smovList {
@@ -486,6 +562,36 @@ export default defineComponent({
 }
 .main {
     padding: 5px;
+}
+
+@keyframes rotating {
+    from {
+        transform: rotate(0);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.onLoad {
+    animation: rotating 3s linear infinite;
+}
+.barButton {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 2.8rem;
+    cursor: pointer;
+    i {
+        width: 100%;
+        height: 100%;
+    }
+    // margin-right: 2rem ;
+}
+
+.barButton:hover {
+    background-color: rgba(0, 0, 0, 0.144);
 }
 </style>
 

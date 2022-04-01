@@ -60,13 +60,14 @@ export module ThreadPool {
         stop() {
             this.runningFlag = false;
             this.delLoading = true;
+
             const seek = setInterval(() => {
                 if (!this.isRunning()) {
                     this.window.emit("seek_status", this.runningFlag);
                     this.delLoading = false;
                     window.clearInterval(seek);
                 }
-            }, 200)
+            }, 50)
 
         }
 
