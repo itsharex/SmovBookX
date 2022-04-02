@@ -19,7 +19,7 @@ export const alert = {
     info: (msg: any) => _alert('info', msg)
 }
 const install = (app: any) => {
-    app.config.globalProperties.alert = alert
+    app.config.globalProperties.$alert = alert
 }
 export default {
     install

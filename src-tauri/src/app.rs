@@ -257,7 +257,7 @@ pub struct App {
   pub msg: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize,Clone)]
 pub struct Conf {
   pub tidy_folder: PathBuf,
   pub thread: i64, //检索线程数

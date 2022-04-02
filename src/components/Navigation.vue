@@ -51,7 +51,7 @@
                     />
                 </template>
             </el-popover>-->
-
+<!-- 
             <div class="setting">
                 <navigation-item
                     :choose="nav.choose"
@@ -61,7 +61,7 @@
                     :show="true"
                     :ico="Tools"
                 ></navigation-item>
-            </div>
+            </div> -->
 
             <div>
                 <navigation-item
@@ -148,6 +148,7 @@ export default defineComponent({
             list: [
                 { name: "首页", path: "/SomvView", ico: HomeFilled },
                 { name: "检索", path: "/SomvFile", ico: Menu },
+                { name: "设置", path: "/setting", ico: Tools },
                 { name: "首页", path: "/index", show: process.env.NODE_ENV === "development" },
                 { name: "测试", path: "/test", show: process.env.NODE_ENV === "development" }
             ] as any[]

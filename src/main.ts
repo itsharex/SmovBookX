@@ -4,7 +4,6 @@ import router from "./router/router";
 import VXETable from 'vxe-table'
 import 'vxe-table/lib/style.css'
 import "./global_event"
+import alert from './util/alert'
 
-console.log(process.env);
-
-createApp(App).use(router).use(VXETable).mount('#app');
+createApp(App).use(router).use(VXETable).use(alert).mount('#app');

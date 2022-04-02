@@ -12,7 +12,7 @@
         @input="searchEvent"
       />
     </div>
-    <!-- 增加一列合并列 用来放滚动条 -->
+    <!-- 设置 overflow: overlay 滚动条浮动上层 不占用布局-->
     <vxe-table
       show-overflow
       keep-source
@@ -345,4 +345,12 @@ export default defineComponent({
 }
 </style>
 
+<style lang="less">
+//处理滚动条溢出
+.vxe-table--render-default .vxe-table--body-wrapper,
+.vxe-table--render-default .vxe-table--footer-wrapper,
+.vxe-table--render-default .vxe-table--header-wrapper {
+  overflow: overlay;
+}
+</style>
 

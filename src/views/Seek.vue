@@ -160,11 +160,12 @@
                         ref="Tasks"
                         :row-config="{ isHover: false, height: 63 }"
                         :show-header="false"
-                        :tooltip-config ="{showAll:false,enterDelay:9999999}"
+                        :tooltip-config="{ showAll: false, enterDelay: 9999999 }"
                     >
                         <template #empty>
                             <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
                         </template>
+
                         <vxe-column
                             field="is_active"
                             title="对象"
@@ -186,10 +187,12 @@
 
                                         <div class="close">
                                             <el-button
-                                                type="text"
+                                                type="danger"
+                                                size="small"
+                                                color="#b1b3b8"
                                                 @click="deleteTask(row)"
                                                 v-if="row.status != 3"
-                                                :icon="Delete"
+                                                :icon="DeleteFilled"
                                                 circle
                                             ></el-button>
                                         </div>
@@ -218,7 +221,7 @@ import { ThreadPool } from '../ts/ThreadPool';
 import { invoke, } from "@tauri-apps/api/tauri";
 import { getAll, getCurrent } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
-import { CircleCheck, Loading, Delete, CaretRight, Remove, RemoveFilled, Grid } from '@element-plus/icons-vue';
+import { CircleCheck, Loading, Delete, CaretRight, Remove, RemoveFilled, Grid, DeleteFilled } from '@element-plus/icons-vue';
 import { ElMessage, ElLoading } from 'element-plus';
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/loading/style/css'
@@ -426,12 +429,16 @@ const deleteTask = (row: { status: number; id: any; }) => {
 }
 
 .smov {
-    padding: 6px;
+    padding-top: 9px;
+    padding-bottom: 9px;
     width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 .smovCard {
-    width: 100%;
+    width: 96%;
     height: 40px;
     line-height: 40px;
     border-radius: 5px;
@@ -479,7 +486,7 @@ const deleteTask = (row: { status: number; id: any; }) => {
 .close {
     position: absolute;
     top: 0px;
-    right: 5px;
+    right: 8%;
     display: flex;
     align-items: center;
     height: 100%;
@@ -587,12 +594,18 @@ const deleteTask = (row: { status: number; id: any; }) => {
         width: 100%;
         height: 100%;
     }
-    // margin-right: 2rem ;
 }
 
 .barButton:hover {
     background-color: rgba(0, 0, 0, 0.144);
 }
+</style>
+
+<style lang="less">
+.vxe-table--body-wrapper {
+    overflow: overlay;
+}
+
 </style>
 
 

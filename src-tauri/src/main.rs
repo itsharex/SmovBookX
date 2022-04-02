@@ -54,13 +54,15 @@ async fn main() {
       cmd::cmd::delete_smov,
       cmd::cmd::remove_smov_seek_status,
       cmd::cmd::get_smov_by_id,
+      cmd::cmd::get_setting_data,
+      cmd::cmd::delete_folder,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,
       cmd::tauri_cmd::open_in_explorer,
       cmd::tauri_cmd::update_tidy_folder,
       cmd::tauri_cmd::set_focus,
       cmd::tauri_cmd::create_new_window,
-      cmd::tauri_cmd::set_style
+      cmd::tauri_cmd::set_style,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

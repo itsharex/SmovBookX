@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import smovDetail from './SmovDetail.vue'
-// import smovDetail from '../dialog/dialog.vue'
 import ElementPlus from 'element-plus'
 
 interface Option {

@@ -17,23 +17,23 @@ const router = createRouter({
                 {
                     path: '/index',
                     component: Index,
-                    meta:{
+                    meta: {
                         keepAlive: true
-                      }
+                    }
                 },
                 {
                     path: '/SomvFile',
                     component: smovFile,
-                    meta:{
+                    meta: {
                         keepAlive: false
-                      }
+                    }
                 },
                 {
                     path: '/SomvView',
                     component: SmovView,
-                    meta:{
+                    meta: {
                         keepAlive: true
-                      }
+                    }
                 },
                 {
                     path: '/test',
@@ -53,6 +53,9 @@ const router = createRouter({
                 {
                     path: '/setting',
                     component: Setting,
+                    meta: {
+                        keepAlive: false
+                    }
                 }
             ]
 

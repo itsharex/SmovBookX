@@ -114,18 +114,25 @@ pub fn test() {
 
 ///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据 需要改bug 这里有一步锁死了
 #[command]
-pub fn update_tidy_folder(path: String) {
-  let app = &mut crate::app::APP.lock();
-  app.conf.tidy_folder = PathBuf::from(&path);
-  let to_path = app.app_dir.join("conf.toml");
-  let a = Conf {
-    tidy_folder: PathBuf::from(&path),
-    thread: app.conf.thread,
-  };
-  if let Ok(_) = File::create(&to_path) {
-    //写入一个数据
-    let c = toml::to_string(&a).unwrap();
-    write(&to_path, c).unwrap();
+pub fn update_tidy_folder(path: String) -> Response<Option<bool>> {
+  let tidy = PathBuf::from(&path);
+  if tidy.exists() {
+    let app = &mut crate::app::APP.lock();
+    app.conf.tidy_folder = tidy;
+    let to_path = app.app_dir.join("conf.toml");
+    let a = Conf {
+      tidy_folder: PathBuf::from(&path),
+      thread: app.conf.thread,
+    };
+    if let Ok(_) = File::create(&to_path) {
+      //写入一个数据
+      let c = toml::to_string(&a).unwrap();
+      write(&to_path, c).unwrap();
+    };
+
+    return Response::new(200, Some(true), "修改成功！");
+  } else {
+    return Response::new(300, None, "目录不存在");
   }
 }
 
@@ -150,15 +157,14 @@ pub fn set_focus(label: String, window: Window) {
 pub fn set_style(effect: String, label: String, window: Window) {
   match window.get_window(&label) {
     Some(window) => {
-      
       set_shadow(&window, true).unwrap();
       clear_blur(&window).unwrap();
       clear_acrylic(&window).unwrap();
       clear_mica(&window).unwrap();
-      println!("{}",effect);
+      println!("{}", effect);
       match effect.as_str() {
-        "blur" => apply_blur(&window,Some((238, 238, 244, 100))).unwrap(),
-        "acrylic" => apply_acrylic(&window,Some((238, 238, 244, 100))).unwrap(),
+        "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
+        "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
         "mica" => apply_mica(&window).unwrap(),
         _ => (),
       };
