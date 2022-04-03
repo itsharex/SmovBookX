@@ -6,36 +6,6 @@ import { ElLoading } from "element-plus";
       <el-header class="WindowHeader" height="40px">
         <action-bar data-tauri-drag-region>
           <div class="quickButton" v-if="false">
-            <!-- 更新图标位置 -->
-            <el-popover
-              placement="bottom"
-              title="更新"
-              :width="200"
-              trigger="hover"
-              v-model:visible="UpdatePopover.show"
-              v-if="Updater.shouldUpdate"
-            >
-              <p>检测到新的更新，点击当前按钮进行更新</p>
-              <p class="Version">版本号:{{ Updater.manifest.version }}</p>
-              <div style="text-align: right; margin: 0"></div>
-              <template #reference>
-                <!-- <el-icon
-                  :size="18"
-                  color="#b40000"
-                  @mouseover="UpdatePopover.show = true"
-                  @mouseleave="UpdatePopover.show = false"
-                  @click="install"
-                >
-                  <star-filled />
-                </el-icon>-->
-                <SmovIco
-                  @mouseover="UpdatePopover.show = true"
-                  @mouseleave="UpdatePopover.show = false"
-                  @click="install"
-                  :name="'update'"
-                />
-              </template>
-            </el-popover>
           </div>
         </action-bar>
       </el-header>
@@ -97,7 +67,6 @@ linstenUpdate();
 
 <style lang="less">
 #app {
-  // font-family: Avenir, Helvetica, Arial, sans-serif;
   font-family: "Microsoft Yahei", "PingFang SC", "system-ui";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -151,14 +120,9 @@ body {
 
 .NavAside {
   background-color: rgba(240, 240, 240, 0.459);
-  // border-radius: 0 7px 0 0;
-  // padding: 2px;
-  // box-shadow: var(--el-box-shadow-light) inset;
-  // border: #2c3e502d solid 2px;
 }
 .WindowHeader {
   background-color: rgba(240, 240, 240, 0.459);
-  // background: #6a626251;
   padding: 0;
 }
 

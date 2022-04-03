@@ -94,14 +94,11 @@ pub fn update_seekname(id: i32, seek_name: String) -> Response<Option<usize>> {
 
 ///需要对这个做一个判定 判定一 是否存在父文件夹 如果存在父文件夹 需要提示添加错误 存在父文件夹
 #[command]
-pub fn insert_folder(path: String) -> Response<Option<Vec<Folder>>> {
+pub fn insert_folder(path: String) -> Response<Option<i32>> {
   let paths = PathBuf::from(&path);
   if paths.exists() {
     match Folder::insert_folder(path) {
-      Ok(_) => match Folder::query_folder() {
-        Ok(e) => return Response::new(200, Some(e), "success"),
-        Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
-      },
+      Ok(e) => return Response::new(200, Some(e), "success"),
       Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
     }
   } else {

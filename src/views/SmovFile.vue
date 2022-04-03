@@ -1,9 +1,16 @@
 <template>
   <div class="fileMain">
     <div class="toolBar">
-      <el-button type="primary" :icon="Files" :loading="false" @click="getSelectEvent">剑气纵横三万里</el-button>
-      <el-button type="warning" :icon="Close" :loading="false" @click="changeStatusAll">一剑光寒十九洲</el-button>
+      <!-- 剑气纵横三万里  一剑光寒十九洲-->
+      <el-button type="primary" :icon="Files" :loading="false" @click="getSelectEvent">检索</el-button>
+      <el-button type="warning" :icon="Close" :loading="false" @click="changeStatusAll">切换</el-button>
       <el-button type="primary" :icon="Refresh" @click="initFn">重载</el-button>
+      <el-button
+        type="warning"
+        :icon="Refresh"
+        @click="toInit"
+        :loading="File.FileInitLoading"
+      >检索文件系统</el-button>
       <el-input
         v-model="search"
         class="search"
@@ -67,6 +74,30 @@
         </template>
       </vxe-column>
     </vxe-table>
+
+    <el-dialog v-model="File.show" title="回调" width="50%" destroy-on-close center>
+      <p>
+        检索到
+        <span class="number">{{ File.data.add_size }}</span>
+        条新数据
+      </p>
+      <p v-if="File.data.del_smov_file.length != 0">
+        发现
+        <span class="number">{{ File.data.del_smov_file.length }}</span> 条被删除的数据
+      </p>
+      <p>
+        <el-checkbox
+          label="删除已被删除的数据"
+          v-model="File.del"
+          v-if="File.data.del_smov_file.length != 0"
+        />
+      </p>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="FileClick">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -94,13 +125,22 @@ export default defineComponent({
 
     let logs = inject('log') as any;
 
+    const { $alert } = getCurrentInstance()!.appContext.config.globalProperties;
+
+    const File = ref({
+      show: false,
+      loading: false,
+      data: {} as any,
+      del: true,
+      FileInitLoading: false
+    });
+
     const findList = () => {
       table.loading = true;
       return new Promise((resolve) => {
         setTimeout(() => {
           const data = FileData;
 
-          console.log(FileData)
           // 阻断 vue 对大数组的监听，避免 vue 绑定大数据造成短暂的卡顿
           const $table = xTable.value;
           if ($table) {
@@ -120,7 +160,6 @@ export default defineComponent({
         const filterRE = new RegExp(searchs, 'gi')
         const searchProps = ['seekname', 'realname', 'extension']
         const rest = $table.getTableData().fullData.filter(item => searchProps.some(key => XEUtils.toValueString(item[key]).toLowerCase().indexOf(searchs) > -1))
-        console.log(rest)
         const data = rest.map(row => {
           const item = Object.assign({}, row)
           searchProps.forEach(key => {
@@ -152,17 +191,11 @@ export default defineComponent({
           )
         }
 
-        console.log("发送数据")
-        console.log(Date.now())
-
         invoke("change_seek_status", { smov: tasks }).then((res: any) => {
           if (res.code == 200) {
-            ElMessage({
-              message: '共' + tasks.length + '条加入到检索队列',
-              type: 'success',
-            })
+            $alert.success('共' + tasks.length + '条加入到检索队列')
           } else {
-            ElMessage.error('插入到检索队列出现错误,' + res.msg)
+            $alert.error('插入到检索队列出现错误,' + res.msg)
           }
         }
         ).finally(() => {
@@ -214,10 +247,8 @@ export default defineComponent({
               level: 'INFO'
             }
             logs.value = log;
-            ElMessage({
-              message: msg,
-              type: 'success',
-            })
+            $alert.success(msg)
+            initFn();
           }
         })
 
@@ -232,12 +263,10 @@ export default defineComponent({
       invoke("change_active_status", { id: row.id, status: isActive }).then((res: any) => {
         if (res.code == 200) {
           const $table = xTable.value;
-          // $table.remove(row);
           row.is_active = isActive;
           $table.reloadRow(row, null, undefined)
-          // XEUtils.remove(FileData, toitem => toitem === row)
         } else {
-          ElMessage.error('关闭出现了一个问题' + res.msg)
+          $alert.error('关闭出现了一个问题' + res.msg)
         }
       }).finally(() => {
 
@@ -251,7 +280,6 @@ export default defineComponent({
     const initFn = () => {
       table.loading = true;
       invoke("query_unretrieved").then((res) => {
-        // console.log(res)
         let data: any = res;
         if (data.code == 200) {
           FileData = data.data;
@@ -269,7 +297,6 @@ export default defineComponent({
     const editClosedEvent: VxeTableEvents.EditClosed = ({ row, column }) => {
       const $table = xTable.value;
       const field = column.field;  //旧值 
-      console.log(field)
       const cellValue = row[field]; //新值
 
       //更新数据库中的数据
@@ -292,6 +319,46 @@ export default defineComponent({
       // 判断单元格值是否被修改
     };
 
+    const toInit = () => {
+      File.value.FileInitLoading = true;
+      invoke("query_new_file_todb")
+        .then((res) => {
+          const data: any = res;
+          if (data.code == 200) {
+            File.value.data = data.data;
+            File.value.show = true;
+          } else {
+            $alert.error("出现了一个错误！")
+          }
+        })
+        .catch(() => {
+          $alert.error("出现了一个错误！")
+        })
+        .finally(() => {
+          setTimeout(() => {
+            File.value.FileInitLoading = false;
+          }, 500);
+
+        });
+    };
+
+    const FileClick = () => {
+      File.value.loading = true;
+      if (File.value.del && File.value.data.del_smov_file.length != 0) {
+        const data: number[] = XEUtils.map(File.value.data.del_smov_file as any[], item => item.id);
+        invoke("delete_smov", { id: data }).then((res: any) => {
+          if (res.code = 200) {
+            initFn();
+            $alert.success("检索成功,删除了" + File.value.data.del_smov_file.length + "条数据")
+          } else {
+            $alert.error("出现了一个错误！")
+          }
+        }
+        )
+      };
+      File.value.show = false;
+    }
+
     return {
       search,
       table,
@@ -307,7 +374,10 @@ export default defineComponent({
       changActive,
       Close,
       changeStatusAll,
-      Select
+      Select,
+      File,
+      FileClick,
+      toInit
     };
   },
 });

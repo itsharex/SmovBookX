@@ -35,7 +35,6 @@ export default defineComponent({
         onMounted(() => {
             instance = new Artplayer({ ...props.option, container: artRef.value });
             nextTick(() => {
-                // emit('get-instance', instance);
             });
             eventFull();
         });

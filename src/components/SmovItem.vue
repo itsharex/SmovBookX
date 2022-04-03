@@ -42,37 +42,6 @@ export default defineComponent({
 
         const openDetail = async () => {
 
-            // // mountDialog({ title: '自定义标题', content: '自定义内容' })
-            // const data= XEUtils.clone(props.data, true)
-            // // console.log(data)
-            // mountDetail({data:data})
-            // loading embedded asset:
-            // let webview = {} as any;
-            // webview = WebviewWindow.getByLabel(props.data.name);
-            // console.log(webview)
-            // if (webview == null) {
-            //     webview = new WebviewWindow(props.data.name, {
-            //         url: '/SmovDetail/' + props.data.id,
-            //         title: props.data.name,
-            //         center:true
-            //     });
-
-            // } else {
-            //     try {
-            //         webview.setAlwaysOnTop(true);
-            //         webview.show();
-            //         setTimeout(() => {
-            //             webview.setAlwaysOnTop(false);
-            //         }, 50)
-            //     } catch {
-            //         webview = new WebviewWindow(props.data.name, {
-            //             url: '/SmovDetail/' + props.data.id,
-            //             title: props.data.name
-            //         });
-
-            //     }
-            // }
-
             const webview = new WebviewWindow(props.data.name, {
                 url: '/SmovDetail/' + props.data.id,
                 title: props.data.name,

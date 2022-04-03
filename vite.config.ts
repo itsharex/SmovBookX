@@ -3,7 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import { svgBuilder } from "./svgBuilder";
+// import { svgBuilder } from "./svgBuilder";
 
 export default defineConfig({
   plugins: [
@@ -24,7 +24,7 @@ export default defineConfig({
       ],
       dts: 'src/components.d.ts',
     }),
-    svgBuilder('./src/assets/svg/'),
+    // svgBuilder('./src/assets/svg/'),
   ],
   server: {
     hmr: { overlay: false },

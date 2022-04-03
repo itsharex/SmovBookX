@@ -45,6 +45,5 @@ html,
 body {
   background-color: rgba(255, 255, 255, 0);
   border-radius: 7px;
-  // overflow: hidden;
 }
 </style>

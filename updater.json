@@ -1,10 +1,10 @@
 {
-    "name":"v0.1.7",
-    "notes":"版本测试 修复了部分bug 新增了部分bug 逻辑修改，灵魂界面 卡片修改为弹出界面",
-    "pub_date":"2022-03-24T15:22:57Z",
+    "name":"v0.1.8",
+    "notes":"测试版本优化了大量的界面 新增了部分功能",
+    "pub_date":"2022-04-02T21:52:57Z",
     "platforms": {
         "win64": {
-            "signature":"dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReDdsMkgrcVpPSzNYbXdzMlowTDhER3pPbDcreit5K1lZRGFBT2hiak92UFZ2VUozcUNwd1k4cWhLbURSdFYwMytmRG5pdmg5MytLZFc2aU94a1M3bzNMTTZBN3FVa0FRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjQ4MTA3NjEyCWZpbGU6QzpcVXNlcnNcTGVyaVxEb2N1bWVudHNcRGV2XHRhdXJpXFNtb3ZCb29rWFxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9TbW92Qm9va18wLjEuN194NjRfemgtQ04ubXNpLnppcAozL2VkMmVoZEFDM2wrZThxZTZYS1l6QTVSTnJiblVJNzhDdUR4WHhnRk1Pb3BUYWF3dnFTL2xrR0dUWmEwMEtBTGVZSlFmMTJHYVY5VXp4ajRhZmJCZz09Cg==",
+            "signature":"dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReDdsMkgrcVpPSzRjRHFraWM3L0ZXYmpoMW5HRVVEVlJLQVByaDhlZFVsTU8zcFFocjk1eHo0ZVVYbllzbkxSWUdQRUNuS3h0SWhuVjZhejZYWjlKSW9XVGN6T2VJWWdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjQ4OTA3NDY3CWZpbGU6RDpcRGV2XHRhdXJpXFNtb3ZCb29rWFxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9TbW92Qm9va18wLjEuOF94NjRfemgtQ04ubXNpLnppcApHcHBNaXVmOWthVTJxNW1QUmV4blBBWlFpNjRlaElWOWM3N1NvM3F2VGQyd3lRYThzak1IelN4ZXRnd3pucEpFMXEvS2x6MXROak82R1lhSHh1NXlCUT09Cg==",
             "url":"https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/SmovBook_0.1.8_x64_zh-CN.msi.zip?version=0.1.8"
         }
     }

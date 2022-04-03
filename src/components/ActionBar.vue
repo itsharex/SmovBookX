@@ -96,8 +96,6 @@ const props = defineProps({
 .WindowButton {
     width: 2.8rem;
     height: 100%;
-
-    // margin-left: 1.1em;
 }
 
 .WindowButton:hover {

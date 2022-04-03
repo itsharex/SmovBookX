@@ -120,7 +120,6 @@ export default defineComponent({
 .logList {
   display: flex;
   flex-direction: column;
-  // align-items: flex-end;
   position: relative;
   top: 0px;
   height: 100%;
@@ -159,7 +158,6 @@ export default defineComponent({
 }
 
 .logItem {
-  // height: 2em;
   display: flex;
   align-items: center;
   margin-left: 10px;

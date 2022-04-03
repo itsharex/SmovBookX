@@ -1,18 +1,20 @@
 {
   "name": "smovbook",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri:dev": "env-cmd -r .env-cmdrc -e development tauri dev",
-    "tauri:build": "env-cmd -r .env-cmdrc -e production tauri build"
+    "tauri:build": "env-cmd -r .env-cmdrc -e production tauri build",
+    "tauri:build --debug": "env-cmd -r .env-cmdrc -e development tauri build --debug"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^1.0.0",
     "@tauri-apps/api": "^1.0.0-rc.2",
     "@types/sharp": "^0.29.5",
     "artplayer": "^4.3.3",
+    "default-passive-events": "^2.0.0",
     "element-plus": "2.1.4",
     "vue": "^3.2.31",
     "vue-router": "^4.0.0-0",

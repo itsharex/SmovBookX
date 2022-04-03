@@ -20,49 +20,6 @@
 
         <!-- 快捷栏优化 本周 -->
         <div class="QuickButton">
-            <!-- <el-button
-                type="primary"
-                color="#C7415B"
-                :class="onLoad === true ? 'onLoad' : ''"
-                :icon="onLoad === true ? Loading : Download"
-                @click="goSeek"
-                circle
-            ></el-button>
-
-            <el-popover
-                placement="bottom"
-                title="更新"
-                :width="200"
-                trigger="hover"
-                v-model:visible="UpdatePopover.show"
-                v-if="Updater.shouldUpdate"
-            >
-                <p>检测到新的更新，点击当前按钮进行更新</p>
-                <p class="Version">版本号:{{ Updater.manifest.version }}</p>
-                <div style="text-align: right; margin: 0"></div>
-                <template #reference>
-                    <el-button
-                        type="danger"
-                        :icon="Cloudy"
-                        @mouseover="UpdatePopover.show = true"
-                        @mouseleave="UpdatePopover.show = false"
-                        @click="install"
-                        circle
-                    />
-                </template>
-            </el-popover>-->
-<!-- 
-            <div class="setting">
-                <navigation-item
-                    :choose="nav.choose"
-                    :name="'设置'"
-                    :path="'/setting'"
-                    :index="-2"
-                    :show="true"
-                    :ico="Tools"
-                ></navigation-item>
-            </div> -->
-
             <div>
                 <navigation-item
                     :choose="nav.choose"
@@ -115,7 +72,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, inject } from 'vue';
+import { defineComponent, ref, onMounted, inject,markRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
 import { listen, emit } from '@tauri-apps/api/event';
@@ -146,9 +103,9 @@ export default defineComponent({
         const nav = ref({
             choose: 0,
             list: [
-                { name: "首页", path: "/SomvView", ico: HomeFilled },
-                { name: "检索", path: "/SomvFile", ico: Menu },
-                { name: "设置", path: "/setting", ico: Tools },
+                { name: "首页", path: "/SomvView", ico: markRaw(HomeFilled) },
+                { name: "检索", path: "/SomvFile", ico: markRaw(Menu) },
+                { name: "设置", path: "/setting", ico: markRaw(Tools) },
                 { name: "首页", path: "/index", show: process.env.NODE_ENV === "development" },
                 { name: "测试", path: "/test", show: process.env.NODE_ENV === "development" }
             ] as any[]
@@ -196,7 +153,6 @@ export default defineComponent({
                 text: '正在下载更新，下载完成后会自动更新',
             })
             await installUpdate();
-            // install complete, restart app
             await relaunch();
         }
 
@@ -231,7 +187,8 @@ export default defineComponent({
             changeChoose,
             Tools,
             UploadFilled,
-            HelpFilled
+            HelpFilled,
+            
         };
     },
 })

@@ -19,14 +19,19 @@
 <script lang='ts' setup>
 import { defineCustomElement } from '@vue/runtime-dom';
 import { useRouter } from 'vue-router';
+import { markRaw } from 'vue';
 
 const router = useRouter();
 
 const router_go = () => {
     changeChoose();
-    router.push({
-        path: props.path,
-    })
+    console.log(props.path)
+    if (props.path !== "") {
+        router.push({
+            path: props.path,
+        })
+    }
+
 }
 
 const em = defineEmits(['changeChoose'])
@@ -34,7 +39,6 @@ const em = defineEmits(['changeChoose'])
 const changeChoose = () => {
     em("changeChoose", props.index)
 }
-
 
 
 const props = defineProps({
@@ -48,7 +52,7 @@ const props = defineProps({
     },
     path: {
         type: String,
-        default: "/"
+        default: ""
     },
     index: {
         type: Number,

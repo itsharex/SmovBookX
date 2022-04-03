@@ -7,10 +7,10 @@
         <el-button type="danger" @click="test5">打开界面测试</el-button>
         <el-button type="danger" @click="test6">后台新建界面测试</el-button>
 
-        <el-icon v-if="show" @click="show=!show">
+        <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
-        <el-icon v-if="!show" @click="show=!show">
+        <el-icon v-if="!show" @click="show = !show">
             <component :is="Box"></component>
         </el-icon>
 
@@ -46,13 +46,6 @@ export default defineComponent({
         let logs = inject('log') as any;
 
         const test1 = () => {
-            // router.push({
-            //     path: '/test2',
-            //     query: {
-            //         num: 1
-            //     }
-            // })
-            // dialog.message("fuck")
 
             const option: notification.Options = {
                 title: "test",
@@ -121,6 +114,10 @@ export default defineComponent({
 
         const test4 = () => {
             createApp(test4_1).mount(document.createElement("div"));
+        }
+
+        const test7 = () => {
+
         }
 
 

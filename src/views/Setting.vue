@@ -22,9 +22,8 @@
         <template #reference>
           <span>检索文件夹:</span>
         </template>
+        <!-- el的table貌似有个滑动监听 有war -->
         <el-table height="200" :data="conf.seek_folder">
-          <!-- <el-table-column property="path" label="path" /> -->
-
           <el-table-column label="path">
             <template #default="scope">
               <div class="PathColumn">
@@ -54,6 +53,7 @@ import { dialog } from "@tauri-apps/api";
 import { OpenDialogOptions } from "@tauri-apps/api/dialog";
 import { request } from "../util/invoke";
 import { Close } from '@element-plus/icons-vue';
+import XEUtils from "xe-utils";
 
 const { $alert } = getCurrentInstance()!.appContext.config.globalProperties;
 
@@ -70,11 +70,14 @@ const conf = ref({
 const tidy = ref();
 const seek = ref();
 
-const setSeekFolder = (res: any) => {
-  request("insert_folder", { path: res }).then((res: any) => {
-    if (res.code == 200) {
+const setSeekFolder = (path: any) => {
+  request("insert_folder", { path: path }).then((callback: any) => {
+    if (callback.code == 200) {
       $alert.success("添加成功")
-      conf.value.seek_folder.join(res);
+      conf.value.seek_folder.push({
+        id:callback.data,
+        path:path
+      });
       seek.value.clean();
     }
   });
@@ -82,7 +85,6 @@ const setSeekFolder = (res: any) => {
 
 const initSettingData = () => {
   request("get_setting_data").then((res: any) => {
-    console.log(res);
     conf.value = res.data;
   })
 }
@@ -97,7 +99,10 @@ const setTidyFolder = (res: any) => {
 };
 
 const deleteSeekFolder = (id: any) => {
-  request("delete_folder", { id: id })
+  request("delete_folder", { id: id }).then((res: any) => {
+    $alert.success("删除成功")
+    XEUtils.remove(conf.value.seek_folder, item => item.id === id)
+  })
 }
 
 onMounted(() => {

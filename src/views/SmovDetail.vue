@@ -8,6 +8,13 @@
                     </el-icon>
                     <p>详情</p>
                 </div>
+
+                <div class="detailIco" @click="toOpen">
+                    <el-icon :size="17">
+                        <video-camera-filled />
+                    </el-icon>
+                    <p>打开</p>
+                </div>
             </action-bar>
         </el-header>
         <el-main class="ImgShow" id="ImgShow">
@@ -115,8 +122,11 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { defineComponent, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import nonePic from "../assets/NoneImages.png";
-import { Menu } from '@element-plus/icons-vue';
+import { Menu, VideoCameraFilled } from '@element-plus/icons-vue';
 import { getCurrent } from "@tauri-apps/api/window";
+import { shell } from "@tauri-apps/api";
+import { join } from "@tauri-apps/api/path";
+import { ElMessage } from "element-plus";
 
 export default defineComponent({
     props: {
@@ -124,8 +134,11 @@ export default defineComponent({
     },
     components: {
         Expand: Menu,
+        VideoCameraFilled:VideoCameraFilled
     },
     setup(props) {
+
+        const { $alert } = getCurrentInstance()!.appContext.config.globalProperties;
 
         const msg = ref(false);
 
@@ -191,7 +204,7 @@ export default defineComponent({
             const imgDiv = document.getElementById("ImgShow")!;
             img.value.temp = imgDiv;
             img.value.imgTemp = mainImg;
-            img.value.temp.addEventListener('mousewheel', SizeEvent, false);
+            img.value.temp.addEventListener('mousewheel', SizeEvent, { passive: false });
             current.setResizable(false);
 
             mainImg.onmousedown = function (ev) {
@@ -256,8 +269,19 @@ export default defineComponent({
         }
 
         const toOpen = async () => {
-
+            try {
+                shell.open(
+                    await join(
+                        data.value.path,
+                        data.value.realname + "." + data.value.extension
+                    )
+                );
+            } catch (e) {
+                console.log(e);
+                $alert.error("打开出现错误，可能没有设置文件类型的默认打开程序");
+            }
         };
+
 
         const changeMainImg = (index: number) => {
             img.value.scale = 1;
