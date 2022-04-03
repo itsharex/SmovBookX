@@ -30,7 +30,7 @@ lazy_static! {
   static ref MAIN_URL: String = String::from("https://javdb36.com");
 }
 
-pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
+pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Error> {
   let mut headers = HeaderMap::new();
   headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());
   headers.insert("cookie", "theme=auto; locale=zh; _ym_uid=1643076534203711663; _ym_d=1643076534; _ym_isad=1; over18=1; _jdb_session=u9TcLXlGGbtvm9gGwZYEpinDW9hp8wUpxrV1z88%2Bu6v7DTLIvBn9rUCQBt7O33JtmzPizK4a67uE8E75PJ56YhJQaocudrRi%2B4Ly025mTYamqzR%2FLDSfG5E%2FI32MC05KRngYkB04O%2Blli1jEvGzLLjH7GMDjERWejUQqwWtYVKEOhf2tfP7%2FPk%2BFo8Rg86S1Tai7Zg7Gc1rB0JwUqIMETFc%2BIToWoZ0jNTXWliRGSlhXpvO4Akn%2FuaBu771kG1uiSK0gQPCDTG9hheuFAjjfI0p%2FFV4b4usCkPiZZH3I2vWCM7S%2B4u6uk%2BXs--YVqvN%2Byh43AE6xyR--J5NZMl5Ko12LNJRzk%2Fzbpw%3D%3D".parse().unwrap());
@@ -81,7 +81,6 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
       let name_f = uid.text_contents().to_uppercase().replace("-", "");
 
       if name_f == format {
-
         //在这里直接对数据进行整理 ，能到这里说明数据真实存在
         //smov_file新建一个方法 ，需要对数据更改位置及更新数据库数据，主要目的为修改位置信息,初始化文件夹，需要回传一个path
         //传入的数据应该为 name 和 id ，就能确定 哪条数据和初始化文件夹的名称
@@ -132,7 +131,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
           .select(".video-meta-panel")
           .unwrap()
           .next_back()
-          .expect("未找到主图");
+          .unwrap();
 
         let video_meta_panel = video_meta_panel.as_node();
 

@@ -9,20 +9,6 @@
                     </el-icon>
                 </div>
                 <div class="barButton">
-                    <!-- <el-button
-                        color="#626aef"
-                        style="color: white"
-                        size="small"
-                        @click="start"
-                        v-show="!pool.isRunning() && !pool.delLoading"
-                    >开始</el-button>
-
-                    <el-button
-                        size="small"
-                        @click="stop"
-                        v-show="pool.isRunning()"
-                        :loading="pool.delLoading"
-                    >结束</el-button>-->
 
                     <el-icon
                         :size="17"
@@ -45,14 +31,6 @@
                     >
                         <remove-filled />
                     </el-icon>
-
-                    <!-- <el-icon
-                            :size="17"
-                            class="control"
-                            @click="removeAll"
-                        >
-                            <delete />
-                    </el-icon>-->
                 </div>
 
                 <!-- <p class="status">状态:{{ pool.isRunning() ? '是' : '否' }}</p> -->
@@ -63,68 +41,11 @@
             <div class="seek">
                 <div class="settingDiv">
                     <div class="buttonDiv">
-                        <!-- 图标 方案一  -->
-                        <!-- <el-icon
-                            :size="30"
-                            @click="start"
-                            class="control"
-                            v-show="!pool.isRunning() && !pool.delLoading"
-                        >
-                            <video-play />
-                        </el-icon>
-
-                        <el-icon :size="29" class="control onLoad" v-show="pool.delLoading">
-                            <loading />
-                        </el-icon>
-
-                        <el-icon
-                            :size="30"
-                            class="control"
-                            v-show="pool.isRunning() && !pool.delLoading"
-                        >
-                            <video-pause />
-                        </el-icon>
-
-                        <el-icon
-                            :size="30"
-                            class="control"
-                            @click="removeAll"
-                        >
-                            <delete />
-                        </el-icon>-->
-
-                        <!-- 最丑的按钮 方案三 -->
-                        <!-- <el-button
-                            @click="start"
-                            color="#C7415B"
-                            type="danger"
-                            :disabled="pool.delLoading || pool.isRunning()"
-                        >开始检索</el-button>
-                        <el-button
-                            @click="stop"
-                            color="#C7415B"
-                            type="danger"
-                            :loading="pool.delLoading"
-                            :disabled="!pool.isRunning()"
-                        >停止检索</el-button>
-
-                        <el-button @click="getSeekSmov" color="#C7415B" type="danger">重载数据</el-button>
-                        <el-button @click="removeAll" color="#C7415B" type="danger">雁过不留痕风过不留声</el-button>-->
+                    
                     </div>
 
                     <div class="filtersDiv">
-                        <!-- <p>
-                            错误
-                            <el-switch v-model="openStatus[2]" @change="ErrChange" />
-                        </p>
-                        <p>
-                            成功
-                            <el-switch v-model="openStatus[1]" @change="SussChange" />
-                        </p>
-                        <p>
-                            未检索
-                            <el-switch v-model="openStatus[0]" @change="WaitChange" />
-                        </p>-->
+                
                     </div>
                 </div>
 
