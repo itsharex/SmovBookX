@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Hash, Debug, Deserialize, Serialize)]
 pub struct Smov {
   pub id: i64,
-  pub name: String, //云端
-  pub path: String, //路径
+  pub name: String,  //云端
+  pub title: String, //标题
+  pub path: String,  //路径
   pub realname: String,
   pub len: u64,             //大小
   pub created: i64,         //本地创建时间
@@ -44,10 +45,17 @@ pub struct Actor {
   name: String,
 }
 
+#[derive(Hash, Debug, Deserialize, Serialize)]
+pub struct SmovPl {
+  id: i64,
+  is_active: i64,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SmovSeek {
   pub id: i64,
   pub name: String,         //云端
+  pub title: String,        //标题
   pub format: String,       //格式化后名称
   pub release_time: String, //发行时间
   pub duration: i32,        //时长
@@ -241,7 +249,7 @@ impl Smov {
     exec(|conn| {
       let tx = conn.transaction()?;
       let mut stmt = tx.prepare(
-        "select id, name, path, realname, len, created, modified, extension, 
+        "select id, name,title, path, realname, len, created, modified, extension, 
         format, release_time, duration,makers_id, publisher_id, series_id, directors_id, 
          isch from smov where is_retrieve = 1",
       )?;
@@ -249,26 +257,27 @@ impl Smov {
         Ok(Smov {
           id: row.get(0)?,
           name: row.get(1)?,
-          path: row.get(2)?,
-          realname: row.get(3)?,
-          len: row.get(4)?,
-          created: row.get(5)?,
-          modified: row.get(6)?,
-          extension: row.get(7)?,
-          format: row.get(8)?,
-          release_time: row.get(9)?,
-          duration: row.get(10)?,
+          title: row.get(2)?,
+          path: row.get(3)?,
+          realname: row.get(4)?,
+          len: row.get(5)?,
+          created: row.get(6)?,
+          modified: row.get(7)?,
+          extension: row.get(8)?,
+          format: row.get(9)?,
+          release_time: row.get(10)?,
+          duration: row.get(11)?,
           maker: String::from(""),
-          maker_id: row.get(11)?,
+          maker_id: row.get(12)?,
           publisher: String::from(""),
-          publisher_id: row.get(12)?,
+          publisher_id: row.get(13)?,
           serie: String::from(""),
-          serie_id: row.get(13)?,
+          serie_id: row.get(14)?,
           director: String::from(""),
-          director_id: row.get(14)?,
+          director_id: row.get(15)?,
           tags: Vec::new(),
           actors: Vec::new(),
-          isch: row.get(15)?,
+          isch: row.get(16)?,
           thumbs_img: String::from(""),
           main_img: String::from(""),
           detail_img: Vec::new(),
@@ -342,9 +351,124 @@ impl Smov {
           smov.actors.push(actor1);
         }
 
+        smov.get_smov_thumbs_img().unwrap();
+
         smov_list.push(smov);
       }
       Ok(smov_list)
+    })
+  }
+
+  pub fn get_smov_by_id(id: i64) -> Result<Smov> {
+    exec(|conn| {
+      let tx = conn.transaction()?;
+
+      let mut smov = tx
+        .query_row_and_then(
+          "select id, name,title, path, realname, len, created, modified, extension, 
+          format, release_time, duration,makers_id, publisher_id, series_id, directors_id, 
+           isch from smov where is_retrieve = 1 and id = ?1",
+          params![id],
+          |row| -> Result<Smov, rusqlite::Error> {
+            Ok(Smov {
+              id: row.get(0)?,
+              name: row.get(1)?,
+              title: row.get(2)?,
+              path: row.get(3)?,
+              realname: row.get(4)?,
+              len: row.get(5)?,
+              created: row.get(6)?,
+              modified: row.get(7)?,
+              extension: row.get(8)?,
+              format: row.get(9)?,
+              release_time: row.get(10)?,
+              duration: row.get(11)?,
+              maker: String::from(""),
+              maker_id: row.get(12)?,
+              publisher: String::from(""),
+              publisher_id: row.get(13)?,
+              serie: String::from(""),
+              serie_id: row.get(14)?,
+              director: String::from(""),
+              director_id: row.get(15)?,
+              tags: Vec::new(),
+              actors: Vec::new(),
+              isch: row.get(16)?,
+              thumbs_img: String::from(""),
+              main_img: String::from(""),
+              detail_img: Vec::new(),
+            })
+          },
+        )
+        .unwrap();
+
+      smov.maker = tx
+        .query_row_and_then(
+          "SELECT name from maker where id = ?1",
+          params![&smov.maker_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      smov.publisher = tx
+        .query_row_and_then(
+          "SELECT name from publisher where id = ?1",
+          params![&smov.publisher_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      smov.serie = tx
+        .query_row_and_then(
+          "SELECT name from serie where id = ?1",
+          params![&smov.serie_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      smov.director = tx
+        .query_row_and_then(
+          "SELECT name from director where id = ?1",
+          params![&smov.director_id],
+          |row| row.get(0),
+        )
+        .expect("查询出现错误");
+
+      let mut stmt = tx.prepare(
+          "select tag.id,tag.name from tag,smov_tag where tag.id = smov_tag.tag_id and smov_tag.smov_id = ?1",
+        )?;
+
+      let tag_iter = stmt.query_map([smov.id], |row| {
+        Ok(Tag {
+          id: row.get(0)?,
+          name: row.get(1)?,
+        })
+      })?;
+
+      for tag in tag_iter {
+        let tag1 = tag.unwrap();
+        smov.tags.push(tag1);
+      }
+
+      let mut stmt = tx.prepare(
+          "select actor.id,actor.name from actor,smov_actor where actor.id = smov_actor.actor_id and smov_actor.smov_id = ?1",
+        )?;
+
+      let actor_iter = stmt.query_map([smov.id], |row| {
+        Ok(Actor {
+          id: row.get(0)?,
+          name: row.get(1)?,
+        })
+      })?;
+
+      for actor in actor_iter {
+        let actor1 = actor.unwrap();
+        smov.actors.push(actor1);
+      }
+
+      smov.get_smov_img().unwrap();
+
+      Ok(smov)
     })
   }
 }
@@ -408,8 +532,8 @@ impl SmovSeek {
 
       tx.execute(
                 "update smov set name = ?1 ,makers_id =?2,series_id = ?3,directors_id =?4 , 
-                publisher_id = ?5,duration = ?6,release_time = ?7 , is_retrieve = ?8 where id = ?9;",
-                params![smov.name,maker,serie,director,publisher,smov.duration,smov.release_time,1,smov.id],
+                publisher_id = ?5,duration = ?6,release_time = ?7 , is_retrieve = ?8 ,title =?9  where id = ?10;",
+                params![smov.name,maker,serie,director,publisher,smov.duration,smov.release_time,1,smov.title,smov.id],
                 ).expect("插入smov表出现错误");
 
       for tag in smov.tags {
@@ -477,11 +601,14 @@ impl SmovFile {
   }
 
   //正常的标准写法！
-  pub fn disable(id: Vec<i64>) -> Result<()> {
+  pub fn disable(id: Vec<SmovPl>) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
       for y in id {
-        match tx.execute("update smov set is_active = 0 where id = ?1", params![y]) {
+        match tx.execute(
+          "update smov set is_active = ?1 where id = ?2",
+          params![y.is_active, y.id],
+        ) {
           Ok(_) => {}
           Err(err) => return Err(err),
         };
@@ -578,11 +705,12 @@ impl SmovFile {
   }
 
   pub fn query_db_file_id_unseek() -> Result<Vec<SmovFile>, rusqlite::Error> {
+    // and is_active=1
     exec(|conn| {
       let mut stmt = conn.prepare(
         "SELECT id,realname, seekname,path,len,created,modified,extension,format,isch,is_active
             FROM smov
-            where is_retrieve = 0 and is_active=1
+            where is_retrieve = 0 
               and not exists(select 1 from seek_queue where smov_id = smov.id)",
       )?;
       let smov_file_iter = stmt.query_map([], |row| {
@@ -738,6 +866,7 @@ impl SMOVBOOK {
             (
                 id           integer primary key autoincrement,
                 name         TEXT,
+                title        TEXT,
                 realname     TEXT,
                 seekname     TEXT,
                 path         TEXT,

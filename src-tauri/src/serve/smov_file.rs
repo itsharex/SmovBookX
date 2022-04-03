@@ -1,7 +1,8 @@
+use parking_lot::MutexGuard;
 use serde::{Deserialize, Serialize};
 
 use crate::model::folder::Folder;
-use crate::model::smov::SmovFile;
+use crate::model::smov::{Smov, SmovFile};
 use anyhow::{anyhow, Result};
 use std::collections::HashSet;
 use std::fs;
@@ -10,7 +11,7 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[warn(non_upper_case_globals)]
-const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv"];
+const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv","wmv"];
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
 pub struct SmovFileBack {
@@ -22,7 +23,29 @@ pub struct SmovFileBack {
 pub fn smov_file() -> Result<SmovFileBack> {
   let begin = timestamp(SystemTime::now());
 
-  let folders = Folder::query_folder().unwrap();
+  let mut folders = Folder::query_folder().unwrap();
+
+  let tidy_folder = crate::app::APP.lock();
+
+  let tidy_folder_path = match tidy_folder.conf.tidy_folder.as_os_str().to_str() {
+    Some(res) => res,
+    None => "",
+  };
+
+  //判定 当整理文件夹已经存在于队列中时 不添加 方法 tidy_in_vec是实现方法
+  if !tidy_folder_path.eq("") && tidy_in_vec(tidy_folder_path, &folders) {
+    folders.insert(
+      0,
+      Folder {
+        id: 0,
+        path: tidy_folder_path.to_string(),
+      },
+    );
+  }
+
+  MutexGuard::unlock_fair(tidy_folder); //这里必须对内存锁的部分锁定
+
+  println!("{:?}", folders);
 
   let db_smov: HashSet<SmovFile> = SmovFile::query_db_file_unid()
     .unwrap()
@@ -144,4 +167,58 @@ pub fn retrieve_all(path: &String) -> Vec<SmovFile> {
     }
   }
   smovs
+}
+
+pub fn tidy_in_vec(tidy_path: &str, folders: &Vec<Folder>) -> bool {
+  let tidy = Path::new(tidy_path);
+  for folder in folders {
+    if tidy.starts_with(Path::new(&folder.path)) {
+      return false;
+    }
+  }
+  true
+}
+
+impl Smov {
+  pub fn get_smov_img(self: &mut Self) -> Result<()> {
+    let path = Path::new(&self.path).join("img");
+    let img = path.join(format!("thumbs_{}.jpg", self.name));
+    if img.exists() {
+      self.thumbs_img = img.to_str().unwrap_or_else(|| "").to_string();
+    };
+
+    let img = path.join(format!("main_{}.jpg", self.name));
+    if img.exists() {
+      self.main_img = img.to_str().unwrap_or_else(|| "").to_string();
+    };
+
+    let path = path.join("detail");
+
+    if path.exists() {
+      let details = match path.read_dir() {
+        Ok(res) => res,
+        Err(err) => {
+          tracing::error!(message =format!("获取'{}'详情图片路径出现错误：'{}',请根据错误原因排查", self.name,err).as_str());
+          return Err(anyhow!("Missing attribute: {}", err));
+        }
+      };
+       for detail in details {
+          match detail{
+            Ok(res) => self.detail_img.insert(0, res.path().as_os_str().to_str().unwrap_or_else(||"").to_string()),
+            _ => {},
+        }
+       }
+    }
+    Ok(())
+  }
+
+  pub fn get_smov_thumbs_img(self: &mut Self) -> Result<()> {
+    let path = Path::new(&self.path).join("img");
+    let img = path.join(format!("thumbs_{}.jpg", self.name));
+    if img.exists() {
+      self.thumbs_img = img.to_str().unwrap_or_else(|| "").to_string();
+    };
+    
+    Ok(())
+  }
 }

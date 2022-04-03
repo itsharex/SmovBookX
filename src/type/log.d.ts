@@ -5,16 +5,6 @@ export type Log =  {
     level: String
 }
 
-// import { CurentTime } from '../util/time'
-
-// export interface LogInterface{
-//     new():LogInterface;
-//     readonly time: String,  
-//     thread: String,
-//     msg: String,
-//     level: String
-// }
-
 
 
 

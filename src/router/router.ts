@@ -4,6 +4,7 @@ import smovFile from '../views/SmovFile.vue';
 import test from '../views/test.vue';
 import Setting from '../views/Setting.vue';
 import Main from '../views/Main.vue';
+import SmovView from '../views/SmovView.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -11,20 +12,33 @@ const router = createRouter({
         {
             path: '/',
             component: Main,
-            redirect: '/index',
+            redirect: '/SomvView',
             children: [
                 {
                     path: '/index',
                     component: Index,
+                    meta: {
+                        keepAlive: true
+                    }
                 },
                 {
                     path: '/SomvFile',
                     component: smovFile,
+                    meta: {
+                        keepAlive: false
+                    }
+                },
+                {
+                    path: '/SomvView',
+                    component: SmovView,
+                    meta: {
+                        keepAlive: true
+                    }
                 },
                 {
                     path: '/test',
                     component: test,
-                    redirect: '/test1',
+                    redirect: '/test2',
                     children: [
                         {
                             path: '/test1',
@@ -39,6 +53,9 @@ const router = createRouter({
                 {
                     path: '/setting',
                     component: Setting,
+                    meta: {
+                        keepAlive: false
+                    }
                 }
             ]
 
@@ -47,6 +64,11 @@ const router = createRouter({
             path: '/seek',
             component: () => import("../views/Seek.vue")
         },
-    ]
+        {
+            path: '/SmovDetail/:Id',
+            component: () => import("../views/SmovDetail.vue")
+        },
+    ],
+
 })
 export default router;

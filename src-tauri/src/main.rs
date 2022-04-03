@@ -22,15 +22,13 @@ async fn main() {
       if cfg!(target_os = "windows") {
         app::webview2_is_installed(_app);
       }
-      if !app::init_app_log(_app) {
-        panic!("日志系统初始化失败！");
-      }
       if !app::init_app_dir() {
         panic!("工作目录初始化失败！");
       }
-      if !app::init_app_conf() {
-        panic!("配置文件初始化失败！");
+      if !app::init_app_log(_app) {
+        panic!("日志系统初始化失败！");
       }
+      app::init_app_shadows(_app);
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())
     })
@@ -55,10 +53,16 @@ async fn main() {
       cmd::cmd::change_active_status,
       cmd::cmd::delete_smov,
       cmd::cmd::remove_smov_seek_status,
+      cmd::cmd::get_smov_by_id,
+      cmd::cmd::get_setting_data,
+      cmd::cmd::delete_folder,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,
       cmd::tauri_cmd::open_in_explorer,
-      cmd::tauri_cmd::update_tidy_folder
+      cmd::tauri_cmd::update_tidy_folder,
+      cmd::tauri_cmd::set_focus,
+      cmd::tauri_cmd::create_new_window,
+      cmd::tauri_cmd::set_style,
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

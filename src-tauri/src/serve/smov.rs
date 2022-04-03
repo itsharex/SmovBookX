@@ -89,13 +89,25 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
         //在这里直接对数据进行整理 ，能到这里说明数据真实存在
         //smov_file新建一个方法 ，需要对数据更改位置及更新数据库数据，主要目的为修改位置信息,初始化文件夹，需要回传一个path
         //传入的数据应该为 name 和 id ，就能确定 哪条数据和初始化文件夹的名称
+        //这里不需要错误回滚机制 因为出现错误时还没有被修改文件的 检索状态 第二次可以直接继续查询
+        let s = TidySmov {
+          id: &id,
+          name: &name,
+        };
+
+        let img_to_path = match s.tidy().await {
+          Ok(n) => n,
+          Err(err) => {
+            return Err(err)
+          } ,
+        };
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
         let img = video_item.select("img").unwrap().next_back().unwrap();
         let thumbs_url = img.attributes.borrow().get("data-src").unwrap().to_string();
         let att = &a.attributes;
         let href = att.borrow().get("href").unwrap().to_string(); //is_some 是否存在？
-        let _title = att.borrow().get("title").unwrap().to_string();
+        let title = att.borrow().get("title").unwrap().to_string();
 
         sava_pic(
           &thumbs_url,
@@ -153,6 +165,7 @@ pub async fn get_test(format: String, id: i64) -> Result<bool, anyhow::Error> {
         let mut smov_seek = SmovSeek {
           id,
           name: name,
+          title,
           format: name_f,
           release_time: String::new(),
           duration: 0,

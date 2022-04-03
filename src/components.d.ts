@@ -4,11 +4,15 @@
 
 declare module 'vue' {
   export interface GlobalComponents {
+    ActionBar: typeof import('./components/ActionBar.vue')['default']
+    Artplayer: typeof import('./components/Artplayer.vue')['default']
+    Dialog: typeof import('./components/dialog/dialog.vue')['default']
+    ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
-    ElCard: typeof import('element-plus/es')['ElCard']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElContainer: typeof import('element-plus/es')['ElContainer']
     ElDialog: typeof import('element-plus/es')['ElDialog']
+    ElDrawer: typeof import('element-plus/es')['ElDrawer']
     ElEmpty: typeof import('element-plus/es')['ElEmpty']
     ElFooter: typeof import('element-plus/es')['ElFooter']
     ElHeader: typeof import('element-plus/es')['ElHeader']
@@ -16,9 +20,16 @@ declare module 'vue' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMain: typeof import('element-plus/es')['ElMain']
     ElPopover: typeof import('element-plus/es')['ElPopover']
-    ElSwitch: typeof import('element-plus/es')['ElSwitch']
+    ElTable: typeof import('element-plus/es')['ElTable']
+    ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    FileInput: typeof import('./components/FileInput.vue')['default']
+    ImgTray: typeof import('./components/ImgTray.vue')['default']
     Log: typeof import('./components/Log.vue')['default']
     Navigation: typeof import('./components/Navigation.vue')['default']
+    NavigationItem: typeof import('./components/NavigationItem.vue')['default']
+    QuickButton: typeof import('./components/QuickButton.vue')['default']
+    SmovDetail: typeof import('./components/SmovDetail/SmovDetail.vue')['default']
+    SmovIco: typeof import('./components/SmovIco.vue')['default']
     SmovItem: typeof import('./components/SmovItem.vue')['default']
   }
 }

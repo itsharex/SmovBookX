@@ -1,12 +1,16 @@
 use serde::Deserialize;
-use tracing::info;
 use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::mpsc::channel;
+use tracing::info;
+use window_shadows::set_shadow;
+use window_vibrancy::{
+  apply_acrylic, apply_blur, apply_mica, clear_acrylic, clear_blur, clear_mica,
+};
 
 use tauri::api::dialog;
-use tauri::command;
+use tauri::{command, Manager, Window, WindowUrl};
 
 extern crate toml;
 use crate::app::Conf;
@@ -37,6 +41,28 @@ pub fn log_operation(event: String, payload: Option<String>) {
 pub fn perform_request(endpoint: String, body: RequestBody) -> String {
   println!("{} {:?}", endpoint, body);
   "message response".into()
+}
+
+#[command]
+pub async fn create_new_window(label: String, url: String, window: Window) {
+  match window.get_window(&label) {
+    Some(win) => set_focus(label, win),
+    None => {
+      println!("{}", &label.clone());
+      Window::builder(
+        &window,
+        &label.clone(),
+        WindowUrl::External(format!("http://localhost:3000/{}", url).parse().unwrap()),
+      )
+      .focus()
+      .title(label.clone())
+      .center()
+      .min_inner_size(800.0, 600.0)
+      .decorations(false)
+      .build()
+      .unwrap();
+    }
+  };
 }
 
 #[command]
@@ -82,24 +108,69 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 
 //测试
 #[command]
-pub fn test()  {
+pub fn test() {
   info!(target: "frontend_log",message = "test msg" );
 }
 
-///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据
+///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据 需要改bug 这里有一步锁死了
 #[command]
-pub fn update_tidy_folder(path: String) {
-  let mut conf = crate::app::CONF.lock();
-  conf.tidy_folder = PathBuf::from(&path);
-  let to_path = &crate::app::APP.lock().app_dir.join("conf.toml");
-  let a = Conf {
-    tidy_folder: PathBuf::from(&path),
-  };
-  if let Ok(_) = File::create(to_path) {
-    //写入一个数据
-    let c = toml::to_string(&a).unwrap();
-    write(to_path, c).unwrap();
+pub fn update_tidy_folder(path: String) -> Response<Option<bool>> {
+  let tidy = PathBuf::from(&path);
+  if tidy.exists() {
+    let app = &mut crate::app::APP.lock();
+    app.conf.tidy_folder = tidy;
+    let to_path = app.app_dir.join("conf.toml");
+    let a = Conf {
+      tidy_folder: PathBuf::from(&path),
+      thread: app.conf.thread,
+    };
+    if let Ok(_) = File::create(&to_path) {
+      //写入一个数据
+      let c = toml::to_string(&a).unwrap();
+      write(&to_path, c).unwrap();
+    };
+
+    return Response::new(200, Some(true), "修改成功！");
+  } else {
+    return Response::new(300, None, "目录不存在");
   }
+}
+
+#[command]
+pub fn set_focus(label: String, window: Window) {
+  match window.get_window(&label) {
+    Some(win) => {
+      #[cfg(any(target_os = "windows", target_os = "macos"))]
+      set_shadow(&win, true).unwrap();
+    }
+    None => {}
+  };
+
+  window
+    .emit_all(format!("{}_single", label).as_str(), "")
+    .unwrap();
+}
+
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[command]
+#[inline]
+pub fn set_style(effect: String, label: String, window: Window) {
+  match window.get_window(&label) {
+    Some(window) => {
+      set_shadow(&window, true).unwrap();
+      clear_blur(&window).unwrap();
+      clear_acrylic(&window).unwrap();
+      clear_mica(&window).unwrap();
+      println!("{}", effect);
+      match effect.as_str() {
+        "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
+        "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
+        "mica" => apply_mica(&window).unwrap(),
+        _ => (),
+      };
+    }
+    None => {}
+  };
 }
 
 pub type MaybeString = Option<String>;

@@ -1,9 +1,10 @@
 <template>
   <div>
-    <el-button type="danger" @click="toInit" :loading="loading">检索文件系统</el-button>
-    <el-button type="danger" @click="toSeek">跳转至正常检索页面</el-button>
+    <el-button type="info" color="#C7415B" @click="toInit" :loading="loading">检索文件系统</el-button>
+    <el-button type="info" color="#C7415B" @click="toSeek">跳转至正常检索页面</el-button>
     <el-button
-      type="danger"
+      type="info"
+      color="#C7415B"
       @click="
         router.push({
           path: '/test',
@@ -12,13 +13,26 @@
     >跳转至测试</el-button>
 
     <el-button
-      type="danger"
+      type="info"
+      color="#C7415B"
+      @click="
+        router.push({
+          path: '/SomvView',
+        })
+      "
+    >跳转至灵魂</el-button>
+
+    <el-button
+      type="info"
+      color="#C7415B"
       @click="
         router.push({
           path: '/setting',
         })
       "
     >跳转至设置</el-button>
+
+    <p class="wxtx">温馨提醒 ： 已经加了图片功能，谨防社死，人人有责</p>
 
     <!-- 检索提示 -->
     <el-dialog v-model="Dialog.show" title="回调" width="50%" destroy-on-close center>
@@ -159,5 +173,11 @@ export default defineComponent({
 
 .number {
   font-weight: 600;
+}
+
+.wxtx {
+  background: rgb(255, 229, 229);
+  border: 2px solid rgb(255, 72, 72);
+  border-radius: 3px;
 }
 </style>

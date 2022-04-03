@@ -8,15 +8,6 @@ pub struct Folder {
   pub path: String,
 }
 
-// fn get_conn() -> Connection {
-//   let conn = Connection::open("SmovBook.db");
-//   if conn.is_ok() {
-//   } else {
-//     println!("连接失败:{:?}", conn.as_ref().err().unwrap().to_string());
-//   }
-//   conn.unwrap()
-// }
-
 fn create_sqlite_connection() -> Result<Connection> {
   let database = PathBuf::from(&crate::app::APP.lock().app_dir).join("SmovBook.db");
   let conn = Connection::open(database)?;
@@ -39,7 +30,7 @@ impl Folder {
     conn.execute(
             "insert into sys_folder(path) select ?1 where not exists(select * from sys_folder where path = ?2)",
             params![path,path],
-            ).expect("插入smov表出现错误");
+            ).expect("加入检索位置出现错误");
 
     let folder_id: i32 = conn
       .query_row_and_then(
@@ -52,6 +43,16 @@ impl Folder {
       Ok(folder_id)
     })
   }
+
+  pub fn delete_folder(id: i32) -> Result<i32, rusqlite::Error> {
+    exec(|conn| { 
+     conn.execute(
+             "delete from sys_folder where id =?1 ",
+             params![id],
+             ).expect("删除检索文件夹出现错误");
+       Ok(1)
+     })
+   }
   
   pub fn query_folder() -> Result<Vec<Folder>, rusqlite::Error> {
    exec(|conn| { 

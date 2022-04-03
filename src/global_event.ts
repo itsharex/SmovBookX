@@ -1,9 +1,13 @@
 import { listen } from '@tauri-apps/api/event';
 import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
+import { request } from './util/invoke';
 
-!(async () => await listen('single', (event) => {
-    console.log("get signal")
+let label = getCurrent().label;
+
+!(async () => await listen(label + '_single', (event) => {
+    console.log("aaaa")
     let current = getCurrent()
+    current.unminimize()
     current.setAlwaysOnTop(true)
     current.show()
     setTimeout(() => {
@@ -11,15 +15,15 @@ import { getCurrent, WebviewWindow } from '@tauri-apps/api/window';
     }, 50)
 }))()
 
-// import { emit } from "@tauri-apps/api/event";
-// emit("tauri://update");
-// console.log("发送检索");
+!(async () => await listen('tauri://file-drop-hover', event => {
+    console.log(event)
+})
+)()
 
-// !(async () => await listen('tauri://update-available', (event) => {
-//     console.log(event);
+document.addEventListener('dragstart', (event) => {
+    event.preventDefault();
+}, false);
 
-// }))()
-
-
+!(async () => await request("listen_single"))()
 
 

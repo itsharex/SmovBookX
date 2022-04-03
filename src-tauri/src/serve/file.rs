@@ -19,8 +19,8 @@ pub struct TidySmov<'a> {
 }
 
 impl TidySmov<'_> {
-  pub fn tidy(self: &Self) -> Result<PathBuf> {
-    let tidy_path = &crate::app::CONF.lock().tidy_folder.clone();
+  pub async fn tidy(self: &Self) -> Result<PathBuf> {
+    let tidy_path = &crate::app::APP.lock().conf.tidy_folder.clone();
     let smov_file = SmovFile::query_by_id(self.id).expect("查询数据库信息出现错误");
 
     let mut file_ch = "";
@@ -39,6 +39,7 @@ impl TidySmov<'_> {
     //判断文件是否还存在
 
     if !file_file_path.exists() {
+      tracing::error!(message = "数据已被物理删除");
       return Err(anyhow!("Missing attribute: {}", "数据已被物理删除"));
     }
     info!("来源文件夹:{:?}", &file_file_path);
@@ -47,28 +48,26 @@ impl TidySmov<'_> {
     if is_single(&smov_file.path) {
       //如果是单文件在整理目录新建文件夹 迁移视频文件
       if !&tidy_folder_path.exists() {
-        create_dir_all::<_>(&tidy_folder_path).expect("创建视频文件夹错误");
+        create_dir_all(&tidy_folder_path).expect("创建视频文件夹错误");
       }
-      // copy(&file_file_path, &tidy_file_path).expect("复制文件出现错误");
+
       let s = Move::from_source(&file_file_path);
 
-      match s.to_dest(&tidy_folder_path) {
+      match s.to_dest(&tidy_file_path) {
         Err(err) => {
-          tracing::error!(message = format!("{}", err).as_str());
+          tracing::error!(message = format!("移动文件出现错误:{}", err).as_str());
           return Err(anyhow!("移动文件出现错误:{}", err));
         }
         _ => {}
       };
-
-      // remove_file(&file_file_path).expect("删除原文件出现错误");
     } else {
-      //如果不是单文件，移动文件夹并重命名
-      // copy(&file_folder_path, &tidy_folder_path).expect("复制文件夹出现错误");
-
       let s = Move::from_source(&file_folder_path);
 
       match s.to_dest(&tidy_folder_path) {
-        Err(err) => return Err(anyhow!("移动文件出现错误:{}", err)),
+        Err(err) => {
+          tracing::error!(message = format!("移动文件出现错误:{}", err).as_str());
+          return Err(anyhow!("移动文件出现错误:{}", err));
+        }
         _ => {}
       };
 
@@ -90,7 +89,6 @@ impl TidySmov<'_> {
           }
         }
       }
-      // remove_dir(&file_folder_path).expect("删除原文件夹出现错误");
     }
 
     let img_path = tidy_folder_path.join("img");
@@ -106,7 +104,7 @@ impl TidySmov<'_> {
     )
     .expect("更新数据库出现了错误！,现在没有处理错误，凉凉");
 
-    Ok(img_path) //tidy_folder_path
+    Ok(img_path) 
   }
 }
 

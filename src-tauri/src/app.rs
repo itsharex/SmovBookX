@@ -4,6 +4,8 @@
  */
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
 use std::io::{Read, Write};
@@ -13,7 +15,7 @@ use std::{
   collections::BTreeMap,
   fs::{create_dir_all, write, File, OpenOptions},
   io::Read,
-  path::{Path, PathBuf},
+  path::PathBuf,
   result::Result::Ok,
   sync::Arc,
   thread,
@@ -48,7 +50,6 @@ use tracing_subscriber::{
 
 lazy_static! {
   pub static ref APP: Mutex<App> = Mutex::new(App::new());
-  pub static ref CONF: Mutex<Conf> = Mutex::new(Conf::new());
 }
 
 struct JsonVisitor<'a>(&'a mut BTreeMap<String, serde_json::Value>);
@@ -132,33 +133,69 @@ where
 
 ///初始化app文件夹
 pub fn init_app_dir() -> bool {
-  if !Path::new(&crate::app::APP.lock().app_dir).exists() {
-    if let Ok(_) = create_dir_all(&crate::app::APP.lock().app_dir) {
-      return true;
+  //lazy 的 处理是在第一次读取的时候 所以这里不能去读取app的值 不然会出现问题 为了让代码更加 简洁 而且在逻辑上更方便一点 我这里选择了 自己去获取一遍 为什么不能在 new方法调用init的原因也是因为会一直相互调用
+  let cfg = tauri::Config::default();
+  let app_path = match tauri::api::path::app_dir(&cfg) {
+    None => PathBuf::new(),
+    Some(p) => p.join("smovbook"),
+  };
+  if !&app_path.exists() {
+    if let Err(_) = create_dir_all(&app_path) {
+      return false;
     }
-    return false;
   }
-  true
-}
 
-pub fn init_app_conf() -> bool {
-  if !Path::new(&crate::app::APP.lock().app_dir.join("conf.toml")).exists() {
-    let path = &crate::app::APP.lock().app_dir.join("conf.toml");
-    if let Ok(_) = File::create(path) {
+  let conf = app_path.join("conf.toml");
+  if !conf.exists() {
+    if let Ok(_) = File::create(&conf) {
       //写入一个数据
       let a = Conf {
         tidy_folder: PathBuf::new(),
+        thread: 1,
       };
       let c = toml::to_string(&a).unwrap();
-      write(path, c).unwrap();
+      write(&conf, c).unwrap();
       return true;
+    } else {
+      return false;
     }
-    return false;
+  } else {
+    //如果存在 就 读取数据查看是否有不存在的项
+    let mut file = match File::open(&conf) {
+      Ok(f) => f,
+      Err(e) => panic!("no such file {} exception:{}", conf.to_str().unwrap(), e),
+    };
+
+    let mut str_val = String::new();
+    match file.read_to_string(&mut str_val) {
+      Ok(s) => s,
+      Err(e) => panic!("Error Reading file: {}", e),
+    };
+
+    let mut confs: HashMap<String, Value> = toml::from_str(&str_val).unwrap();
+    let mut flag = false;
+
+    if confs.get("tidy_folder").eq(&None) {
+      confs.insert("tidy_folder".to_string(), Value::String("".to_string()));
+      flag = true;
+    }
+
+    if confs.get("thread").eq(&None) {
+      confs.insert("thread".to_string(), Value::Integer(0));
+      flag = true;
+    }
+
+    if flag {
+      //还是需要处理这个文件被占用的可能性的
+      let confs = toml::to_string(&confs).unwrap();
+      // app.msg =confs;
+      write(conf, &confs).unwrap();
+    };
+    return true;
   }
-  true
 }
 
-pub fn init_app_log(app: &mut tauri::App) -> bool {
+pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
   let file = &crate::app::APP.lock().app_dir.join("log");
 
   if !file.exists() {
@@ -191,8 +228,7 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
     .with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
       !metadata.target().starts_with("frontend_log") //不存在的
-    }))
-  ;
+    }));
 
   let cus = CustomLayer {
     window: match app.get_window("main") {
@@ -205,7 +241,8 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
     .with(now_log)
     .with(cus.with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！ || metadata.level().eq(&tracing::Level::WARN)
-      metadata.target().starts_with("frontend_log")  || metadata.level().eq(&tracing::Level::ERROR)  //存在的
+      metadata.target().starts_with("frontend_log") || metadata.level().eq(&tracing::Level::ERROR)
+      //存在的
     })))
     .init();
 
@@ -216,17 +253,38 @@ pub fn init_app_log(app: &mut tauri::App) -> bool {
 /// app配置map
 pub struct App {
   pub app_dir: PathBuf,
+  pub conf: Conf,
+  pub msg: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize,Clone)]
 pub struct Conf {
   pub tidy_folder: PathBuf,
+  pub thread: i64, //检索线程数
 }
 
-impl Conf {
-  pub fn new() -> Conf {
-    let conf = &crate::app::APP.lock().app_dir.join("conf.toml");
-    let mut file = match File::open(conf) {
+impl App {
+  pub fn new() -> App {
+    let cfg = tauri::Config::default();
+    let mut app = App {
+      app_dir: PathBuf::new(),
+      conf: Conf {
+        tidy_folder: PathBuf::new(),
+        thread: 0,
+      },
+      msg: String::from(""),
+    };
+    match tauri::api::path::app_dir(&cfg) {
+      None => app.app_dir = PathBuf::new(),
+      Some(p) => app.app_dir = p.join("smovbook"),
+    };
+
+    //此时文件可能不存在 调用一次app new 在懒加载不能做这个处理，，
+    let conf = app.app_dir.join("conf.toml").clone();
+    // if !conf.exists(){
+    //   App::new();
+    // }
+    let mut file = match File::open(&conf) {
       Ok(f) => f,
       Err(e) => panic!("no such file {} exception:{}", conf.to_str().unwrap(), e),
     };
@@ -237,23 +295,11 @@ impl Conf {
       Err(e) => panic!("Error Reading file: {}", e),
     };
 
-    let config: Conf = toml::from_str(&str_val).unwrap();
+    let config = toml::from_str(&str_val).unwrap();
 
-    config
-  }
-}
+    app.conf = config;
 
-impl App {
-  pub fn new() -> App {
-    let cfg = tauri::Config::default();
-    match tauri::api::path::app_dir(&cfg) {
-      None => App {
-        app_dir: PathBuf::new(),
-      },
-      Some(p) => App {
-        app_dir: p.join("smovbook"),
-      },
-    }
+    app
   }
 }
 
@@ -328,6 +374,7 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
     SystemTrayEvent::LeftClick { .. } => {
       if let Some(window) = app.get_window("main") {
         window.show().unwrap();
+        window.unminimize().unwrap();
         window.set_focus().unwrap();
         info!("handle_system_tray_event at here?");
       }
@@ -405,6 +452,19 @@ pub fn lock_single() {
   }
 }
 
+///初始化界面阴影
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[inline]
+pub fn init_app_shadows(app: &mut tauri::App<Wry>) {
+  use window_shadows::set_shadow;
+  match app.get_window("main") {
+    Some(window) => {
+      set_shadow(&window, true).unwrap();
+    }
+    None => {}
+  };
+}
+
 /// 发送拉起请求
 fn send_wake_up() {
   tauri::async_runtime::block_on(async {
@@ -464,7 +524,7 @@ pub fn webview2_is_installed(app: &mut tauri::App<Wry>) {
 pub async fn listen_single(window: Window) {
   let _: tauri::async_runtime::JoinHandle<anyhow::Result<(), anyhow::Error>> =
     tauri::async_runtime::spawn(async move {
-      let socket = UdpSocket::bind("127.0.0.1:24254").await.expect("连接失败");
+      let socket = UdpSocket::bind("127.0.0.1:24254").await?;
       loop {
         let mut buf = [0; 32];
         let (size, _) = socket.recv_from(&mut buf).await.expect("出现错误");
@@ -480,7 +540,7 @@ pub async fn listen_single(window: Window) {
           }
         }
         if status {
-          let _ = window.emit_all("single", "");
+          let _ = window.emit_all("main_single", "");
         };
       }
     });

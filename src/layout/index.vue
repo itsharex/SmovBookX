@@ -41,7 +41,9 @@ const disableMenu = () => {
 
 
 <style lang="less">
+html,
 body {
-  background-color: #00000000;
+  background-color: rgba(255, 255, 255, 0);
+  border-radius: 7px;
 }
 </style>
