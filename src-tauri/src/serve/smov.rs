@@ -43,10 +43,6 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
 
   let url = format!("{}/search?q={}&f=all", *MAIN_URL, format);
 
-  // let proxy = reqwest::Proxy::all("115.223.195.206:9000").expect("tor proxy should be there");
-
-  // let client = reqwest::Client::builder().proxy(proxy).build().expect("should be able to build reqwest client");
-
   let client = reqwest::Client::new();
   let res = client
     .get(url)
