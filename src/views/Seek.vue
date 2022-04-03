@@ -93,23 +93,6 @@
                             <delete />
                         </el-icon>-->
 
-                        <!-- 最丑的按钮 方案三 -->
-                        <!-- <el-button
-                            @click="start"
-                            color="#C7415B"
-                            type="danger"
-                            :disabled="pool.delLoading || pool.isRunning()"
-                        >开始检索</el-button>
-                        <el-button
-                            @click="stop"
-                            color="#C7415B"
-                            type="danger"
-                            :loading="pool.delLoading"
-                            :disabled="!pool.isRunning()"
-                        >停止检索</el-button>
-
-                        <el-button @click="getSeekSmov" color="#C7415B" type="danger">重载数据</el-button>
-                        <el-button @click="removeAll" color="#C7415B" type="danger">雁过不留痕风过不留声</el-button>-->
                     </div>
 
                     <div class="filtersDiv">
