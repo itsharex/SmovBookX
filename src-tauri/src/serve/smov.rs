@@ -12,7 +12,6 @@ use std::{
   fs::File,
   io::{Read, Write},
 };
-use tracing::info;
 lazy_static! {
   static ref VEC: Vec<u8> = vec![0x18u8, 0x11u8];
   static ref HEADER: HeaderMap = {
@@ -317,7 +316,7 @@ async fn sava_pic(
     path.as_os_str().to_str().unwrap_or_else(|| "none")
   );
 
-  info!(target: "frontend_log",message = msg.as_str());
+  tracing::info!(target: "frontend_log",message = msg.as_str());
 
   let res = client
     .get(url)

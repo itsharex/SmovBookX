@@ -16,8 +16,7 @@ use serde_json::Map;
 use serde_json::Value;
 use tauri::command;
 use tauri::Manager;
-use tauri::Window;
-use tracing::info;
+use tauri::Window; 
 
 //检索新文件到数据库
 #[command]
@@ -35,14 +34,14 @@ pub async fn retrieve_data(retrieving_smov: RetrievingSmov) -> Response<Option<i
     .name(String::from(&retrieving_smov.seek_name))
     .spawn(move || {
       let msg = format!("开始检索{}", &retrieving_smov.seek_name);
-      info!(target: "frontend_log",message = msg.as_str());
+      tracing::info!(target: "frontend_log",message = msg.as_str());
       let s = tauri::async_runtime::block_on(async move {
         let a = smov::retrieve_smov(format, retrieving_smov.smov_id).await;
-        info!("{}", "线程检索结束");
+        tracing::info!("{}", "线程检索结束");
         return a;
       });
       let msg = format!("检索结束{}", &retrieving_smov.seek_name);
-      info!(target: "frontend_log",message = msg.as_str());
+      tracing::info!(target: "frontend_log",message = msg.as_str());
       return s;
     }) {
     Ok(res) => res,
@@ -246,3 +245,5 @@ pub async fn get_setting_data() -> Response<Option<Map<String, Value>>> {
 
   Response::new(200, Some(inner_map), "设置信息获取成功")
 }
+
+

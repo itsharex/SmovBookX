@@ -1,18 +1,20 @@
 <template>
     <div>
-        <el-button type="danger" @click="test1">cs</el-button>
+        <!-- <el-button type="danger" @click="test1">cs</el-button>
         <el-button type="danger" @click="test2">csss</el-button>
         <el-button type="danger" @click="test3">文件检索测试</el-button>
         <el-button type="danger" @click="test4">即时渲染测试</el-button>
         <el-button type="danger" @click="test5">打开界面测试</el-button>
-        <el-button type="danger" @click="test6">后台新建界面测试</el-button>
+        <el-button type="danger" @click="test6">后台新建界面测试</el-button>-->
 
-        <el-icon v-if="show" @click="show = !show">
+        <el-button type="danger" @click="test7">测试打开web服务器</el-button>
+
+        <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
         <el-icon v-if="!show" @click="show = !show">
             <component :is="Box"></component>
-        </el-icon>
+        </el-icon>-->
 
         <router-view></router-view>
     </div>
@@ -117,7 +119,9 @@ export default defineComponent({
         }
 
         const test7 = () => {
-
+            request("rocket_main").then((res: any) => {
+                console.log(res)
+            })
         }
 
 
@@ -148,7 +152,8 @@ export default defineComponent({
             src,
             Bowl,
             Box,
-            show
+            show,
+            test7
         }
     }
 })

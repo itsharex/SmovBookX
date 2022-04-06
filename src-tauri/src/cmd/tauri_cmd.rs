@@ -3,7 +3,6 @@ use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::mpsc::channel;
-use tracing::info;
 use window_shadows::set_shadow;
 use window_vibrancy::{
   apply_acrylic, apply_blur, apply_mica, clear_acrylic, clear_blur, clear_mica,
@@ -109,7 +108,7 @@ pub fn pathbuf_to_string(pathbuf: PathBuf) -> MaybeString {
 //测试
 #[command]
 pub fn test() {
-  info!(target: "frontend_log",message = "test msg" );
+  tracing::info!(target: "frontend_log",message = "test msg" );
 }
 
 ///这里到时候要做数据库式的配置修改 定位位置后修改那个位置的数据 需要改bug 这里有一步锁死了

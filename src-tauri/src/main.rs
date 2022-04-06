@@ -6,12 +6,16 @@
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate rocket;
+
 mod app;
 mod cmd;
 mod model;
 mod response;
 mod serve;
 mod util;
+mod hfs;
 
 #[tokio::main]
 async fn main() {
@@ -63,6 +67,7 @@ async fn main() {
       cmd::tauri_cmd::set_focus,
       cmd::tauri_cmd::create_new_window,
       cmd::tauri_cmd::set_style,
+      hfs::hfs::rocket_main
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");
