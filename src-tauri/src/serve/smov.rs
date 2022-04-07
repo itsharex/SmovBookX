@@ -4,7 +4,7 @@ extern crate reqwest;
 
 use crate::model::smov::SmovSeek;
 use crate::serve::file::TidySmov;
-use kuchiki::traits::*;
+use kuchiki::{traits::*, NodeData, NodeDataRef, NodeRef};
 use reqwest::header::HeaderMap;
 use reqwest::Client;
 use std::path::PathBuf;
@@ -91,9 +91,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
 
         let img_to_path = match s.tidy().await {
           Ok(n) => n,
-          Err(err) => {
-            return Err(err)
-          } ,
+          Err(err) => return Err(err),
         };
 
         let a = video_item.select("a").unwrap().next_back().unwrap();
@@ -231,13 +229,21 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
               smov_seek.tags.push(s);
             }
           } else if type_flag.eq("演員:") {
+            //有逻辑问题 可能会出现 女演员在后面的情况
+            //获取所有链接
             let mut actors = detail_m.select("a").unwrap();
-            let actors_size = detail_m.select(".female").unwrap().count();
-            let mut i = 0;
-            while i != actors_size {
-              let s = actors.next().unwrap().text_contents();
-              smov_seek.actors.push(s);
-              i += 1;
+            //获取所有标记
+            let actors_flag = detail_m.select(".symbol").unwrap(); //.count();//female
+
+            for symbol in actors_flag {
+              let symbol = symbol.as_node();
+              if has_class(&symbol, "female") {
+                smov_seek
+                  .actors
+                  .push(actors.next().unwrap().text_contents());
+              } else {
+                actors.next();
+              }
             }
           }
         }
@@ -336,4 +342,19 @@ async fn sava_pic(
   file.write_all(&data.unwrap())?;
 
   Ok(())
+}
+
+pub fn has_class(el: &NodeRef, class: &str) -> bool {
+  let data = match el.data() {
+    NodeData::Element(data) => data,
+    _ => return false,
+  };
+
+  let attributes = data.attributes.borrow();
+
+  if let Some(class_attr) = attributes.get("class") {
+    class_attr.split_whitespace().any(|piece| piece == class)
+  } else {
+    false
+  }
 }
