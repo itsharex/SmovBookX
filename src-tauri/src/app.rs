@@ -9,7 +9,10 @@ use rocket::{
   log::LogLevel,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, net::IpAddr};
+use std::{
+  collections::HashMap,
+  net::{IpAddr, Ipv4Addr},
+};
 use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
@@ -551,20 +554,6 @@ pub async fn listen_single(window: Window) {
     });
 }
 
-#[derive(Deserialize, Serialize)]
-struct HfsConfig {
-  pub address: IpAddr,
-  pub port: u16,
-  pub workers: usize,
-  pub keep_alive: u32,
-  pub limits: Limits,
-  pub ident: Ident,
-  pub temp_dir: PathBuf,
-  pub log_level: LogLevel,
-  pub shutdown: Shutdown,
-  pub cli_colors: bool,
-}
-
 ///开发环境
 #[cfg(debug_assertions)]
 pub fn init_hfs() {
@@ -575,36 +564,82 @@ pub fn init_hfs() {
   };
   let conf = app_path.join("hfs_debug.toml");
 
-  File::open(conf).unwrap().read_to_string(buf)
+  // let hfs = Ipv4Addr::new(127, 0, 0, 1);
+  // let hfs = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
 
-  if !conf.exists() {
-    if let Ok(_) = File::create(&conf) {
-      //       let hfs_config_str = r#"[default]
-      //       address = "127.0.0.1"
-      //       port = 8000
-      //       workers = 16
-      //       keep_alive = 5
-      //       ident = "Rocket"
-      //       log_level = "normal"
-      //       temp_dir = ""
-      //       cli_colors = true
+  // let str = toml::to_string(&hfs).unwrap();
 
-      //       [default.shutdown]
-      //       ctrlc = true
-      //       signals = ["term", "hup"]
-      //       grace = 5
-      //       mercy = 5
-      // "#;
-      //       let hfs_config: HfsConfig = toml::from_str(hfs_config_str).unwrap();
-      let hfs_config: HfsConfig = toml::from_str.unwrap();
-      //写入一个数据
-      // let a = rocket::Config::default();
-      // let text = toml::to_string(&a).expect("ceshi");
-      // println!("{:?}", text);
-      //let c = toml::to_string(&a).unwrap();
-      write(&conf, hfs_config_str).unwrap();
-    }
-  }
+  // println!("{}",str);
+  #[derive(Deserialize, Serialize, Debug)]
+  pub struct HfsConfig {
+    pub address: IpAddr,
+    pub port: u16,
+    pub workers: usize,
+    pub keep_alive: u32,
+    pub cli_colors: bool,
+    pub ident: Ident,
+    pub temp_dir: PathBuf,
+    pub log_level: LogLevel,
+    pub limits: Limits,
+    pub shutdown: Shutdown,
+  };
+  let mut str_val = String::new();
+
+  File::open(conf)
+    .unwrap()
+    .read_to_string(&mut str_val)
+    .unwrap();
+
+  //方案一 自定义一个类型写入
+  let sss: Value = toml::from_str(&str_val).unwrap();
+
+  let sss = sss.as_table().unwrap().get("default").unwrap();
+
+  let sss: HfsConfig = sss.clone().try_into().unwrap();
+
+  println!("{:?}", sss);
+
+  //方案二 获取默认值序列化 将序列化后的值 转化为默认的
+  let config = Config::default();
+  // let config = config.data().unwrap(); 未确定是否会出现丢数据的情况
+  let config = toml::Value::try_from(&config).unwrap();
+  let config = toml::to_string(&config).unwrap();
+  println!("{:?}", config);
+
+  // if !conf.exists() {
+  //   if let Ok(_) = File::create(&conf) {
+  //     //       let hfs_config_str = r#"[default]
+  //     //       address = "127.0.0.1"
+  //     //       port = 8000
+  //     //       workers = 16
+  //     //       keep_alive = 5
+  //     //       ident = "Rocket"
+  //     //       log_level = "normal"
+  //     //       temp_dir = ""
+  //     //       cli_colors = true
+
+  //     //       [default.shutdown]
+  //     //       ctrlc = true
+  //     //       signals = ["term", "hup"]
+  //     //       grace = 5
+  //     //       mercy = 5
+  //     // "#;
+  //     //       let hfs_config: HfsConfig = toml::from_str(hfs_config_str).unwrap();
+  //     // let hfs_config: HfsConfig = toml::from_str.unwrap();
+  //     //写入一个数据
+  //     // let a = rocket::Config::default();
+  //     // let text = toml::to_string(&a).expect("ceshi");
+  //     // println!("{:?}", text);
+  //     //let c = toml::to_string(&a).unwrap();
+  //     // write(&conf, hfs_config_str).unwrap();
+  //   }
+  // }
+
+  use std::net::Ipv4Addr;
+
+  use rocket::{figment::Provider, Config};
+  use serde::Deserializer;
+  use toml::Spanned;
 }
 
 ///生产环境
