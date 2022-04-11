@@ -20,7 +20,7 @@ mod hfs;
 #[tokio::main]
 async fn main() {
   app::lock_single();
-
+  app::init_hfs();
   let _app = tauri::Builder::default()
     .setup(|_app| {
       if cfg!(target_os = "windows") {

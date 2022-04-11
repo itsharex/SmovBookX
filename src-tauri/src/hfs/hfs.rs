@@ -67,7 +67,7 @@ fn rocket() -> Rocket<Build> {
   //在app中定义一个config 在new前先创建一个文件 然后再读取 default()
   let figment = rocket::Config::figment()
     .merge(("port", 1111))
-    .merge(("limits", Limits::new().limit("json", 2.mebibytes())));
+    .merge(("limits", Limits::new().limit("json", 2.mebibytes())));  //merge 合并到参数
 
   let figment = Figment::from(rocket::Config::default())  //由默认配置生成
     .merge(Serialized::defaults(Config::default())) //序列化 默认生成

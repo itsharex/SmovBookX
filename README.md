@@ -84,3 +84,29 @@ hfs功能
   当我请求后台启动服务器时 这个任务貌似会一直处于一个阻塞的状态 应为他应当返回一个结果
 
   文件服务器的返回 应该都是要做多次返回的类型！！ 不能用单次返回 会有问题 可能会有侦测不到的问题
+
+  是否需要两个文件？ 好像只设置一个文件就可以了 反正可以自定义
+
+
+
+[default]
+address = "127.0.0.1"
+port = 8000
+workers = 16
+keep_alive = 5
+ident = "Rocket"
+log_level = "normal"
+temp_dir = ""
+cli_colors = true
+
+[default.limits]
+forms = "64 kB"
+json = "1 MiB"
+msgpack = "2 MiB"
+"file/jpg" = "5 MiB"
+
+[default.shutdown]
+ctrlc = true
+signals = ["term", "hup"]
+grace = 5
+mercy = 5

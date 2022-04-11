@@ -3,8 +3,13 @@
 > 配置初始化等
  */
 use parking_lot::Mutex;
+use rocket::{
+  config::{Ident, Shutdown},
+  data::Limits,
+  log::LogLevel,
+};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, net::IpAddr};
 use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
@@ -257,7 +262,7 @@ pub struct App {
   pub msg: String,
 }
 
-#[derive(Deserialize, Serialize,Clone)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Conf {
   pub tidy_folder: PathBuf,
   pub thread: i64, //检索线程数
@@ -544,4 +549,81 @@ pub async fn listen_single(window: Window) {
         };
       }
     });
+}
+
+#[derive(Deserialize, Serialize)]
+struct HfsConfig {
+  pub address: IpAddr,
+  pub port: u16,
+  pub workers: usize,
+  pub keep_alive: u32,
+  pub limits: Limits,
+  pub ident: Ident,
+  pub temp_dir: PathBuf,
+  pub log_level: LogLevel,
+  pub shutdown: Shutdown,
+  pub cli_colors: bool,
+}
+
+///开发环境
+#[cfg(debug_assertions)]
+pub fn init_hfs() {
+  let cfg = tauri::Config::default();
+  let app_path = match tauri::api::path::app_dir(&cfg) {
+    None => PathBuf::new(),
+    Some(p) => p.join("smovbook"),
+  };
+  let conf = app_path.join("hfs_debug.toml");
+
+  File::open(conf).unwrap().read_to_string(buf)
+
+  if !conf.exists() {
+    if let Ok(_) = File::create(&conf) {
+      //       let hfs_config_str = r#"[default]
+      //       address = "127.0.0.1"
+      //       port = 8000
+      //       workers = 16
+      //       keep_alive = 5
+      //       ident = "Rocket"
+      //       log_level = "normal"
+      //       temp_dir = ""
+      //       cli_colors = true
+
+      //       [default.shutdown]
+      //       ctrlc = true
+      //       signals = ["term", "hup"]
+      //       grace = 5
+      //       mercy = 5
+      // "#;
+      //       let hfs_config: HfsConfig = toml::from_str(hfs_config_str).unwrap();
+      let hfs_config: HfsConfig = toml::from_str.unwrap();
+      //写入一个数据
+      // let a = rocket::Config::default();
+      // let text = toml::to_string(&a).expect("ceshi");
+      // println!("{:?}", text);
+      //let c = toml::to_string(&a).unwrap();
+      write(&conf, hfs_config_str).unwrap();
+    }
+  }
+}
+
+///生产环境
+#[cfg(not(debug_assertions))]
+pub fn init_hfs() {
+  let cfg = tauri::Config::default();
+  let app_path = match tauri::api::path::app_dir(&cfg) {
+    None => PathBuf::new(),
+    Some(p) => p.join("smovbook"),
+  };
+  let conf = app_path.join("hfs.toml");
+
+  if !conf.exists() {
+    if let Ok(_) = File::create(&conf) {
+      //写入一个数据
+      let a = rocket::Config::default();
+
+      let c = toml::to_string(&a).unwrap();
+      write(&conf, c).unwrap();
+    }
+  }
 }
