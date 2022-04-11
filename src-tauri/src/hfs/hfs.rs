@@ -1,11 +1,14 @@
 use core::fmt;
 use std::thread;
 
+use rocket::data::{Limits, ToByteUnit};
 use rocket::error::ErrorKind;
+use rocket::figment::{Figment, Profile};
+use rocket::figment::providers::{Serialized, Toml, Env, Format};
 use rocket::http::Status;
 use rocket::response::{content, status};
 use rocket::yansi::Paint;
-use rocket::{Build, Error, Request, Rocket, Shutdown};
+use rocket::{Build, Error, Request, Rocket, Shutdown, Config};
 use tauri::command;
 
 use crate::response::response::Response;
@@ -57,17 +60,27 @@ fn unmanaged(_u8: &rocket::State<u8>, _string: &rocket::State<String>) {}
 
 #[get("/stop")]
 pub async fn stop(shutdown: Shutdown) {
-    shutdown.notify()
+  shutdown.notify()
 }
 
 fn rocket() -> Rocket<Build> {
-  rocket::build()
+  //在app中定义一个config 在new前先创建一个文件 然后再读取 default()
+  let figment = rocket::Config::figment()
+    .merge(("port", 1111))
+    .merge(("limits", Limits::new().limit("json", 2.mebibytes())));
+
+  let figment = Figment::from(rocket::Config::default())  //由默认配置生成
+    .merge(Serialized::defaults(Config::default())) //序列化 默认生成
+    .merge(Toml::file("App.toml").nested())  //由toml自动生成
+    .merge(Env::prefixed("APP_").global()) //由全局变量生成 貌似是 rustfmt的那个文件自动生成
+    .select(Profile::from_env_or("APP_PROFILE", "default"));
+
+  rocket::custom(figment)
     .mount("/", routes![hello, forced_error])
     .register("/", catchers![general_not_found, default_catcher])
     .register("/hello", catchers![hello_not_found])
     .register("/hello/Sergio", catchers![sergio_error])
     .mount("/", routes![stop])
-    
 }
 
 #[command]
@@ -81,7 +94,7 @@ pub async fn rocket_main() -> Response<Option<i32>> {
         if let Err(e) = rocket().launch().await {
           drop(e);
         };
-      }); 
+      });
     })
     .unwrap();
 
@@ -95,8 +108,8 @@ pub async fn rocket_main() -> Response<Option<i32>> {
 }
 
 async fn request_shutdown() {
-    std::thread::sleep(std::time::Duration::from_millis(200));
-    let _ = reqwest::get(format!("http://127.0.0.1:{}/stop", 4000)).await;
+  std::thread::sleep(std::time::Duration::from_millis(200));
+  let _ = reqwest::get(format!("http://127.0.0.1:{}/stop", 4000)).await;
 }
 
 #[command]
