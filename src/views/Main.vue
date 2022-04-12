@@ -36,6 +36,7 @@ import 'element-plus/es/components/loading/style/css'
 import { checkUpdate, installUpdate } from '@tauri-apps/api/updater';
 import { relaunch } from '@tauri-apps/api/process';
 import { StarFilled } from '@element-plus/icons-vue';
+import { request } from '../util/invoke';
 const log = false;
 
 const Updater: any = ref({})
@@ -44,6 +45,8 @@ const UpdatePopover = ref({
   Loading: false,
   show: false
 });
+
+
 
 </script>
 

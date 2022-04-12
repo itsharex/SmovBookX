@@ -450,6 +450,7 @@ pub fn lock_single() {
   unsafe {
     let _ = OpenMutexW(0, true, "SmovBook@leri");
     let WIN32_ERROR(code) = GetLastError();
+    println!("{}", code);
     if code == 2 {
       // 创建锁
       let _ = CreateMutexW(null(), true, "SmovBook@leri");
@@ -502,16 +503,22 @@ pub fn init_app_shadows(app: &mut tauri::App<Wry>) {
   };
 }
 
-/// 发送拉起请求
+/// 发送拉起请求  拉起请求有问题 要修改 主要是 获取焦点的问题
 fn send_wake_up() {
-  tauri::async_runtime::block_on(async {
-    let res = UdpSocket::bind("127.0.0.1:24253").await.unwrap();
-    let mut data = [0u8; 16];
-    for i in 0..16 {
-      data[i] = 1 as u8
-    }
-    res.send_to(&data, "127.0.0.1:24254").await.unwrap();
-  });
+  let _ = thread::Builder::new()
+    .name(String::from("send_wake_up"))
+    .spawn(move || {
+      let _s = tauri::async_runtime::block_on(async move {
+        let res = UdpSocket::bind("127.0.0.1:24253").await.unwrap();
+        let mut data = [0u8; 16];
+        for i in 0..16 {
+          data[i] = 1 as u8
+        }
+        res.send_to(&data, "127.0.0.1:24254").await.unwrap();
+      });
+    })
+    .unwrap()
+    .join();
 }
 #[cfg(target_os = "windows")]
 fn open_reg_key() -> std::io::Result<()> {
@@ -565,19 +572,18 @@ pub async fn listen_single(window: Window) {
       loop {
         let mut buf = [0; 32];
         let (size, _) = socket.recv_from(&mut buf).await.expect("出现错误");
-        if size != 16 {
-          return Ok(());
-        };
-        // check status
-        let mut status = true;
-        for item in &buf[0..size] {
-          if *item as i32 != 1 {
-            status = false;
-            break;
+        if size == 16 {
+          // check status
+          let mut status = true;
+          for item in &buf[0..size] {
+            if *item as i32 != 1 {
+              status = false;
+              break;
+            }
           }
-        }
-        if status {
-          let _ = window.emit_all("main_single", "");
+          if status {
+            let _ = window.emit_all("main_single", "");
+          };
         };
       }
     });

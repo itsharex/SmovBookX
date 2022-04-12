@@ -4,8 +4,11 @@ import { request } from './util/invoke';
 
 let label = getCurrent().label;
 
+if (label == "main") {
+    !(async () => await request("listen_single"))()
+}
+
 !(async () => await listen(label + '_single', (event) => {
-    console.log("aaaa")
     let current = getCurrent()
     current.unminimize()
     current.setAlwaysOnTop(true)
@@ -24,6 +27,7 @@ document.addEventListener('dragstart', (event) => {
     event.preventDefault();
 }, false);
 
-!(async () => await request("listen_single"))()
+
+
 
 
