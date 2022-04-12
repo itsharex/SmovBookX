@@ -9,6 +9,8 @@
 
         <el-button type="danger" @click="test7">测试打开web服务器</el-button>
 
+        <el-button type="danger" @click="test8">测试关闭web服务器</el-button>
+
         <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -124,6 +126,12 @@ export default defineComponent({
             })
         }
 
+        const test8 = () => {
+            request("request_shutdown").then((res: any) => {
+                console.log(res)
+            })
+        }
+
 
 
         const test5 = async () => {
@@ -153,7 +161,8 @@ export default defineComponent({
             Bowl,
             Box,
             show,
-            test7
+            test7,
+            test8
         }
     }
 })

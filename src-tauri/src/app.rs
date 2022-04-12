@@ -3,16 +3,9 @@
 > 配置初始化等
  */
 use parking_lot::Mutex;
-use rocket::{
-  config::{Ident, Shutdown},
-  data::Limits,
-  log::LogLevel,
-};
+use rocket::Config;
 use serde::{Deserialize, Serialize};
-use std::{
-  collections::HashMap,
-  net::{IpAddr, Ipv4Addr},
-};
+use std::collections::HashMap;
 use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
@@ -58,6 +51,7 @@ use tracing_subscriber::{
 
 lazy_static! {
   pub static ref APP: Mutex<App> = Mutex::new(App::new());
+  pub static ref HFSCONFIG: Mutex<HfsConfig> = Mutex::new(HfsConfig::new());
 }
 
 struct JsonVisitor<'a>(&'a mut BTreeMap<String, serde_json::Value>);
@@ -266,6 +260,12 @@ pub struct App {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+pub struct HfsConfig {
+  pub config: Config,
+  pub runing: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Conf {
   pub tidy_folder: PathBuf,
   pub thread: i64, //检索线程数
@@ -284,7 +284,7 @@ impl App {
     };
     match tauri::api::path::app_dir(&cfg) {
       None => app.app_dir = PathBuf::new(),
-      Some(p) => app.app_dir = p.join("smovbook"),
+      Some(p) => app.app_dir = p.join("SmovBook"),
     };
 
     //此时文件可能不存在 调用一次app new 在懒加载不能做这个处理，，
@@ -311,6 +311,35 @@ impl App {
   }
 }
 
+impl HfsConfig {
+  pub fn new() -> HfsConfig {
+    let cfg = tauri::Config::default();
+    let app_path = match tauri::api::path::app_dir(&cfg) {
+      None => PathBuf::new(),
+      Some(p) => p.join("SmovBook"),
+    };
+    let conf = app_path.join("hfs.toml");
+    let mut str_val = String::new();
+
+    File::open(conf)
+      .unwrap()
+      .read_to_string(&mut str_val)
+      .unwrap();
+
+    let config: Value = toml::from_str(&str_val).unwrap();
+
+    let config = config.as_table().unwrap().get("default").unwrap();
+
+    let config: Config = config.clone().try_into().unwrap();
+
+    let hfs_config = HfsConfig {
+      config,
+      runing: false,
+    };
+
+    hfs_config
+  }
+}
 /// 创建任务栏图标
 #[cfg(target_os = "windows")]
 pub fn create_try() -> SystemTray {
@@ -555,110 +584,31 @@ pub async fn listen_single(window: Window) {
 }
 
 ///开发环境
-#[cfg(debug_assertions)]
-pub fn init_hfs() {
+//#[cfg(debug_assertions)] #[cfg(not(debug_assertions))] 环境配置
+pub fn init_hfs() -> bool {
   let cfg = tauri::Config::default();
   let app_path = match tauri::api::path::app_dir(&cfg) {
     None => PathBuf::new(),
-    Some(p) => p.join("smovbook"),
-  };
-  let conf = app_path.join("hfs_debug.toml");
-
-  // let hfs = Ipv4Addr::new(127, 0, 0, 1);
-  // let hfs = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
-
-  // let str = toml::to_string(&hfs).unwrap();
-
-  // println!("{}",str);
-  #[derive(Deserialize, Serialize, Debug)]
-  pub struct HfsConfig {
-    pub address: IpAddr,
-    pub port: u16,
-    pub workers: usize,
-    pub keep_alive: u32,
-    pub cli_colors: bool,
-    pub ident: Ident,
-    pub temp_dir: PathBuf,
-    pub log_level: LogLevel,
-    pub limits: Limits,
-    pub shutdown: Shutdown,
-  };
-  let mut str_val = String::new();
-
-  File::open(conf)
-    .unwrap()
-    .read_to_string(&mut str_val)
-    .unwrap();
-
-  //方案一 自定义一个类型写入
-  let sss: Value = toml::from_str(&str_val).unwrap();
-
-  let sss = sss.as_table().unwrap().get("default").unwrap();
-
-  let sss: HfsConfig = sss.clone().try_into().unwrap();
-
-  println!("{:?}", sss);
-
-  //方案二 获取默认值序列化 将序列化后的值 转化为默认的
-  let config = Config::default();
-  // let config = config.data().unwrap(); 未确定是否会出现丢数据的情况
-  let config = toml::Value::try_from(&config).unwrap();
-  let config = toml::to_string(&config).unwrap();
-  println!("{:?}", config);
-
-  // if !conf.exists() {
-  //   if let Ok(_) = File::create(&conf) {
-  //     //       let hfs_config_str = r#"[default]
-  //     //       address = "127.0.0.1"
-  //     //       port = 8000
-  //     //       workers = 16
-  //     //       keep_alive = 5
-  //     //       ident = "Rocket"
-  //     //       log_level = "normal"
-  //     //       temp_dir = ""
-  //     //       cli_colors = true
-
-  //     //       [default.shutdown]
-  //     //       ctrlc = true
-  //     //       signals = ["term", "hup"]
-  //     //       grace = 5
-  //     //       mercy = 5
-  //     // "#;
-  //     //       let hfs_config: HfsConfig = toml::from_str(hfs_config_str).unwrap();
-  //     // let hfs_config: HfsConfig = toml::from_str.unwrap();
-  //     //写入一个数据
-  //     // let a = rocket::Config::default();
-  //     // let text = toml::to_string(&a).expect("ceshi");
-  //     // println!("{:?}", text);
-  //     //let c = toml::to_string(&a).unwrap();
-  //     // write(&conf, hfs_config_str).unwrap();
-  //   }
-  // }
-
-  use std::net::Ipv4Addr;
-
-  use rocket::{figment::Provider, Config};
-  use serde::Deserializer;
-  use toml::Spanned;
-}
-
-///生产环境
-#[cfg(not(debug_assertions))]
-pub fn init_hfs() {
-  let cfg = tauri::Config::default();
-  let app_path = match tauri::api::path::app_dir(&cfg) {
-    None => PathBuf::new(),
-    Some(p) => p.join("smovbook"),
+    Some(p) => p.join("SmovBook"),
   };
   let conf = app_path.join("hfs.toml");
 
   if !conf.exists() {
     if let Ok(_) = File::create(&conf) {
-      //写入一个数据
-      let a = rocket::Config::default();
+      let mut config = Config::default();
+      config.temp_dir = app_path.join("hfs_temp");
+      config.ident = rocket::config::Ident::try_new("SmovBook").unwrap();
 
-      let c = toml::to_string(&a).unwrap();
-      write(&conf, c).unwrap();
+      let config = toml::Value::try_from(&config).unwrap();
+
+      let mut map = toml::map::Map::new();
+
+      map.insert("default".to_string(), config);
+
+      let config = toml::to_string(&map).unwrap();
+
+      write(&conf, config).unwrap();
     }
   }
+  true
 }

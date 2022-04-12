@@ -1,14 +1,13 @@
 use core::fmt;
 use std::thread;
 
-use rocket::data::{Limits, ToByteUnit};
 use rocket::error::ErrorKind;
-use rocket::figment::{Figment, Profile};
-use rocket::figment::providers::{Serialized, Toml, Env, Format};
+use rocket::figment::providers::{Format, Toml};
+use rocket::figment::Figment;
 use rocket::http::Status;
 use rocket::response::{content, status};
 use rocket::yansi::Paint;
-use rocket::{Build, Error, Request, Rocket, Shutdown, Config};
+use rocket::{Build, Error, Request, Rocket, Shutdown};
 use tauri::command;
 
 use crate::response::response::Response;
@@ -64,16 +63,8 @@ pub async fn stop(shutdown: Shutdown) {
 }
 
 fn rocket() -> Rocket<Build> {
-  //在app中定义一个config 在new前先创建一个文件 然后再读取 default()
-  let figment = rocket::Config::figment()
-    .merge(("port", 1111))
-    .merge(("limits", Limits::new().limit("json", 2.mebibytes())));  //merge 合并到参数
-
-  let figment = Figment::from(rocket::Config::default())  //由默认配置生成
-    .merge(Serialized::defaults(Config::default())) //序列化 默认生成
-    .merge(Toml::file("App.toml").nested())  //由toml自动生成
-    .merge(Env::prefixed("APP_").global()) //由全局变量生成 貌似是 rustfmt的那个文件自动生成
-    .select(Profile::from_env_or("APP_PROFILE", "default"));
+  let figment = Figment::from(rocket::Config::default()) //由默认配置生成
+    .merge(Toml::file(&crate::app::APP.lock().app_dir.join("hfs.toml")).nested()); //由toml自动生成
 
   rocket::custom(figment)
     .mount("/", routes![hello, forced_error])
@@ -84,37 +75,51 @@ fn rocket() -> Rocket<Build> {
 }
 
 #[command]
-pub async fn rocket_main() -> Response<Option<i32>> {
+pub async fn rocket_main() {
   //需要一个服务器是否正在运行的状态 需要随时能够停止或重启服务器 不需要服务器访问权限 需要错误返回原因
 
   let handle = thread::Builder::new()
     .name(String::from("hfs"))
     .spawn(move || {
       let _s = tauri::async_runtime::block_on(async move {
+        let config = &mut crate::app::HFSCONFIG.lock();
+        config.runing = true;
         if let Err(e) = rocket().launch().await {
+          config.runing = false;
           drop(e);
-        };
+        }
       });
     })
     .unwrap();
 
   let _handle = match handle.join() {
-    Ok(_) => return Response::new(200, Some(1), "success"),
+    Ok(_) => return,
     Err(err) => {
-      let s = err.downcast::<String>().expect("");
-      return Response::err(None, &s);
+      let _s = err.downcast::<String>().expect(""); //得到 panic 中的错误 需要控制类型 str 或 string
+      return;
     }
   };
 }
 
-async fn request_shutdown() {
+#[command]
+pub async fn request_shutdown() {
   std::thread::sleep(std::time::Duration::from_millis(200));
-  let _ = reqwest::get(format!("http://127.0.0.1:{}/stop", 4000)).await;
+  info_!("{}", "hfs.runing");
+  let hfs = &crate::app::HFSCONFIG.lock().clone();
+  info_!("{}", hfs.runing);
+  if hfs.runing {
+    let port = &crate::app::HFSCONFIG.lock().clone().config.port;
+    let _ = reqwest::get(format!("http://127.0.0.1:{}/stop", port)).await;
+    let config = &mut crate::app::HFSCONFIG.lock();
+    config.runing = false;
+    return;
+  }
 }
 
 #[command]
 pub async fn hfs_is_runing() -> Response<Option<bool>> {
-  Response::new(200, Some(true), "success")
+  let hfs = &crate::app::HFSCONFIG.lock().clone().runing;
+  Response::new(200, Some(hfs.clone()), "success")
 }
 
 fn drop(error: Error) {

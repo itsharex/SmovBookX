@@ -85,6 +85,7 @@ const setSeekFolder = (path: any) => {
 
 const initSettingData = () => {
   request("get_setting_data").then((res: any) => {
+    console.log(res);
     conf.value = res.data;
   })
 }

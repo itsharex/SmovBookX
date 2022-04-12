@@ -243,6 +243,15 @@ pub async fn get_setting_data() -> Response<Option<Map<String, Value>>> {
 
   inner_map.insert("conf".to_string(), conf);
 
+  let hfs_config = &crate::app::HFSCONFIG.lock().clone();
+
+  let hfs_config = match serde_json::to_value(hfs_config.clone()) {
+    Ok(res) => res,
+    Err(err) => return Response::new(300, None, format!("{}", err).as_str()),
+  };
+
+  inner_map.insert("hfs_config".to_string(), hfs_config);
+
   Response::new(200, Some(inner_map), "设置信息获取成功")
 }
 

@@ -11,26 +11,32 @@ extern crate rocket;
 
 mod app;
 mod cmd;
+mod hfs;
 mod model;
 mod response;
 mod serve;
 mod util;
-mod hfs;
 
 #[tokio::main]
 async fn main() {
   app::lock_single();
-  app::init_hfs();
+
   let _app = tauri::Builder::default()
     .setup(|_app| {
       if cfg!(target_os = "windows") {
         app::webview2_is_installed(_app);
       }
       if !app::init_app_dir() {
+        tracing::error!("工作目录初始化失败！");
         panic!("工作目录初始化失败！");
       }
       if !app::init_app_log(_app) {
+        tracing::error!("日志系统初始化失败！");
         panic!("日志系统初始化失败！");
+      }
+      if !app::init_hfs() {
+        tracing::error!("文件服务器配置初始化错误！");
+        panic!("文件服务器配置初始化错误！");
       }
       app::init_app_shadows(_app);
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
@@ -67,7 +73,9 @@ async fn main() {
       cmd::tauri_cmd::set_focus,
       cmd::tauri_cmd::create_new_window,
       cmd::tauri_cmd::set_style,
-      hfs::hfs::rocket_main
+      hfs::hfs::rocket_main,
+      hfs::hfs::request_shutdown,
+      hfs::hfs::hfs_is_runing
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");

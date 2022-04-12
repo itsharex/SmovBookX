@@ -4,7 +4,7 @@ extern crate reqwest;
 
 use crate::model::smov::SmovSeek;
 use crate::serve::file::TidySmov;
-use kuchiki::{traits::*, NodeData, NodeDataRef, NodeRef};
+use kuchiki::{traits::*, NodeData, NodeRef};
 use reqwest::header::HeaderMap;
 use reqwest::Client;
 use std::path::PathBuf;
