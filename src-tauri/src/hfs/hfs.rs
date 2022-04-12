@@ -1,6 +1,7 @@
 use core::fmt;
 use std::thread;
 
+use parking_lot::MutexGuard;
 use rocket::error::ErrorKind;
 use rocket::figment::providers::{Format, Toml};
 use rocket::figment::Figment;
@@ -82,10 +83,13 @@ pub async fn rocket_main() {
     .name(String::from("hfs"))
     .spawn(move || {
       let _s = tauri::async_runtime::block_on(async move {
-        let config = &mut crate::app::HFSCONFIG.lock();
+        let mut config = crate::app::HFSCONFIG.lock();
         config.runing = true;
+        MutexGuard::unlock_fair(config);
         if let Err(e) = rocket().launch().await {
+          let mut config = crate::app::HFSCONFIG.lock();
           config.runing = false;
+          MutexGuard::unlock_fair(config);
           drop(e);
         }
       });
