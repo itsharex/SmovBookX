@@ -131,6 +131,7 @@ export default defineComponent({
 
             eventSeekStatus();
             linstenUpdate();
+            eventHfsStatus();
         });
 
         //增加控制 是否自动检测版本更新
@@ -138,6 +139,12 @@ export default defineComponent({
             Updater.value = await checkUpdate();
 
             console.log(Updater.value)
+        }
+
+        const eventHfsStatus = async () => {
+            !(async () => await listen('HFS://OperatingStatus', (event: any) => {
+                console.log(event.payload);
+            }))()
         }
 
         const eventSeekStatus = async () => {

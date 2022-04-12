@@ -122,13 +122,13 @@ export default defineComponent({
 
         const test7 = () => {
             request("rocket_main").then((res: any) => {
-                console.log(res)
+          
             })
         }
 
         const test8 = () => {
             request("request_shutdown").then((res: any) => {
-                console.log(res)
+               
             })
         }
 

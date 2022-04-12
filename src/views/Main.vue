@@ -45,24 +45,6 @@ const UpdatePopover = ref({
   show: false
 });
 
-//增加控制 是否自动检测版本更新
-const linstenUpdate = async () => {
-  Updater.value = await checkUpdate();
-
-  console.log(Updater.value)
-}
-
-const install = async () => {
-  const loading = ElLoading.service({
-    lock: true,
-    text: '正在下载更新，下载完成后会自动更新',
-  })
-  await installUpdate();
-  await relaunch();
-}
-
-linstenUpdate();
-
 </script>
 
 <style lang="less">

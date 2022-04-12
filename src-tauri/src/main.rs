@@ -78,7 +78,7 @@ async fn main() {
       hfs::hfs::hfs_is_runing
     ])
     .build(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .expect("error while running tauri application");  //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息
 
   _app.run(app::handle_app_event);
 }

@@ -3,13 +3,14 @@ use std::thread;
 
 use parking_lot::MutexGuard;
 use rocket::error::ErrorKind;
+use rocket::fairing::AdHoc;
 use rocket::figment::providers::{Format, Toml};
 use rocket::figment::Figment;
 use rocket::http::Status;
 use rocket::response::{content, status};
 use rocket::yansi::Paint;
 use rocket::{Build, Error, Request, Rocket, Shutdown};
-use tauri::command;
+use tauri::{command, Window, Manager};
 
 use crate::response::response::Response;
 
@@ -76,41 +77,64 @@ fn rocket() -> Rocket<Build> {
 }
 
 #[command]
-pub async fn rocket_main() {
+pub async fn rocket_main(window: Window) {
   //需要一个服务器是否正在运行的状态 需要随时能够停止或重启服务器 不需要服务器访问权限 需要错误返回原因
+  let runing = crate::app::HFSCONFIG.lock().clone().runing;
+  let windows_th = window.get_window("main").unwrap(); 
+  if !runing  { 
+    let handle = thread::Builder::new()
+      .name(String::from("hfs"))
+      .spawn(move || {
+        let _s = tauri::async_runtime::block_on(async move {
+          if let Err(e) = rocket()
+            .attach(AdHoc::on_liftoff("Liftoff Printer", |_| {
+              Box::pin(async move {
+                let mut config = crate::app::HFSCONFIG.lock();
+                config.runing = true;
+                MutexGuard::unlock_fair(config);
+                windows_th.emit("HFS://OperatingStatus", Response::ok(Some(true), "hfs服务器开启")).unwrap();
+              })
+            }))
+            .launch()
+            .await
+          {
+            let mut config = crate::app::HFSCONFIG.lock();
+            config.runing = false;
+            MutexGuard::unlock_fair(config);
+            drop(e);
+          }
+        });
+      })
+      .unwrap();
 
-  let handle = thread::Builder::new()
-    .name(String::from("hfs"))
-    .spawn(move || {
-      let _s = tauri::async_runtime::block_on(async move {
-        let mut config = crate::app::HFSCONFIG.lock();
-        config.runing = true;
-        MutexGuard::unlock_fair(config);
-        if let Err(e) = rocket().launch().await {
-          let mut config = crate::app::HFSCONFIG.lock();
-          config.runing = false;
-          MutexGuard::unlock_fair(config);
-          drop(e);
-        }
-      });
-    })
-    .unwrap();
-
-  let _handle = match handle.join() {
-    Ok(_) => return,
-    Err(err) => {
-      let _s = err.downcast::<String>().expect(""); //得到 panic 中的错误 需要控制类型 str 或 string
-      return;
-    }
-  };
+    let _handle = match handle.join() {
+      Ok(_) => {
+        let _ = &window
+          .emit(
+            "HFS://OperatingStatus",
+            Response::ok(Some(false), "hfs服务器正常关闭"),
+          )
+          .unwrap();
+        return;
+      }
+      Err(err) => {
+        let msg = err.downcast::<String>().expect(""); //得到 panic 中的错误 需要控制类型 str 或 string
+        let _ = &window
+          .emit(
+            "HFS://OperatingStatus",
+            Response::err(Some(false), format!("hfs服务器非正常关闭:{}", msg).as_str()),
+          )
+          .unwrap();
+        return;
+      }
+    };
+  }
 }
 
 #[command]
 pub async fn request_shutdown() {
   std::thread::sleep(std::time::Duration::from_millis(200));
-  info_!("{}", "hfs.runing");
   let hfs = &crate::app::HFSCONFIG.lock().clone();
-  info_!("{}", hfs.runing);
   if hfs.runing {
     let port = &crate::app::HFSCONFIG.lock().clone().config.port;
     let _ = reqwest::get(format!("http://127.0.0.1:{}/stop", port)).await;
