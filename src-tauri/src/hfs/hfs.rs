@@ -147,11 +147,18 @@ pub async fn rocket_main(window: Window) {
         return;
       }
     };
+  } else {
+    window
+      .emit(
+        "HFS://OperatingStatus",
+        Response::ok(Some(true), "hfs服务器开启"),
+      )
+      .unwrap();
   }
 }
 
 #[command]
-pub async fn request_shutdown() {
+pub async fn request_shutdown(window: Window) {
   std::thread::sleep(std::time::Duration::from_millis(200));
   let hfs = &crate::app::HFSCONFIG.lock().clone();
   if hfs.runing {
@@ -160,6 +167,13 @@ pub async fn request_shutdown() {
     let config = &mut crate::app::HFSCONFIG.lock();
     config.runing = false;
     return;
+  } else {
+    window
+      .emit(
+        "HFS://OperatingStatus",
+        Response::ok(Some(false), "hfs服务器正常关闭"),
+      )
+      .unwrap();
   }
 }
 

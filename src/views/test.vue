@@ -38,7 +38,6 @@ import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { WebviewWindow } from '@tauri-apps/api/window';
 import { request } from '../util/invoke';
 import { Bowl, Box } from '@element-plus/icons-vue';
-import QrcodeVue from 'qrcode.vue'
 import mountContent from '../components/qrCode/qrCode'
 
 export default defineComponent({
@@ -185,8 +184,7 @@ export default defineComponent({
             test7,
             test8,
             test9,
-            qr,
-            QrcodeVue
+            qr
         }
     }
 })
