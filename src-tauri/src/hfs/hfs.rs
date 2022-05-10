@@ -6,6 +6,7 @@ use rocket::error::ErrorKind;
 use rocket::fairing::AdHoc;
 use rocket::figment::providers::{Format, Toml};
 use rocket::figment::Figment;
+use rocket::fs::FileServer;
 use rocket::http::Status;
 use rocket::response::{content, status};
 use rocket::yansi::Paint;
@@ -81,6 +82,8 @@ fn rocket() -> Rocket<Build> {
   let figment = Figment::from(rocket::Config::default()) //由默认配置生成
     .merge(Toml::file(&crate::app::APP.lock().app_dir.join("hfs.toml")).nested()); //由toml自动生成
 
+  let tidy_folder = &crate::app::APP.lock().conf.tidy_folder;
+
   rocket::custom(figment)
     .mount("/", routes![hello, forced_error])
     .register("/", catchers![general_not_found, default_catcher])
@@ -88,6 +91,7 @@ fn rocket() -> Rocket<Build> {
     .register("/hello/Sergio", catchers![sergio_error])
     .mount("/", routes![stop])
     .mount("/", routes![data])
+    .mount("/SmovStatic", FileServer::from(tidy_folder))
 }
 
 #[command]

@@ -450,7 +450,6 @@ pub fn lock_single() {
   unsafe {
     let _ = OpenMutexW(0, true, "SmovBook@leri");
     let WIN32_ERROR(code) = GetLastError();
-    println!("{}", code);
     if code == 2 {
       // 创建锁
       let _ = CreateMutexW(null(), true, "SmovBook@leri");
