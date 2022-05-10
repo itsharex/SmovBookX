@@ -172,4 +172,9 @@ pub fn set_style(effect: String, label: String, window: Window) {
   };
 }
 
+#[command]
+pub fn get_local_ip() -> Response<Option<String>>{
+  Response::ok(Some(local_ipaddress::get().unwrap()), "获取成功")
+}
+
 pub type MaybeString = Option<String>;

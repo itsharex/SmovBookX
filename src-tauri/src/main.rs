@@ -73,6 +73,7 @@ async fn main() {
       cmd::tauri_cmd::set_focus,
       cmd::tauri_cmd::create_new_window,
       cmd::tauri_cmd::set_style,
+      cmd::tauri_cmd::get_local_ip,
       hfs::hfs::rocket_main,
       hfs::hfs::request_shutdown,
       hfs::hfs::hfs_is_runing

@@ -10,8 +10,9 @@ use rocket::http::Status;
 use rocket::response::{content, status};
 use rocket::yansi::Paint;
 use rocket::{Build, Error, Request, Rocket, Shutdown};
-use tauri::{command, Window, Manager};
+use tauri::{command, Manager, Window};
 
+use crate::model::smov::Smov;
 use crate::response::response::Response;
 
 #[get("/hello/<name>/<age>")]
@@ -64,6 +65,18 @@ pub async fn stop(shutdown: Shutdown) {
   shutdown.notify()
 }
 
+#[get("/data")]
+pub async fn data() -> content::Json<String> {
+  let data = match Smov::get_all_smov() {
+    Ok(res) => Response::new(200, Some(res), "success"),
+    Err(err) => Response::new(300, None, format!("{}", err).as_str()),
+  };
+
+  let data = serde_json::to_string(&data).unwrap();
+
+  content::Json(data)
+}
+
 fn rocket() -> Rocket<Build> {
   let figment = Figment::from(rocket::Config::default()) //由默认配置生成
     .merge(Toml::file(&crate::app::APP.lock().app_dir.join("hfs.toml")).nested()); //由toml自动生成
@@ -74,14 +87,15 @@ fn rocket() -> Rocket<Build> {
     .register("/hello", catchers![hello_not_found])
     .register("/hello/Sergio", catchers![sergio_error])
     .mount("/", routes![stop])
+    .mount("/", routes![data])
 }
 
 #[command]
 pub async fn rocket_main(window: Window) {
   //需要一个服务器是否正在运行的状态 需要随时能够停止或重启服务器 不需要服务器访问权限 需要错误返回原因
   let runing = crate::app::HFSCONFIG.lock().clone().runing;
-  let windows_th = window.get_window("main").unwrap(); 
-  if !runing  { 
+  let windows_th = window.get_window("main").unwrap();
+  if !runing {
     let handle = thread::Builder::new()
       .name(String::from("hfs"))
       .spawn(move || {
@@ -92,7 +106,12 @@ pub async fn rocket_main(window: Window) {
                 let mut config = crate::app::HFSCONFIG.lock();
                 config.runing = true;
                 MutexGuard::unlock_fair(config);
-                windows_th.emit("HFS://OperatingStatus", Response::ok(Some(true), "hfs服务器开启")).unwrap();
+                windows_th
+                  .emit(
+                    "HFS://OperatingStatus",
+                    Response::ok(Some(true), "hfs服务器开启"),
+                  )
+                  .unwrap();
               })
             }))
             .launch()

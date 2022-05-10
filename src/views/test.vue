@@ -11,6 +11,10 @@
 
         <el-button type="danger" @click="test8">测试关闭web服务器</el-button>
 
+        <el-button type="danger" @click="test9">测试获取本地ip</el-button>
+
+
+
         <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -34,6 +38,8 @@ import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { WebviewWindow } from '@tauri-apps/api/window';
 import { request } from '../util/invoke';
 import { Bowl, Box } from '@element-plus/icons-vue';
+import QrcodeVue from 'qrcode.vue'
+import mountContent from '../components/qrCode/qrCode'
 
 export default defineComponent({
     setup() {
@@ -41,6 +47,8 @@ export default defineComponent({
         const router = useRouter();
 
         const show = ref(false)
+
+        const qr = ref("")
 
         const test = () => {
 
@@ -122,13 +130,22 @@ export default defineComponent({
 
         const test7 = () => {
             request("rocket_main").then((res: any) => {
-          
+
+            })
+        }
+
+        const test9 = () => {
+            request("get_local_ip").then((res: any) => {
+                console.log(res)
+                qr.value = res.data
+
+                mountContent({ title: '手机端扫描', qr: res.data +":8000" })
             })
         }
 
         const test8 = () => {
             request("request_shutdown").then((res: any) => {
-               
+
             })
         }
 
@@ -147,6 +164,10 @@ export default defineComponent({
 
         }
 
+        const qrcode = () => {
+            
+        }
+
 
 
         return {
@@ -162,7 +183,10 @@ export default defineComponent({
             Box,
             show,
             test7,
-            test8
+            test8,
+            test9,
+            qr,
+            QrcodeVue
         }
     }
 })

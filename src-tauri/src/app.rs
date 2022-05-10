@@ -5,7 +5,7 @@
 use parking_lot::Mutex;
 use rocket::Config;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, net::{IpAddr, Ipv4Addr}};
 use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
@@ -604,6 +604,7 @@ pub fn init_hfs() -> bool {
       let mut config = Config::default();
       config.temp_dir = app_path.join("hfs_temp");
       config.ident = rocket::config::Ident::try_new("SmovBook").unwrap();
+      config.address=IpAddr::V4(Ipv4Addr::new(0,0,0,0));
 
       let config = toml::Value::try_from(&config).unwrap();
 

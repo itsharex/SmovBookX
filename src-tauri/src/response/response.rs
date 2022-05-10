@@ -2,6 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize,Debug,Clone)]
+#[serde(crate = "rocket::serde")]
 pub struct Response<T> {
     code: i32,
     msg: String,
