@@ -68,14 +68,6 @@ pub async fn stop(shutdown: Shutdown) {
   shutdown.notify()
 }
 
-// #[get("/<file..>")]
-// fn videoTest(file: PathBuf) -> ByteStream![&'static [u8]] {
-//   let path = &crate::app::APP.lock().conf.tidy_folder.clone();
-//   let path = path.join("ABP-408").join("ABP-408.mp4").to_str().unwrap();
-//   // let file = std::fs::File::open(path).unwrap();
-//   include_bytes!(path)
-// }
-
 #[get("/data")]
 pub async fn data() -> content::Json<String> {
   let data = match Smov::get_all_smov() {
@@ -101,7 +93,6 @@ fn rocket() -> Rocket<Build> {
     .register("/hello/Sergio", catchers![sergio_error])
     .mount("/", routes![stop])
     .mount("/", routes![data])
-    // .mount("/test",routes![videoTest])
     .mount("/SmovStatic", FileServer::from(tidy_folder))
 }
 
