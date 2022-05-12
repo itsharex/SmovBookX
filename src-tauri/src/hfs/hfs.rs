@@ -1,5 +1,7 @@
 use core::fmt;
-use std::path::PathBuf;
+use std::borrow::Borrow;
+use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
 use std::thread;
 
 use parking_lot::MutexGuard;
@@ -7,13 +9,14 @@ use rocket::error::ErrorKind;
 use rocket::fairing::AdHoc;
 use rocket::figment::providers::{Format, Toml};
 use rocket::figment::Figment;
-use rocket::fs::FileServer;
+use rocket::fs::{FileServer, NamedFile};
+use rocket::futures::FutureExt;
 use rocket::http::Status;
-use rocket::response::stream::ByteStream;
-use rocket::response::{content, status};
+use rocket::response::{self, content, status};
 use rocket::yansi::Paint;
 use rocket::{Build, Error, Request, Rocket, Shutdown};
 use tauri::{command, Manager, Window};
+use tokio::fs::File;
 
 use crate::model::smov::Smov;
 use crate::response::response::Response;
@@ -80,6 +83,54 @@ pub async fn data() -> content::Json<String> {
   content::Json(data)
 }
 
+struct SmovVideoFile(PathBuf, String, u64, u32, NamedFile);
+
+impl SmovVideoFile {
+  pub async fn new(path: PathBuf) -> SmovVideoFile {
+    let path_buf = std::path::PathBuf::new().join(&path);
+    let file = File::open(&path_buf)
+      .await
+      .unwrap()
+      .metadata()
+      .await
+      .unwrap();
+    let named_file = NamedFile::open(path).await.unwrap();
+
+    let extension = path_buf
+      .extension()
+      .unwrap_or_else(|| &OsStr::new(""))
+      .to_str()
+      .unwrap_or_else(|| "")
+      .to_string();
+    SmovVideoFile(path_buf, extension, file.len(), 0, named_file)
+  }
+}
+
+impl<'r> rocket::response::Responder<'r, 'static> for SmovVideoFile {
+  fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+    let mut res = rocket::Response::build_from(self.4.respond_to(req)?);
+
+    if self.1 == "mp4".to_string() {
+      let _ = &res.raw_header("Cache-control", "max-age=86400");
+      let _ = &res.raw_header("Accept-Ranges", "bytes"); //  24h (24*60*60)
+    };
+
+    res.ok()
+  }
+}
+
+#[get("/resources/<file..>")]
+async fn files(file: PathBuf) -> Option<SmovVideoFile> {
+  // NamedFile::open(Path::new("resources/").join(file))
+  //   .await
+  //   .ok()
+  //   .map( |nf| SmovVideoFile::new(nf).await)
+  let path = &crate::app::APP.lock().conf.tidy_folder.clone();
+  let path = PathBuf::new().join(path).join(file);
+  let s = SmovVideoFile::new(path).await;
+  Some(s)
+}
+
 fn rocket() -> Rocket<Build> {
   let figment = Figment::from(rocket::Config::default()) //由默认配置生成
     .merge(Toml::file(&crate::app::APP.lock().app_dir.join("hfs.toml")).nested()); //由toml自动生成
@@ -93,6 +144,7 @@ fn rocket() -> Rocket<Build> {
     .register("/hello/Sergio", catchers![sergio_error])
     .mount("/", routes![stop])
     .mount("/", routes![data])
+    .mount("/", routes![files])
     .mount("/SmovStatic", FileServer::from(tidy_folder))
 }
 
