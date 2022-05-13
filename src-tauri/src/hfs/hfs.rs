@@ -1,7 +1,6 @@
 use core::fmt;
-use std::borrow::Borrow;
 use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::thread;
 
 use parking_lot::MutexGuard;
@@ -10,9 +9,9 @@ use rocket::fairing::AdHoc;
 use rocket::figment::providers::{Format, Toml};
 use rocket::figment::Figment;
 use rocket::fs::{FileServer, NamedFile};
-use rocket::futures::FutureExt;
-use rocket::http::Status;
-use rocket::response::{self, content, status};
+use rocket::http::{ContentType, Status};
+use rocket::response::content::{RawHtml, RawJson};
+use rocket::response::{self, status};
 use rocket::yansi::Paint;
 use rocket::{Build, Error, Request, Rocket, Shutdown};
 use tauri::{command, Manager, Window};
@@ -32,8 +31,8 @@ fn forced_error(code: u16) -> Status {
 }
 
 #[catch(404)]
-fn general_not_found() -> content::Html<&'static str> {
-  content::Html(
+fn general_not_found() -> RawHtml<&'static str> {
+  RawHtml(
     r#"
         <p>Hmm... What are you looking for?</p>
         Say <a href="/hello/Sergio/100">hello!</a>
@@ -42,8 +41,8 @@ fn general_not_found() -> content::Html<&'static str> {
 }
 
 #[catch(404)]
-fn hello_not_found(req: &Request<'_>) -> content::Html<String> {
-  content::Html(format!(
+fn hello_not_found(req: &Request<'_>) -> RawHtml<String> {
+  RawHtml(format!(
     "\
         <p>Sorry, but '{}' is not a valid path!</p>\
         <p>Try visiting /hello/&lt;name&gt;/&lt;age&gt; instead.</p>",
@@ -72,7 +71,7 @@ pub async fn stop(shutdown: Shutdown) {
 }
 
 #[get("/data")]
-pub async fn data() -> content::Json<String> {
+pub async fn data() -> RawJson<String> {
   let data = match Smov::get_all_smov() {
     Ok(res) => Response::new(200, Some(res), "success"),
     Err(err) => Response::new(300, None, format!("{}", err).as_str()),
@@ -80,7 +79,53 @@ pub async fn data() -> content::Json<String> {
 
   let data = serde_json::to_string(&data).unwrap();
 
-  content::Json(data)
+  RawJson(data)
+}
+
+struct SmovVideo(PathBuf, File, u64);
+
+impl SmovVideo {
+  pub async fn new(path: PathBuf) -> SmovVideo {
+    let path_tidy = &crate::app::APP.lock().conf.tidy_folder.clone();
+    let path = path_tidy.join(path);
+    let file = File::open(&path).await.unwrap();
+    let length = file.metadata().await.unwrap().len();
+    SmovVideo(path, file, length)
+  }
+}
+
+impl<'r> rocket::response::Responder<'r, 'static> for SmovVideo {
+  fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+    let mut response = rocket::Response::build();
+    let response = response.streamed_body(self.1);
+    let range = req
+      .headers()
+      .get_one("Range")
+      .unwrap_or_else(|| "0")
+      .to_string()
+      .replace("bytes=", "")
+      .replace("-", "")
+      .parse::<u64>()
+      .unwrap();
+    if let Some(ext) = self.0.extension() {
+      if let Some(ct) = ContentType::from_extension(&ext.to_string_lossy()) {
+        response.raw_header("content-type", format!("{}", ct));
+      }
+      if ext == "mp4" {
+        let content_length = format!("{}", self.2 - range);
+        let content_range = format!("bytes {}-{}/{}", range, self.2 - 1, self.2);
+        response
+          .raw_header("cache-control", "max-age=86400")
+          .raw_header("accept-ranges", "bytes")
+          .raw_header("content-length", content_length)
+          .raw_header("content-range", content_range)
+          .status(Status { code: (206) });
+          
+      }
+    }
+
+    response.ok()
+  }
 }
 
 struct SmovVideoFile(PathBuf, String, u64, u32, NamedFile);
@@ -109,10 +154,27 @@ impl SmovVideoFile {
 impl<'r> rocket::response::Responder<'r, 'static> for SmovVideoFile {
   fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
     let mut res = rocket::Response::build_from(self.4.respond_to(req)?);
+    let range = req
+      .headers()
+      .get_one("Range")
+      .unwrap_or_else(|| "0")
+      .to_string()
+      .replace("bytes=", "")
+      .replace("-", "")
+      .parse::<u64>()
+      .unwrap();
+
+    println!("{}", range);
 
     if self.1 == "mp4".to_string() {
-      let _ = &res.raw_header("Cache-control", "max-age=86400");
-      let _ = &res.raw_header("Accept-Ranges", "bytes"); //  24h (24*60*60)
+      let content_length = format!("{}", self.2 - range);
+      let content_range = format!("bytes {}-{}/{}", range, self.2 - 1, self.2);
+      let _ = &res
+        .raw_header("cache-control", "max-age=86400")
+        .raw_header("accept-ranges", "bytes")
+        .raw_header("content-length", content_length)
+        .raw_header("content-range", content_range)
+        .status(Status { code: (206) });
     };
 
     res.ok()
@@ -121,14 +183,16 @@ impl<'r> rocket::response::Responder<'r, 'static> for SmovVideoFile {
 
 #[get("/resources/<file..>")]
 async fn files(file: PathBuf) -> Option<SmovVideoFile> {
-  // NamedFile::open(Path::new("resources/").join(file))
-  //   .await
-  //   .ok()
-  //   .map( |nf| SmovVideoFile::new(nf).await)
   let path = &crate::app::APP.lock().conf.tidy_folder.clone();
   let path = PathBuf::new().join(path).join(file);
-  let s = SmovVideoFile::new(path).await;
-  Some(s)
+  Some(SmovVideoFile::new(path).await)
+}
+
+#[get("/video/<file..>")]
+async fn smov_video(file: PathBuf) -> Option<SmovVideo> {
+  let path = &crate::app::APP.lock().conf.tidy_folder.clone();
+  let path = PathBuf::new().join(path).join(file);
+  Some(SmovVideo::new(path).await)
 }
 
 fn rocket() -> Rocket<Build> {
@@ -145,6 +209,7 @@ fn rocket() -> Rocket<Build> {
     .mount("/", routes![stop])
     .mount("/", routes![data])
     .mount("/", routes![files])
+    .mount("/", routes![smov_video])
     .mount("/SmovStatic", FileServer::from(tidy_folder))
 }
 
@@ -285,11 +350,6 @@ fn drop(error: Error) {
       }
 
       panic!("aborting due to fairing failure(s)");
-    }
-    ErrorKind::Runtime(ref err) => {
-      error!("An error occurred in the runtime:");
-      info_!("{}", err);
-      panic!("aborting due to runtime failure");
     }
     ErrorKind::InsecureSecretKey(profile) => {
       error!("secrets enabled in non-debug without `secret_key`");

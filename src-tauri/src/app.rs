@@ -3,7 +3,7 @@
 > 配置初始化等
  */
 use parking_lot::Mutex;
-use rocket::Config;
+use rocket::{Config, figment::value::magic::RelativePathBuf, config::{Shutdown, Ident}, data::Limits, log::LogLevel};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::{IpAddr, Ipv4Addr}};
 use toml::Value;
@@ -261,7 +261,7 @@ pub struct App {
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct HfsConfig {
-  pub config: Config,
+  pub config: HfsConfigs,
   pub runing: bool,
 }
 
@@ -269,6 +269,30 @@ pub struct HfsConfig {
 pub struct Conf {
   pub tidy_folder: PathBuf,
   pub thread: i64, //检索线程数
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct HfsConfigs {
+
+  pub address: IpAddr,
+
+  pub port: u16,
+
+  pub workers: usize,
+
+  pub ident: Ident,
+
+  pub limits: Limits,
+
+  pub temp_dir: PathBuf,
+  
+  pub keep_alive: u32,
+
+  pub shutdown: Shutdown,
+
+  pub log_level: LogLevel,
+
+  pub cli_colors: bool
 }
 
 impl App {
@@ -330,7 +354,7 @@ impl HfsConfig {
 
     let config = config.as_table().unwrap().get("default").unwrap();
 
-    let config: Config = config.clone().try_into().unwrap();
+    let config: HfsConfigs = config.clone().try_into().unwrap();
 
     let hfs_config = HfsConfig {
       config,
@@ -601,7 +625,11 @@ pub fn init_hfs() -> bool {
   if !conf.exists() {
     if let Ok(_) = File::create(&conf) {
       let mut config = Config::default();
-      config.temp_dir = app_path.join("hfs_temp");
+      let temp_path = app_path.join("hfs_temp");
+      if !temp_path.exists(){
+        create_dir_all(temp_path).expect("创建hfs缓存文件夹错误");
+      }
+      config.temp_dir = RelativePathBuf::from(app_path.join("hfs_temp"));
       config.ident = rocket::config::Ident::try_new("SmovBook").unwrap();
       config.address=IpAddr::V4(Ipv4Addr::new(0,0,0,0));
 
