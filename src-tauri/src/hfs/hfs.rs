@@ -98,29 +98,43 @@ impl<'r> rocket::response::Responder<'r, 'static> for SmovVideo {
   fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
     let mut response = rocket::Response::build();
     let response = response.streamed_body(self.1);
-    let range = req
+    let range_header = req
       .headers()
       .get_one("Range")
-      .unwrap_or_else(|| "0")
-      .to_string()
-      .replace("bytes=", "")
-      .replace("-", "")
-      .parse::<u64>()
-      .unwrap();
+      .unwrap_or_else(|| "")
+      .to_string();
+
+    let mut range = 0;
+
+    if range_header != "" {
+      range = range_header
+        .replace("bytes=", "")
+        .replace("-", "")
+        .parse::<u64>()
+        .unwrap();
+    }
+
     if let Some(ext) = self.0.extension() {
       if let Some(ct) = ContentType::from_extension(&ext.to_string_lossy()) {
-        response.raw_header("content-type", format!("{}", ct));
+        response.raw_header("Content-Type", format!("{}", ct));
       }
       if ext == "mp4" {
-        let content_length = format!("{}", self.2 - range);
+        let content_length = match range {
+            0 => format!("{}", self.2 - range),
+            _ => format!("{}", self.2 - range + 1),
+        };
         let content_range = format!("bytes {}-{}/{}", range, self.2 - 1, self.2);
-        response
-          .raw_header("cache-control", "max-age=86400")
-          .raw_header("accept-ranges", "bytes")
-          .raw_header("content-length", content_length)
-          .raw_header("content-range", content_range)
-          .status(Status { code: (206) });
-          
+        let _ = &response
+          //.raw_header("cache-control", "max-age=86400")
+          .raw_header("Accept-Ranges", "bytes")
+          .raw_header("Content-Length", content_length)
+          .status(Status { code: (200) });
+
+        if range_header != "" {
+          let _ = &response
+            .raw_header("Content-Range", content_range)
+            .status(Status { code: (206) });
+        }
       }
     }
 
@@ -170,11 +184,18 @@ impl<'r> rocket::response::Responder<'r, 'static> for SmovVideoFile {
       let content_length = format!("{}", self.2 - range);
       let content_range = format!("bytes {}-{}/{}", range, self.2 - 1, self.2);
       let _ = &res
-        .raw_header("cache-control", "max-age=86400")
+        //.raw_header("cache-control", "max-age=86400")
         .raw_header("accept-ranges", "bytes")
-        .raw_header("content-length", content_length)
-        .raw_header("content-range", content_range)
-        .status(Status { code: (206) });
+        .raw_header("content-length", content_length);
+
+      if range > 0 {
+        println!("{}", range);
+        let _ = &res
+          .raw_header("content-range", content_range)
+          .status(Status { code: (206) });
+      } else {
+        let _ = &res.status(Status { code: (200) });
+      }
     };
 
     res.ok()
