@@ -6,9 +6,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
-extern crate rocket;
-
 mod app;
 mod cmd;
 mod hfs;
@@ -74,9 +71,8 @@ async fn main() {
       cmd::tauri_cmd::create_new_window,
       cmd::tauri_cmd::set_style,
       cmd::tauri_cmd::get_local_ip,
-      hfs::hfs::rocket_main,
-      hfs::hfs::request_shutdown,
-      hfs::hfs::hfs_is_runing
+      hfs::axum_hfs::run_hfs,
+      hfs::axum_hfs::shutdown_signal
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");  //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息

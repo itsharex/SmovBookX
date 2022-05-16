@@ -128,7 +128,7 @@ export default defineComponent({
         }
 
         const test7 = () => {
-            request("rocket_main").then((res: any) => {
+            request("run_hfs").then((res: any) => {
 
             })
         }
@@ -143,7 +143,7 @@ export default defineComponent({
         }
 
         const test8 = () => {
-            request("request_shutdown").then((res: any) => {
+            request("shutdown_signal").then((res: any) => {
 
             })
         }

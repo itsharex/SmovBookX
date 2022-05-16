@@ -3,9 +3,11 @@
 > 配置初始化等
  */
 use parking_lot::Mutex;
-use rocket::{Config, figment::value::magic::RelativePathBuf, config::{Shutdown, Ident}, data::Limits, log::LogLevel};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, net::{IpAddr, Ipv4Addr}};
+use std::{
+  collections::HashMap,
+  net::{IpAddr, Ipv4Addr},
+};
 use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
@@ -225,7 +227,7 @@ pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
     .with_filter(filter::LevelFilter::INFO);
 
   let now_log = stdout_log
-    .with_filter(filter::LevelFilter::INFO) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
+    .with_filter(filter::LevelFilter::DEBUG) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
     .and_then(debug_log)
     .with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！
@@ -273,26 +275,26 @@ pub struct Conf {
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct HfsConfigs {
-
   pub address: IpAddr,
 
   pub port: u16,
 
-  pub workers: usize,
-
-  pub ident: Ident,
-
-  pub limits: Limits,
-
   pub temp_dir: PathBuf,
-  
-  pub keep_alive: u32,
+}
 
-  pub shutdown: Shutdown,
-
-  pub log_level: LogLevel,
-
-  pub cli_colors: bool
+impl HfsConfigs {
+  pub fn default() -> HfsConfigs {
+    let cfg = tauri::Config::default();
+    let app_path = match tauri::api::path::app_dir(&cfg) {
+      None => PathBuf::new(),
+      Some(p) => p.join("SmovBook"),
+    };
+    HfsConfigs {
+      address: IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+      port: 3225,
+      temp_dir: app_path.join("hfs_temp"),
+    }
+  }
 }
 
 impl App {
@@ -624,14 +626,11 @@ pub fn init_hfs() -> bool {
 
   if !conf.exists() {
     if let Ok(_) = File::create(&conf) {
-      let mut config = Config::default();
+      let config = HfsConfigs::default();
       let temp_path = app_path.join("hfs_temp");
-      if !temp_path.exists(){
+      if !temp_path.exists() {
         create_dir_all(temp_path).expect("创建hfs缓存文件夹错误");
       }
-      config.temp_dir = RelativePathBuf::from(app_path.join("hfs_temp"));
-      config.ident = rocket::config::Ident::try_new("SmovBook").unwrap();
-      config.address=IpAddr::V4(Ipv4Addr::new(0,0,0,0));
 
       let config = toml::Value::try_from(&config).unwrap();
 
