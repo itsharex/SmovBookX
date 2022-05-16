@@ -220,10 +220,13 @@ pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
     .with_thread_names(true)
     .with_target(false)
     .with_file(false)
-    .pretty();
+    .with_line_number(false)
+    .pretty(); //美化 虽然我觉的也没美化多少
 
   let debug_log = tracing_subscriber::fmt::layer()
     .with_writer(Arc::new(file))
+    .with_ansi(false)
+    .with_file(true)
     .with_filter(filter::LevelFilter::INFO);
 
   let now_log = stdout_log
