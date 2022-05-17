@@ -35,7 +35,8 @@ pub async fn run_hfs(window: Window) {
     .unwrap();
 }
 
-//这里是否能将他定义为一个 tauri的监听 然后传输数据？ 明天实验
+//这里是否能将他定义为一个 tauri的监听 然后传输数据？ 明天实验 应该不行 妈的  
+//https://github.com/sebpuetz/axum-convenience/blob/1b3b01e24a34bfb5a49f152e0d10c9a3335dfcc8/src/app.rs 这个 实现单例后关闭这个线程
 async fn handle_error(_err: io::Error) -> impl IntoResponse {
   (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong...")
 }
