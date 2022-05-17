@@ -11,6 +11,8 @@
 
         <el-button type="danger" @click="test8">测试关闭web服务器</el-button>
 
+        <el-button type="danger" @click="test10">测试向后端发送shutdown事件</el-button>
+
         <el-button type="danger" @click="test9">测试获取本地ip</el-button>
 
 
@@ -39,6 +41,7 @@ import { WebviewWindow } from '@tauri-apps/api/window';
 import { request } from '../util/invoke';
 import { Bowl, Box } from '@element-plus/icons-vue';
 import mountContent from '../components/qrCode/qrCode'
+import { emit } from '@tauri-apps/api/event';
 
 export default defineComponent({
     setup() {
@@ -167,6 +170,10 @@ export default defineComponent({
             
         }
 
+        const test10 = () =>{
+            emit("HFS://ShutDown")
+        }
+
 
 
         return {
@@ -184,7 +191,8 @@ export default defineComponent({
             test7,
             test8,
             test9,
-            qr
+            qr,
+            test10
         }
     }
 })
