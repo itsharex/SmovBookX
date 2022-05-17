@@ -120,7 +120,7 @@ import { alert } from "../util/alert";
 export default defineComponent({
   name: "Navigation",
   props: [],
-  setup(props, { emit }) {
+  setup(props) {
     const router = useRouter();
     const back = () => {
       router.back();
@@ -245,6 +245,7 @@ export default defineComponent({
         if (HfsStatus.value == 0) {
           request("run_hfs");
         } else {
+          //当后台为关闭状态 但前台仍为启动状态会出现问题 但是问题不大 重启就好
           emit("HFS://ShutDown");
         }
 
@@ -254,7 +255,7 @@ export default defineComponent({
 
     const qrOpen = () => {
       request("get_local_ip").then((res: any) => {
-        mountContent({ title: "手机端扫描", qr: res.data + ":8000" });
+        mountContent({ title: "手机端扫描", qr: res.data });
       });
     };
 

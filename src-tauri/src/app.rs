@@ -258,6 +258,7 @@ pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
 }
 
 /// app配置map
+#[derive(Deserialize, Serialize, Clone)]
 pub struct App {
   pub app_dir: PathBuf,
   pub conf: Conf,
