@@ -1,9 +1,9 @@
-use crate::response::response::Response;
+use crate::{model::smov::Smov, response::response::Response};
 use axum::{
   http::StatusCode,
   response::IntoResponse,
   routing::{get, get_service},
-  Router,
+  Router, Json,
 };
 use parking_lot::MutexGuard;
 use std::{io, net::SocketAddr, thread};
@@ -28,7 +28,11 @@ pub async fn run_hfs(window: Window) {
   } else {
     let app: _ = Router::new()
       .route("/foo", get(|| async { "Hi from /foo" }))
-      .route("/resources",get_service(ServeDir::new(tidy_folder)).handle_error(handle_error))
+      .route(
+        "/resources",
+        get_service(ServeDir::new(tidy_folder)).handle_error(handle_error),
+      )
+      .route("/data",get(get_data))
       .fallback(get_service(ServeDir::new(tidy_folder)).handle_error(handle_error))
       .layer(TraceLayer::new_for_http());
 
@@ -204,4 +208,13 @@ async fn shutdown_signal(window: &Window) {
         }).await.unwrap();
       },
   }
+}
+
+pub async fn get_data() -> Json<Response<Option<Vec<Smov>>>> {
+  let data = match Smov::get_all_smov() {
+    Ok(res) => Response::new(200, Some(res), "success"),
+    Err(err) => Response::new(300, None, format!("{}", err).as_str()),
+  };
+
+  Json(data)
 }
