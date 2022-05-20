@@ -13,6 +13,7 @@ mod model;
 mod response;
 mod serve;
 mod util;
+mod crawler;
 
 #[tokio::main]
 async fn main() {
