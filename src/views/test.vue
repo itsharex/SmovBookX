@@ -17,6 +17,8 @@
 
     <el-button type="danger" @click="test9">测试获取本地ip</el-button>
 
+    <el-button type="danger" @click="test11">爬虫序列化测试</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -90,12 +92,6 @@ export default defineComponent({
     };
 
     const test3 = () => {
-      // readDir("E:\\ccccc\\zl\\SSNI-107\\img").then( //只能打开 几个基础文件夹的文件 不然不让打开 放弃这个地方了
-      //     (res: any) => {
-      //         console.log(res)
-      //     }
-      // )
-
       const assetUrl = convertFileSrc(
         "E:\\ccccc\\zl\\SSNI-107\\img\\thumbs_SSNI-107.jpg"
       );
@@ -170,8 +166,12 @@ export default defineComponent({
 
     const test10 = () => {
       emit("HFS://ShutDown").then((res) => {
-          console.log(res)
+        console.log(res);
       });
+    };
+
+    const test11 = async () => {
+      await request("exec_test");
     };
 
     return {
@@ -191,6 +191,7 @@ export default defineComponent({
       test9,
       qr,
       test10,
+      test11
     };
   },
 });
