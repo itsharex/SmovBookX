@@ -19,6 +19,8 @@
 
     <el-button type="danger" @click="test11">爬虫序列化测试</el-button>
 
+    <el-button type="danger" @click="test12">爬虫反序列化测试</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -171,7 +173,11 @@ export default defineComponent({
     };
 
     const test11 = async () => {
-      await request("exec_test");
+      await request("generate");
+    };
+
+    const test12 = async () => {
+      await request("execute");
     };
 
     return {
@@ -191,7 +197,8 @@ export default defineComponent({
       test9,
       qr,
       test10,
-      test11
+      test11,
+      test12
     };
   },
 });
