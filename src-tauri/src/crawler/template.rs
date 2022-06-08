@@ -4,6 +4,14 @@ use std::collections::BinaryHeap;
 use std::fs::File;
 use std::io::Read;
 
+#[derive(Clone, Deserialize, Serialize, Debug)]
+//类型
+pub struct Temp {
+  pub url: String,
+  pub version: u8,
+  pub cr_tmp: BinaryHeap<CrTmp>,
+}
+
 #[derive(Clone, Deserialize, Serialize, PartialEq, Eq, Ord, PartialOrd, Debug)]
 //代表这个节点下 获取多少数据 无限递归
 pub struct CrTmp {
@@ -46,6 +54,7 @@ pub enum Corres {
 
 impl CrTmp {
   pub fn new() -> BinaryHeap<CrTmp> {
+    //判断是否存在文件 当文件不存在时 拉取文件 当文件存在时直接获取文件中的数据
 
     let path = &crate::app::APP.lock().clone().app_dir.join("model.json");
 
@@ -66,10 +75,32 @@ impl CrTmp {
   }
 }
 
+impl Temp {
+  pub fn new() -> Temp {
+    let path = &crate::app::APP.lock().clone().app_dir.join("model.json");
+
+    let mut file = match File::open(&path) {
+      Ok(f) => f,
+      Err(e) => panic!("no such file {} exception:{}", path.to_str().unwrap(), e),
+    };
+
+    let mut str_val = String::new();
+    match file.read_to_string(&mut str_val) {
+      Ok(s) => s,
+      Err(e) => panic!("Error Reading file: {}", e),
+    };
+
+    let heap: Temp = serde_json::from_str(&str_val).unwrap();
+
+    heap
+  }
+}
+
 impl Obj {
   ///根据名称类型 获取数据
   pub fn get_data(self: &Self, node_ref: &NodeRef) -> Option<String> {
-    let node_ref = node_ref.select(&self.name).unwrap().next_back().unwrap();
+    let node_ref = node_ref.select(&self.name).unwrap().next_back().unwrap(); 
+    //不能next_back 应该遍历这些 元素 然后返回需要的数据 虽然对于一个元素下有多个元素的项目会出现复杂度加倍的情况 但是数据量其实不大 还好
 
     match &self.have_class {
       Some(class) => {
@@ -89,27 +120,9 @@ impl Obj {
           None
         }
       }
+      //none下也需要对获取数据做多个判断
       None => Some(node_ref.text_contents()),
     }
-
-    // if self.have_class.is_some() {
-    //   if has_class(node_ref.as_node(), self.have_class.as_str()) {
-    //     match &self.att {
-    //       Att::Text() => Some(node_ref.text_contents()),
-    //       Att::Attributes(local_name) => Some(
-    //         node_ref
-    //           .attributes
-    //           .borrow()
-    //           .get(local_name.clone())
-    //           .unwrap()
-    //           .to_string(),
-    //       ),
-    //     }
-    //   } else {
-    //     None
-    //   }
-    // } else {
-    // }
   }
 }
 

@@ -230,7 +230,7 @@ pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
     .with_filter(filter::LevelFilter::INFO);
 
   let now_log = stdout_log
-    .with_filter(filter::LevelFilter::DEBUG) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
+    .with_filter(filter::LevelFilter::INFO) //这里的意思是 将所有info级别以上的 以stdout_log这个东西输出
     .and_then(debug_log)
     .with_filter(filter::filter_fn(|metadata| {
       //对debug_log 进行自定义过滤 debug_log为写入文件的 所以这里我只要加上 过滤条件 某个以上就好了 nice！

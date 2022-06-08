@@ -3,6 +3,8 @@ use std::collections::BinaryHeap;
 use std::fs::write;
 use tauri::command;
 
+use crate::crawler::template::Temp;
+
 use super::template::{Att, Corres, CrTmp, Obj};
 
 #[command]
@@ -36,7 +38,13 @@ pub fn generate() {
   //   println!("{}", item.name);
   // }
 
-  let value = serde_json::json!(heap);
+  let value = Temp {
+    url: "https://javdb36.com".to_string(),
+    version: 001,
+    cr_tmp: heap,
+  };
+
+  let value = serde_json::json!(value);
 
   let str = serde_json::to_string_pretty(&value).unwrap();
 
@@ -44,7 +52,7 @@ pub fn generate() {
 
   write(&path, &str).unwrap();
 
-  let value: BinaryHeap<CrTmp> = serde_json::from_str(&str).unwrap();
+  // let value: BinaryHeap<CrTmp> = serde_json::from_str(&str).unwrap();
 
-  println!("{:?}", value);
+  // println!("{:?}", value);
 }
