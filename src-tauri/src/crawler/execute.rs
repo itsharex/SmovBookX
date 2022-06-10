@@ -1,4 +1,4 @@
-use crate::crawler::template::Temp;
+use crate::crawler::template::{Corres, Temp};
 use axum::http::HeaderMap;
 use kuchiki::traits::TendrilSink;
 use tauri::command;
@@ -23,7 +23,7 @@ pub async fn execute() {
 
   let main_url = MODEL.url.clone();
 
-  let format = "miaa213";
+  let format = "MIAA213";
 
   let url = format!("{}/search?q={}&f=all", main_url, format);
 
@@ -40,7 +40,9 @@ pub async fn execute() {
 
   let text = res.text().await.expect("无法格式化");
 
-  let document = kuchiki::parse_html().one(text);
+  tracing::info!("{}", text);
+
+  let mut document = kuchiki::parse_html().one(text);
 
   // let len = crtmp.len();
 
@@ -51,26 +53,53 @@ pub async fn execute() {
   for item in crtmp.into_iter() {
     let mut ret = "".to_string();
 
-    let document = match document.select(&item.name).unwrap().next() {
-      Some(node) => node,
-      None => {
-        tracing::info!("{}---{}", "未获取到", &item.name);
-        return;
-      } //判断是否已经到了最后一级 当没到最后一级 这个任务就失败了 不对 没找到就应该报错了
+    document = match !item.same_level {
+      true => document,
+      false => {
+        let node = match document.select(&item.name).unwrap().next() {
+          Some(node) => node,
+          None => {
+            tracing::info!("{}---{}", "未获取到", &item.name);
+            return;
+          } //判断是否已经到了最后一级 当没到最后一级 这个任务就失败了 不对 没找到就应该报错了
+        };
+        node.as_node().clone()
+      }
     };
 
-    let document = document.as_node();
-
     if let Some(objs) = item.obj {
-
       //当存在多个obj时 这里应该对下面对每个obj 进行判断 相当于for循环下有多个if 尝试考虑 过滤器
+      //这里应该要对 name类型有个判断 只有name匹配到才会进行下一步 一直没获取到的话直接报错 那name的优先级应该在开始 设置同级的标志不继续向下获取
+      //那这个同级name可以随便取 下一级获取下一个document 的时候再取一样的
+      //所以每一个Crtmp应该要唯一 obj可能是多个元素
+      //name类型应该需要匹配多个域并返回当前的域 所以gatdata里 可能需要对当前的域做一个返回 作为下一个域
+
+      //需要解决两个很大的问题
+      //问题1 如何优雅的做到名称的匹配 并返回当前这个域下的字符串
+      //问题2 如何优雅的做到这个区域内某个字符串是否存在的判断 解决办法：在obj中添加 过滤器的字段
+      //所有的crtmp都应该作为一个父域来实现 这个父域应当唯一！ crtmp是流程 是获取父 obj是所有的元素获取
       for obj in objs {
         tracing::info!("{}", obj.name);
         ret = match obj.get_data(document) {
           Some(res) => res,
-          None => "".to_string(),
+          None => {
+            //判断是否可以为空
+            match obj.can_null {
+              true => "".to_string(),
+              false => {
+                tracing::info!("{}---{}", "未获取到", &obj.name);
+                return; //这里应该要报错
+              }
+            }
+          }
         };
-        //println!("{}", ret);
+
+        //类型判断
+        //特殊类型 name url
+        if obj.types == Corres::Name {
+          if ret.to_uppercase().replace("-", "") == format {};
+        }
+
         tracing::info!("{}", ret);
       }
     }

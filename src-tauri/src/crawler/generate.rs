@@ -1,4 +1,3 @@
-use priority_queue::PriorityQueue;
 use std::collections::BinaryHeap;
 use std::fs::write;
 use tauri::command;
@@ -26,9 +25,11 @@ pub fn generate() {
     same_level: true,
     obj: Some(vec![Obj {
       name: "a".to_string(),
-      have_class: None,
-      types: Corres::Url(),
+      filter: None,
+      can_null: false,
+      types: Corres::Url,
       att: Att::Attributes("src".to_string()),
+      cover: false,
     }]),
   };
 
