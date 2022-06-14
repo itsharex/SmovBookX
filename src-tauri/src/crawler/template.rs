@@ -54,6 +54,7 @@ pub enum FilterType {
 pub enum Corres {
   Id,
   Name,        //云端
+  NameF,       //特殊类型！
   Title,       //标题
   Format,      //格式化后名称
   ReleaseTime, //发行时间
@@ -67,8 +68,33 @@ pub enum Corres {
   Url,         //url节点 重新获取 页面
 }
 
+#[derive(Clone, Debug)]
+pub struct ResData {
+  pub res: String,
+  pub node: NodeRef,
+}
+
+impl Temp {
+  //注入名称
+  pub fn injection_name(self: Self, name: String) {
+    for item in self.cr_tmp.into_iter() {
+      if let Some(objs) = item.obj {
+        for obj in objs {
+          if obj.types.eq(&Corres::Name) {
+            if let Some(mut filter) = obj.filter {
+              filter.types = FilterType::Element(name.clone())
+            }
+          }
+        }
+      } else {
+        continue;
+      }
+    }
+  }
+}
+
 impl CrTmp {
-  pub fn new() -> BinaryHeap<CrTmp> {
+  pub fn _new() -> BinaryHeap<CrTmp> {
     //判断是否存在文件 当文件不存在时 拉取文件 当文件存在时直接获取文件中的数据
 
     let path = &crate::app::APP.lock().clone().app_dir.join("model.json");
@@ -113,50 +139,50 @@ impl Temp {
 
 impl Obj {
   ///根据名称类型 获取数据
-  pub fn get_data(self: &Self, mut node_refs: NodeRef) -> Option<String> {
+  pub fn get_data(self: &Self, node_refs: &NodeRef) -> Option<ResData> {
     //不能next_back 应该遍历这些 元素 然后返回需要的数据 虽然对于一个元素下有多个元素的项目会出现复杂度加倍的情况 但是数据量其实不大 还好
     //遍历节点 返回第一个值
     //返回数据更改 返回一个可能存在的对应域 这个域会作为接下来的顶级域
 
-    // 这个逻辑太复杂了 晕了
-
     for node_ref in node_refs.select(&self.name).unwrap() {
-      if self.cover {
-        let nod= node_ref.as_node().clone() ;
-        node_refs = nod;
-      }
+      let mut res = String::new();
+      let mut ok_flag = false;
       if let Some(filter) = &self.filter {
         match &filter.types {
           FilterType::Class => {
             if has_class(node_ref.as_node(), filter.name.as_str()) {
-              return match &self.att {
-                Att::Text => Some(node_ref.text_contents()),
-                Att::Attributes(local_name) => Some(
-                  node_ref
-                    .attributes
-                    .borrow()
-                    .get(local_name.clone())
-                    .unwrap()
-                    .to_string(),
-                ),
+              res = match &self.att {
+                Att::Text => node_ref.text_contents(),
+                Att::Attributes(local_name) => node_ref
+                  .attributes
+                  .borrow()
+                  .get(local_name.clone())
+                  .unwrap()
+                  .to_string(),
               };
+              ok_flag = true;
             }
           }
           FilterType::Element(name) => {
             match node_ref.as_node().select(&filter.name).unwrap().next() {
               Some(node) => {
-                if node.text_contents().eq(name) {
-                  return match &self.att {
-                    Att::Text => Some(node_ref.text_contents()),
-                    Att::Attributes(local_name) => Some(
-                      node_ref
-                        .attributes
-                        .borrow()
-                        .get(local_name.clone())
-                        .unwrap()
-                        .to_string(),
-                    ),
+                let name_f = if self.types.eq(&Corres::Name) {
+                  node.text_contents().to_uppercase().replace("-", "")
+                } else {
+                  node.text_contents()
+                };
+
+                if name_f.eq(name) {
+                  res = match &self.att {
+                    Att::Text => node_ref.text_contents(),
+                    Att::Attributes(local_name) => node_ref
+                      .attributes
+                      .borrow()
+                      .get(local_name.clone())
+                      .unwrap()
+                      .to_string(),
                   };
+                  ok_flag = true;
                 }
               }
               None => {}
@@ -164,16 +190,26 @@ impl Obj {
           }
         }
       } else {
-        return match &self.att {
-          Att::Text => Some(node_ref.text_contents()),
+        res = match &self.att {
+          Att::Text => node_ref.text_contents(),
           Att::Attributes(local_name) => {
             tracing::info!("{:?}", node_ref);
-            match node_ref.attributes.borrow().get(local_name.clone()) {
-              Some(res) => Some(res.to_string()),
-              None => None,
-            }
+            node_ref
+              .attributes
+              .borrow()
+              .get(local_name.clone())
+              .unwrap()
+              .to_string()
           }
         };
+        ok_flag = true;
+      }
+
+      if ok_flag {
+        return Some(ResData {
+          res,
+          node: node_ref.as_node().clone(),
+        });
       }
     }
     None

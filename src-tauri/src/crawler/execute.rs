@@ -1,10 +1,11 @@
 use crate::crawler::template::{Corres, Temp};
 use axum::http::HeaderMap;
 use kuchiki::traits::TendrilSink;
+use parking_lot::Mutex;
 use tauri::command;
 
 lazy_static! {
-  pub static ref MODEL: Temp = Temp::new();
+  pub static ref MODEL: Mutex<Temp> = Mutex::new(Temp::new());
 }
 
 #[command]
@@ -19,11 +20,21 @@ pub async fn execute() {
       .unwrap(),
   );
 
-  let crtmp = MODEL.cr_tmp.clone();
+  //lazy_static::initialize(&MODEL);
+  //假设出现 互斥锁出现错误的情况 好像可以重新访问 tm这个概念太难懂了 以后再说
 
-  let main_url = MODEL.url.clone();
+  let model = MODEL.lock().clone();
+
+  let crtmp = model.cr_tmp.clone();
+
+  tracing::info!("{:?}", crtmp);
+
+  let main_url = model.url.clone();
 
   let format = "MIAA213";
+
+  //注入过滤器
+  model.injection_name(String::from(format));
 
   let url = format!("{}/search?q={}&f=all", main_url, format);
 
@@ -40,7 +51,7 @@ pub async fn execute() {
 
   let text = res.text().await.expect("无法格式化");
 
-  tracing::info!("{}", text);
+  //tracing::info!("{}", text);
 
   let mut document = kuchiki::parse_html().one(text);
 
@@ -51,8 +62,7 @@ pub async fn execute() {
   tracing::info!("测试开始");
 
   for item in crtmp.into_iter() {
-    let mut ret = "".to_string();
-
+    tracing::info!("{}",item.name);
     document = match !item.same_level {
       true => document,
       false => {
@@ -78,14 +88,23 @@ pub async fn execute() {
       //问题1 如何优雅的做到名称的匹配 并返回当前这个域下的字符串
       //问题2 如何优雅的做到这个区域内某个字符串是否存在的判断 解决办法：在obj中添加 过滤器的字段
       //所有的crtmp都应该作为一个父域来实现 这个父域应当唯一！ crtmp是流程 是获取父 obj是所有的元素获取
+      //如何返回对应的下级obj是一个问题 或者说我不需要返回 因为假设匹配到数据后 必定存在在第一个 所以我完全可以直接获取第一个元素
+      //但是我是打算以后都可以用这个模板的 所以可能还是得弄一个返回类型
       for obj in objs {
         tracing::info!("{}", obj.name);
-        ret = match obj.get_data(document) {
-          Some(res) => res,
+        let ret = match obj.get_data(&document) {
+          Some(res) => {
+            //判断是否覆盖当前doc
+            if obj.cover {
+              document = res.node.clone();
+            }
+            tracing::info!("为啥没有返回？？？{}", res.res);
+            res
+          }
           None => {
             //判断是否可以为空
             match obj.can_null {
-              true => "".to_string(),
+              true => continue,
               false => {
                 tracing::info!("{}---{}", "未获取到", &obj.name);
                 return; //这里应该要报错
@@ -97,10 +116,10 @@ pub async fn execute() {
         //类型判断
         //特殊类型 name url
         if obj.types == Corres::Name {
-          if ret.to_uppercase().replace("-", "") == format {};
+          if ret.res.to_uppercase().replace("-", "") == format {};
         }
 
-        tracing::info!("{}", ret);
+        tracing::info!("{:?}", ret.res);
       }
     }
   }

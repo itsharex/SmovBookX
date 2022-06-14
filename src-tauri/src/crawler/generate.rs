@@ -4,7 +4,7 @@ use tauri::command;
 
 use crate::crawler::template::Temp;
 
-use super::template::{Att, Corres, CrTmp, Obj};
+use super::template::{Att, Corres, CrTmp, Filter, FilterType, Obj};
 
 #[command]
 pub fn generate() {
@@ -13,7 +13,7 @@ pub fn generate() {
   let mut index = 0;
 
   let cr_tmp = CrTmp {
-    name: "#movie-list".to_string(),
+    name: ".movie-list".to_string(),
     same_level: false,
     obj: None,
   };
@@ -21,7 +21,40 @@ pub fn generate() {
   heap.push(cr_tmp);
 
   let cr_tmp = CrTmp {
-    name: "#item".to_string(),
+    name: ".item".to_string(),
+    same_level: true,
+    obj: Some(vec![Obj {
+      name: ".video-title".to_string(),
+      filter: Some(Filter {
+        name: "strong".to_string(),
+        types: FilterType::Element("".to_string()),
+      }),
+      can_null: false,
+      types: Corres::NameF,
+      att: Att::Text,
+      cover: true,
+    }]),
+  };
+
+  heap.push(cr_tmp);
+
+  let cr_tmp = CrTmp {
+    name: ".item".to_string(),
+    same_level: true,
+    obj: Some(vec![Obj {
+      name: "strong".to_string(),
+      filter: None,
+      can_null: false,
+      types: Corres::Name,
+      att: Att::Text,
+      cover: true,
+    }]),
+  };
+
+  heap.push(cr_tmp);
+
+  let cr_tmp = CrTmp {
+    name: ".item".to_string(),
     same_level: true,
     obj: Some(vec![Obj {
       name: "a".to_string(),
