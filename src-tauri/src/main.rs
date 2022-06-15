@@ -73,8 +73,7 @@ async fn main() {
       cmd::tauri_cmd::set_style,
       cmd::tauri_cmd::get_local_ip,
       hfs::axum_hfs::run_hfs,
-      crawler::generate::generate,
-      crawler::execute::execute
+      crawler::crawler::smov_crawler
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application");  //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息

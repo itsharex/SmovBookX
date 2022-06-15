@@ -19,7 +19,7 @@
 
     <el-button type="danger" @click="test11">爬虫序列化测试</el-button>
 
-    <el-button type="danger" @click="test12">爬虫反序列化测试</el-button>
+    <el-button type="danger" @click="test12">爬虫测试</el-button>
 
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
@@ -177,7 +177,7 @@ export default defineComponent({
     };
 
     const test12 = async () => {
-      await request("execute");
+      await request("smov_crawler",{format:"SSIS252",id:3});
     };
 
     return {
