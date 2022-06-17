@@ -113,18 +113,20 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
 
   let thumbs_url = img.value().attr("src").unwrap_or_else(|| "");
 
-  tokio::spawn({
-    let url = String::from(thumbs_url);
-    let name = format!("thumbs_{}.jpg", name);
-    let path = PathBuf::from(&img_to_path);
-    sava_pic(
-      url,
-      name,
-      path
-    )
-  });
+  // sava_pic(
+  //   String::from(thumbs_url),
+  //   format!("thumbs_{}.jpg", name),
+  //   PathBuf::from(&img_to_path),
+  // )
+  // .await; //异步拉取数据会造成错误被跳过 同步拉取会出现错误我tm 因为一直出现错误 更新tauri版本 烦死了
 
-  println!("{}", title);
+  // //异步中不能继续创建异步代码 所以如果需要新建一个异步程序 需要spawn
+  // let s = tokio::spawn({
+  //   let url = String::from(thumbs_url);
+  //   let name = format!("thumbs_{}.jpg", name);
+  //   let path = PathBuf::from(&img_to_path);
+  //   sava_pic(url, name, path)
+  // });
 
   return Ok(true);
 }

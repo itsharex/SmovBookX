@@ -1,6 +1,5 @@
 use anyhow::Result;
 use reqwest::header::HeaderMap;
-use reqwest::Client;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -10,7 +9,7 @@ pub async fn sava_pic(url: String, name: String, path: PathBuf) -> Result<()> {
 
   let client = reqwest::Client::new();
 
-  println!("执行,{},{:?}",url ,pic_path);
+  println!("执行,{},{:?}", url, pic_path);
 
   let mut headers = HeaderMap::new();
   headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());
@@ -30,13 +29,8 @@ pub async fn sava_pic(url: String, name: String, path: PathBuf) -> Result<()> {
 
   tracing::info!(target: "frontend_log",message = msg.as_str());
 
-  let res = client
-    .get(url)
-    .headers(headers)
-    .send()
-    .await?
-    .bytes()
-    .await?;
+  let res = client.get(url).headers(headers).send().await?;
+  let res = res.bytes().await?;
 
   let mut file = match File::create(&pic_path) {
     Err(why) => panic!("couldn't create {}", why),
@@ -45,7 +39,7 @@ pub async fn sava_pic(url: String, name: String, path: PathBuf) -> Result<()> {
 
   let content = res.bytes();
   let data: std::result::Result<Vec<_>, _> = content.collect();
-  file.write_all(&data.unwrap())?;
+  file.write_all(&data.unwrap()).unwrap();
 
   Ok(())
 }
