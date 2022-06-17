@@ -1,4 +1,6 @@
-use anyhow::{anyhow, Result};
+use std::path::PathBuf;
+
+use anyhow::Result;
 ///考虑在爬虫实现热更新 模板引擎的错误尝试 模板引擎可能并不适合爬虫 有没有直接从云端获取结构的办法 哎 到时候再解决吧
 use reqwest::header::HeaderMap;
 use scraper::{Html, Selector};
@@ -23,17 +25,26 @@ lazy_static! {
   static ref MAIN_URL: String = String::from("https://javdb36.com");
 }
 
+// #[command]
+// pub async fn smov_crawler(format: String, id: i64) {
+//   match tauri::async_runtime::block_on(smov_crawler_program(format, id)) {
+//     Ok(res) => println!("{}", res),
+//     Err(err) => println!("{}", err.to_string()),
+//   };
+// }
 #[command]
 pub async fn smov_crawler(format: String, id: i64) {
-  tauri::async_runtime::block_on(smov_crawler_program(format, id));
+  // let s = tauri::async_runtime::spawn(smov_crawler_program(format, id)).await;
+  smov_crawler_program(format, id).await;
 }
 
-pub async fn smov_crawler_program(format: String, id: i64) -> Result<()> {
+pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
   let header = HeaderMap::clone(&*HEADER);
 
   let url = format!("{}/search?q={}&f=all", *MAIN_URL, format);
 
   let client = reqwest::Client::new();
+
   let res = client
     .get(url)
     .headers(header.clone())
@@ -82,9 +93,9 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<()> {
     name: &name,
   };
 
-  let img_to_path = match s.tidy().await {
+  let img_to_path = match s.tidy() {
     Ok(n) => n,
-    Err(err) => return Err(anyhow::Error::new(CrawlerErr::NotFound)),
+    Err(err) => return Err(err),
   };
 
   let item_path = smov_item
@@ -98,22 +109,24 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<()> {
 
   let title = item_path.value().attr("title").unwrap_or_else(|| "");
 
-  let thumbs_url = item_path.value().attr("href").unwrap_or_else(|| "");
+  let item_url = item_path.value().attr("href").unwrap_or_else(|| "");
 
-  let img = img.value().attr("src").unwrap_or_else(|| "");
+  let thumbs_url = img.value().attr("src").unwrap_or_else(|| "");
 
-  sava_pic(
-    &thumbs_url.to_string(),
-    &(format!("thumbs_{}.jpg", name)),
-    &img_to_path,
-    &client,
-  )
-  .await
-  .expect("保存图片出现错误");
+  tokio::spawn({
+    let url = String::from(thumbs_url);
+    let name = format!("thumbs_{}.jpg", name);
+    let path = PathBuf::from(&img_to_path);
+    sava_pic(
+      url,
+      name,
+      path
+    )
+  });
 
   println!("{}", title);
 
-  return Err(anyhow!("Missing attribute: {}", "missing"));
+  return Ok(true);
 }
 
 #[derive(Error, Debug)]

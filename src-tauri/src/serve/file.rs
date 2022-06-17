@@ -18,7 +18,7 @@ pub struct TidySmov<'a> {
 }
 
 impl TidySmov<'_> {
-  pub async fn tidy(self: &Self) -> Result<PathBuf> {
+  pub fn tidy(self: &Self) -> Result<PathBuf> {
     let tidy_path = &crate::app::APP.lock().conf.tidy_folder.clone();
     let smov_file = SmovFile::query_by_id(self.id).expect("查询数据库信息出现错误");
 

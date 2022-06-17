@@ -1,16 +1,16 @@
+use anyhow::Result;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
-pub async fn sava_pic(
-  url: &String,
-  name: &String,
-  path: &PathBuf,
-  client: &Client,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn sava_pic(url: String, name: String, path: PathBuf) -> Result<()> {
   let pic_path = path.join(name);
+
+  let client = reqwest::Client::new();
+
+  println!("执行,{},{:?}",url ,pic_path);
 
   let mut headers = HeaderMap::new();
   headers.insert("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36".parse().unwrap());

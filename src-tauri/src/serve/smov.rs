@@ -89,7 +89,7 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           name: &name,
         };
 
-        let img_to_path = match s.tidy().await {
+        let img_to_path = match s.tidy() {
           Ok(n) => n,
           Err(err) => return Err(err),
         };

@@ -177,7 +177,7 @@ export default defineComponent({
     };
 
     const test12 = async () => {
-      await request("smov_crawler",{format:"SSIS252",id:3});
+      await request("smov_crawler",{format:"IPX005",id:1});
     };
 
     return {
