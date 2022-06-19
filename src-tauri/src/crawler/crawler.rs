@@ -25,13 +25,6 @@ lazy_static! {
   static ref MAIN_URL: String = String::from("https://javdb36.com");
 }
 
-// #[command]
-// pub async fn smov_crawler(format: String, id: i64) {
-//   match tauri::async_runtime::block_on(smov_crawler_program(format, id)) {
-//     Ok(res) => println!("{}", res),
-//     Err(err) => println!("{}", err.to_string()),
-//   };
-// }
 #[command]
 pub async fn smov_crawler(format: String, id: i64) {
   // let s = tauri::async_runtime::spawn(smov_crawler_program(format, id)).await;
