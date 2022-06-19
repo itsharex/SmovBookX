@@ -28,7 +28,7 @@ lazy_static! {
 #[command]
 pub async fn smov_crawler(format: String, id: i64) {
   // let s = tauri::async_runtime::spawn(smov_crawler_program(format, id)).await;
-  smov_crawler_program(format, id).await;
+  smov_crawler_program(format, id); //好像不等待就好了
 }
 
 pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
@@ -39,13 +39,20 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
   let client = reqwest::Client::new();
 
   let res = client
-    .get(url)
+    .get(url.clone())
     .headers(header.clone())
     .send()
     .await
     .expect("访问出现错误");
 
   let text = res.text().await.expect("无法格式化");
+
+  // sava_pic(
+  //   String::from(url.clone()),
+  //   format!("thumbs_{}.jpg", url.clone()),
+  //   PathBuf::from(&url.clone()),
+  // )
+  // .await; //异步拉取数据会造成错误被跳过 同步拉取会出现错误我tm 因为一直出现错误 更新tauri版本 烦死了
 
   let fragment = Html::parse_fragment(&text);
 
@@ -106,12 +113,12 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
 
   let thumbs_url = img.value().attr("src").unwrap_or_else(|| "");
 
-  // sava_pic(
-  //   String::from(thumbs_url),
-  //   format!("thumbs_{}.jpg", name),
-  //   PathBuf::from(&img_to_path),
-  // )
-  // .await; //异步拉取数据会造成错误被跳过 同步拉取会出现错误我tm 因为一直出现错误 更新tauri版本 烦死了
+  sava_pic(
+    String::from(thumbs_url),
+    format!("thumbs_{}.jpg", name),
+    PathBuf::from(&img_to_path),
+  )
+  .await; //异步拉取数据会造成错误被跳过 同步拉取会出现错误我tm 因为一直出现错误 更新tauri版本 烦死了
 
   // //异步中不能继续创建异步代码 所以如果需要新建一个异步程序 需要spawn
   // let s = tokio::spawn({
