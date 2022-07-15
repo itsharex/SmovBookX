@@ -22,5 +22,5 @@ lazy_static! {
       .expect("create client failed")
   };
 
-  pub static ref MAIN_URL: String = String::from("https://javdb36.com");
+  pub static ref MAIN_URL: String = String::from("https://javdb.com");
 }
