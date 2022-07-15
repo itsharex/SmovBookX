@@ -177,7 +177,12 @@ export default defineComponent({
     };
 
     const test12 = async () => {
-      await request("smov_crawler",{format:"IPX005",id:1});
+      await request("smov_crawler",{ retrievingSmov: {
+        id: 1,
+        seek_name: "ipx005",
+        smov_id: 1,
+        status: 2,
+      } } );
     };
 
     return {
@@ -198,7 +203,7 @@ export default defineComponent({
       qr,
       test10,
       test11,
-      test12
+      test12,
     };
   },
 });

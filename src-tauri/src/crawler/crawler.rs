@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::{
   crawler::{error::CrawlerErr, save_pic::sava_pic_sync},
+  model::smov::{RetrievingSmov, SmovSeek},
   serve::file::TidySmov,
   util::smov_format::SmovName,
 };
@@ -15,9 +16,10 @@ use tokio::task::block_in_place;
 use super::client::{CLIENT, MAIN_URL};
 
 #[command]
-pub async fn smov_crawler(format: String, id: i64) {
+pub async fn smov_crawler(retrieving_smov: RetrievingSmov) {
   // let s = tauri::async_runtime::spawn(smov_crawler_program(format, id)).await;
-  match smov_crawler_program(format, id).await {
+  let format = SmovName::format_smov_name(&retrieving_smov.seek_name);
+  match smov_crawler_program(format, retrieving_smov.id).await {
     Ok(res) => println!("{}", res),
     Err(err) => println!("{}", err.to_string()),
   }; //好像不等待就好了 不加await 就不会执行了 为啥呢
@@ -82,7 +84,11 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
     .next()
     .unwrap();
 
-  let title = item_path.value().attr("title").unwrap_or_else(|| "");
+  let title = item_path
+    .value()
+    .attr("title")
+    .unwrap_or_else(|| "")
+    .to_string();
 
   let item_url = item_path.value().attr("href").unwrap_or_else(|| "");
 
@@ -92,21 +98,81 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
 
   match sava_pic_sync(
     thumbs_url.to_string(),
-    format!("thumbs_{}.jpg", name),
+    format!("thumbs_{}.jpg", &name),
     PathBuf::from(&img_to_path),
   ) {
-    Err(err) => return Err(err) ,
+    Err(err) => return Err(err),
     _ => {}
   };
 
   let url = format!("{}{}", *MAIN_URL, item_url.to_string());
+
+  println!("{}", url);
 
   let fragment = match get_temp_sync(&url) {
     Ok(html) => html,
     Err(err) => return Err(err),
   };
 
-  //后面已经能够进行下去了 后续需要将取不同区域的组件封装 
+  let mut smov_seek = SmovSeek {
+    id,
+    name: String::from(&name),
+    title,
+    format,
+    release_time: String::new(),
+    duration: 0,
+    publishers: String::new(),
+    makers: String::new(),
+    series: String::from("无系列"),
+    directors: String::new(),
+    tags: Vec::new(),
+    actors: Vec::new(),
+  };
+
+  let selector = Selector::parse(".video-meta-panel").unwrap();
+
+  let mut video_meta_panel = fragment.select(&selector);
+
+  let video_meta_panel = match video_meta_panel.next() {
+    Some(el) => el,
+    None => {
+      return Err(anyhow::Error::new(CrawlerErr::ItemNotFound));
+    }
+  };
+
+  let selector = Selector::parse("img").unwrap();
+
+  let main_img = video_meta_panel
+    .select(&selector)
+    .next()
+    .unwrap()
+    .value()
+    .attr("src")
+    .unwrap_or_else(|| "");
+
+  match sava_pic_sync(
+    thumbs_url.to_string(),
+    format!("main_{}.jpg", &name),
+    PathBuf::from(&img_to_path),
+  ) {
+    Err(err) => return Err(err),
+    _ => {}
+  };
+
+  let selector = Selector::parse(".panel-block").unwrap();
+
+  let strong_selector = Selector::parse("strong").unwrap();
+
+  for detail in video_meta_panel.select(&selector) {
+    if let Some(strong_type_el) = detail.select(&strong_selector).next(){
+         match strong_type_el.inner_html().as_str() {
+          " 時長:" =>{},
+          _=>{}
+             
+         }
+    };
+     
+  }
 
   return Ok(true);
 }

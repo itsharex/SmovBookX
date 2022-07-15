@@ -36,6 +36,7 @@ pub async fn _save_pic(url: String, name: String, path: PathBuf) -> Result<()> {
   Ok(())
 }
 
+///保存图片 设置错误重试
 pub fn sava_pic_sync(url: String, name: String, path: PathBuf) -> Result<()> {
   let pic_path = path.join(name);
   let path_str = String::from(&pic_path.to_str().unwrap_or_else(|| "").to_string());
