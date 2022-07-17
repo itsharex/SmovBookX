@@ -283,7 +283,8 @@ pub async fn retrieve_smov(format: String, id: i64) -> Result<bool, anyhow::Erro
           counter = counter + 1;
         }
 
-        SmovSeek::insert_by_path_name(smov_seek).unwrap();
+        // SmovSeek::insert_by_path_name(smov_seek).unwrap();
+        smov_seek.insert_by_path_name().unwrap();
 
         flag = true;
       }

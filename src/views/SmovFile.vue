@@ -106,7 +106,6 @@ import { defineComponent, ref, onMounted, reactive, inject } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
 import XEUtils from 'xe-utils';
-import { ElMessage } from "element-plus";
 import { Files, Refresh, Search, Close, Select } from '@element-plus/icons-vue';
 import { Log } from "../type/log";
 import { CurentTime } from "../util/time";

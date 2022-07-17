@@ -474,58 +474,58 @@ impl Smov {
 }
 
 impl SmovSeek {
-  pub fn insert_by_path_name(smov: SmovSeek) -> Result<()> {
+  pub fn insert_by_path_name(self: &Self) -> Result<()> {
     exec(|conn| {
       let tx = conn.transaction()?;
       tx.execute(
         "insert into maker(name) select ?1 where not exists (select * from maker where name= ?2)",
-        params![smov.makers, smov.makers],
+        params![self.makers, self.makers],
       )?;
 
       let maker: u64 = tx
         .query_row_and_then(
           "SELECT id from maker where name = ?1",
-          params![smov.makers],
+          params![self.makers],
           |row| row.get(0),
         )
         .expect("查询出现错误");
 
       tx.execute(
         "insert into serie(name) select ?1 where not exists (select * from serie where name= ?2)",
-        params![smov.series, smov.series],
+        params![self.series, self.series],
       )
       .expect("插入出现错误？");
 
       let serie: u64 = tx
         .query_row_and_then(
           "SELECT id from serie where name = ?1",
-          params![smov.series],
+          params![self.series],
           |row| row.get(0),
         )
         .expect("查询出现错误");
 
       tx.execute(
                 "insert into director(name) select ?1 where not exists (select * from director where name= ?2)",
-                params![smov.directors, smov.directors],
+                params![self.directors, self.directors],
                 )?;
 
       let director: u64 = tx
         .query_row_and_then(
           "SELECT id from director where name = ?1",
-          params![smov.directors],
+          params![self.directors],
           |row| row.get(0),
         )
         .expect("查询出现错误");
 
       tx.execute(
                 "insert into publisher(name) select ?1 where not exists (select * from publisher where name= ?2)",
-                params![smov.publishers, smov.publishers],
+                params![self.publishers, self.publishers],
                 )?;
 
       let publisher: u64 = tx
         .query_row_and_then(
           "SELECT id from publisher where name = ?1",
-          params![smov.publishers],
+          params![self.publishers],
           |row| row.get(0),
         )
         .expect("查询出现错误");
@@ -533,10 +533,10 @@ impl SmovSeek {
       tx.execute(
                 "update smov set name = ?1 ,makers_id =?2,series_id = ?3,directors_id =?4 , 
                 publisher_id = ?5,duration = ?6,release_time = ?7 , is_retrieve = ?8 ,title =?9  where id = ?10;",
-                params![smov.name,maker,serie,director,publisher,smov.duration,smov.release_time,1,smov.title,smov.id],
+                params![self.name,maker,serie,director,publisher,self.duration,self.release_time,1,self.title,self.id],
                 ).expect("插入smov表出现错误");
 
-      for tag in smov.tags {
+      for tag in &self.tags {
         tx.execute(
           "insert into tag(name) select ?1 where not exists (select * from tag where name= ?2)",
           params![tag, tag],
@@ -550,11 +550,11 @@ impl SmovSeek {
 
         tx.execute(
           "insert into smov_tag(smov_id,tag_id) values(?1,?2)",
-          params![smov.id, tagid],
+          params![self.id, tagid],
         )?;
       }
 
-      for actor in smov.actors {
+      for actor in &self.actors {
         tx.execute(
           "insert into actor(name) select ?1 where not exists (select * from actor where name= ?2)",
           params![actor, actor],
@@ -570,7 +570,7 @@ impl SmovSeek {
 
         tx.execute(
           "insert into smov_actor(smov_id,actor_id) values(?1,?2)",
-          params![smov.id, actorid],
+          params![self.id, actorid],
         )?;
       }
 
@@ -876,6 +876,7 @@ impl SMOVBOOK {
                 extension    TEXT,
                 format       TEXT,
                 release_time TEXT,
+                publish_time TEXT,
                 duration     integer,
                 publisher_id integer,
                 makers_id    integer              Null,

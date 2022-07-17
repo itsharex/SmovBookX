@@ -69,7 +69,7 @@
     "windows": [
       {
         "title": "SMOVBOOK",
-        "minWidth": 946,
+        "minWidth": 950,
         "minHeight": 650,
         "alwaysOnTop": false,
         "decorations": false,

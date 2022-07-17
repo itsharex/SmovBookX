@@ -111,7 +111,9 @@ export module ThreadPool {
                         this.processTask();
                     } else {
                         task.status = 3;
-                        invoke("retrieve_data", { retrievingSmov: task }).then((res: any) => {
+                        console.log(task);
+                        invoke("smov_crawler", { retrievingSmov: task }).then((res: any) => {
+                            console.log(res);
                             if (res.code == 200) {
                                 task.status = 1;
                             } else {

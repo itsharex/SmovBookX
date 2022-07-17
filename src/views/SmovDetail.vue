@@ -126,7 +126,6 @@ import { Menu, VideoCameraFilled } from '@element-plus/icons-vue';
 import { getCurrent } from "@tauri-apps/api/window";
 import { shell } from "@tauri-apps/api";
 import { join } from "@tauri-apps/api/path";
-import { ElMessage } from "element-plus";
 
 export default defineComponent({
     props: {

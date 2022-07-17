@@ -1,31 +1,36 @@
 use std::path::PathBuf;
 
 use crate::{
-  crawler::{error::CrawlerErr, save_pic::sava_pic_sync},
-  model::smov::{RetrievingSmov, SmovSeek},
+  crawler::{error::CrawlerErr, network::{sava_pic_sync,get_temp_sync}},
+  model::smov::{RetrievingSmov, SmovFileSeek, SmovSeek},
+  response::response::Response,
   serve::file::TidySmov,
   util::smov_format::SmovName,
 };
 use anyhow::Result;
 
 ///考虑在爬虫实现热更新 模板引擎的错误尝试 模板引擎可能并不适合爬虫 有没有直接从云端获取结构的办法 哎 到时候再解决吧
-use scraper::{Html, Selector};
+use scraper::{ElementRef,  Selector};
 use tauri::command;
-use tokio::task::block_in_place;
 
 use super::client::{CLIENT, MAIN_URL};
 
 #[command]
-pub async fn smov_crawler(retrieving_smov: RetrievingSmov) {
-  // let s = tauri::async_runtime::spawn(smov_crawler_program(format, id)).await;
+pub async fn smov_crawler(retrieving_smov: RetrievingSmov) -> Response<Option<i32>> {
   let format = SmovName::format_smov_name(&retrieving_smov.seek_name);
-  match smov_crawler_program(format, retrieving_smov.id).await {
-    Ok(res) => println!("{}", res),
-    Err(err) => println!("{}", err.to_string()),
-  }; //好像不等待就好了 不加await 就不会执行了 为啥呢
+  match smov_crawler_program(format, retrieving_smov.smov_id).await {
+    Ok(_) => {
+      SmovFileSeek::change_status(retrieving_smov.id, 1).expect("出现了一个错误");
+      Response::new(200, Some(1), "success")
+    }
+    Err(err) => {
+      SmovFileSeek::change_status(retrieving_smov.id, 2).expect("出现了一个错误");
+      Response::new(404, Some(1), &err.to_string())
+    }
+  }
 }
 
-pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
+pub async fn smov_crawler_program(format: String, id: i64) -> Result<()> {
   let url = format!("{}/search?q={}&f=all", *MAIN_URL, format);
 
   let selector = Selector::parse(".movie-list").unwrap();
@@ -94,7 +99,7 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
 
   let thumbs_url = img.value().attr("src").unwrap_or_else(|| "");
 
-  println!("{}", title);
+  tracing::info!("title:{}", title);
 
   match sava_pic_sync(
     thumbs_url.to_string(),
@@ -107,7 +112,7 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
 
   let url = format!("{}{}", *MAIN_URL, item_url.to_string());
 
-  println!("{}", url);
+  tracing::info!("url:{}", url);
 
   let fragment = match get_temp_sync(&url) {
     Ok(html) => html,
@@ -140,16 +145,6 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
     }
   };
 
-  let selector = Selector::parse("img").unwrap();
-
-  let main_img = video_meta_panel
-    .select(&selector)
-    .next()
-    .unwrap()
-    .value()
-    .attr("src")
-    .unwrap_or_else(|| "");
-
   match sava_pic_sync(
     thumbs_url.to_string(),
     format!("main_{}.jpg", &name),
@@ -163,39 +158,104 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<bool> {
 
   let strong_selector = Selector::parse("strong").unwrap();
 
+  let value_selector = Selector::parse(".value").unwrap();
+
   for detail in video_meta_panel.select(&selector) {
-    if let Some(strong_type_el) = detail.select(&strong_selector).next(){
-         match strong_type_el.inner_html().as_str() {
-          " 時長:" =>{},
-          _=>{}
-             
-         }
+    if let Some(strong_type_el) = detail.select(&strong_selector).next() {
+      match strong_type_el.inner_html().as_str() {
+        "時長:" => smov_seek.duration = get_value_unique(detail, &value_selector).replace(" 分鍾", "").parse::<i32>().unwrap(),
+        "日期:" => smov_seek.release_time = get_value_unique(detail, &value_selector),
+        "導演:" => smov_seek.directors = get_value_unique(detail, &value_selector),
+        "片商:" => smov_seek.makers = get_value_unique(detail, &value_selector),
+        "發行:" => smov_seek.publishers = get_value_unique(detail, &value_selector),
+        "系列:" => smov_seek.series = get_value_unique(detail, &value_selector),
+        "類別:" => smov_seek.tags = get_value(detail, &value_selector),
+        "演員:" => smov_seek.actors = get_value_actors(detail, &value_selector),
+        _ => {}
+      };
     };
-     
   }
 
-  return Ok(true);
+  let selector = Selector::parse(".preview-images").unwrap();
+
+  let detail_images = fragment.select(&selector).next().unwrap();
+
+  let selector = Selector::parse(".tile-item").unwrap();
+
+  let mut counter = 1;
+
+  for deimg in detail_images.select(&selector) {
+    let path = deimg.value().attr("href").unwrap().to_string();
+    match sava_pic_sync(
+      path,
+      format!("detail_{}.jpg", counter),
+      PathBuf::from(&img_to_path).join("detail"),
+    ) {
+      Err(err) => return Err(err),
+      _ => {}
+    };
+    counter += 1;
+  }
+
+  smov_seek.insert_by_path_name().unwrap();
+  
+  Ok(())
 }
 
-async fn _get_temp(url: String) -> String {
-  let res = CLIENT.get(url).send().await.expect("访问出现错误");
+///用于获取value的部分
+fn get_value_unique(el: ElementRef, selector: &Selector) -> String {
+  let text = el.select(selector).next().unwrap().text();
+  let mut values = "".to_string();
+  for value in text {
+    values = format!("{}{}", values, value);
+  };
 
-  res.text().await.expect("无法格式化")
+  values
 }
 
-//改造 返回错误 而不是返回Html
-fn get_temp_sync(url: &String) -> Result<Html> {
-  let url1 = String::from(url);
-  let url2 = String::from(url);
-  block_in_place(|| match reqwest::blocking::get(url1) {
-    Ok(res) => Ok(Html::parse_fragment(
-      &res.text().expect("字符串没提取出来懒得处理的错误"),
-    )),
-    Err(err) => {
-      return Err(anyhow::Error::new(CrawlerErr::NetworkError {
-        url: url2,
-        msg: err.to_string(),
-      }));
-    }
-  })
+fn get_value(el: ElementRef, selector: &Selector) -> Vec<String> {
+  let value = el
+    .select(selector)
+    .next()
+    .unwrap()
+    .text()
+    .map(|x| x.to_string())
+    .filter(|x| !x.eq(&",\u{a0}".to_string())) //去除空格部分
+    .collect::<Vec<_>>();
+
+  value
 }
+
+fn get_value_actors(el: ElementRef, selector: &Selector) -> Vec<String> {
+
+  let el =  el
+  .select(selector)
+  .next()
+  .unwrap();
+  //先获取演员部分
+  let selectors = Selector::parse("a").unwrap();
+
+  let mut actors = el.select(&selectors);
+
+  //再获取标记部分
+  let selectors = Selector::parse("strong").unwrap();
+  let flags = el.select(&selectors);
+
+
+  let value = flags
+    .map(|x| {
+      //判断字符是否为 ♀
+      if x.inner_html().eq("♀") {
+        actors.next().unwrap().inner_html()
+      } else {
+        actors.next();
+        "".to_string()
+      }
+    })
+    .filter(|x| !x.eq(&"".to_string()))
+    .collect::<Vec<_>>();
+
+  value
+}
+
+

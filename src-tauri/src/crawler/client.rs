@@ -15,7 +15,7 @@ lazy_static! {
         .unwrap(),
     );
     reqwest::ClientBuilder::new()
-      .connect_timeout(Duration::from_secs(5))
+      .connect_timeout(Duration::from_secs(2))
       .default_headers(headers)
       .timeout(Duration::from_secs(5))
       .build()

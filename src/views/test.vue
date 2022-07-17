@@ -21,6 +21,8 @@
 
     <el-button type="danger" @click="test12">爬虫测试</el-button>
 
+    <el-button type="danger" @click="test13">爬虫测试(家里)</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -177,12 +179,22 @@ export default defineComponent({
     };
 
     const test12 = async () => {
-      await request("smov_crawler",{ retrievingSmov: {
-        id: 1,
-        seek_name: "ipx005",
-        smov_id: 1,
-        status: 2,
-      } } );
+      await request("smov_crawler", {
+        retrievingSmov: {
+          id: 1,
+          seek_name: "ipx005",
+          smov_id: 1,
+          status: 2,
+        },
+      });
+    };
+
+    const test13 = async () => {
+      await request("smov_crawler", {
+        retrievingSmov: {
+          id: 1, seek_name: 'IPVR-075', smov_id: 1, status: 3
+        },
+      });
     };
 
     return {
@@ -204,6 +216,7 @@ export default defineComponent({
       test10,
       test11,
       test12,
+      test13,
     };
   },
 });

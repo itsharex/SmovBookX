@@ -448,12 +448,13 @@ const deleteTask = (row: { status: number; id: any; }) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 40px;
+    // width: 100%;
+    // height: 100%;
+    border-radius: 50% ;
     position: absolute;
-    top: 0px;
-    left: 0px;
-    background: #ffffffe6;
+    top:5%;
+    left:2%;
+    // background: #ffffffe6;
 }
 
 .loading {

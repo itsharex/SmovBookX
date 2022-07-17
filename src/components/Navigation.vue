@@ -205,11 +205,11 @@ export default defineComponent({
     const eventSeekStatus = async () => {
       !(async () =>
         await listen("seek_status", (event: any) => {
-          console.log(event.payload);
+          console.log(event);
           onLoad.value = eval(event.payload.toLowerCase());
-          if (event.payload.code != 200) {
-            alert.error(event.payload.msg);
-          }
+          // if (event.payload.code != 200) {
+          //   alert.error(event.payload.msg);
+          // }
         }))();
     };
 
