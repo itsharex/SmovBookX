@@ -86,22 +86,6 @@ pub fn sava_pic_sync(url: String, name: String, path: PathBuf) -> Result<()> {
   })
 }
 
-//改造 返回错误 而不是返回Html
-pub fn get_temp_syn1c(url: &String) -> Result<Html> {
-  let url1 = String::from(url);
-  let url2 = String::from(url);
-  block_in_place(|| match reqwest::blocking::get(url1) {
-    Ok(res) => Ok(Html::parse_fragment(
-      &res.text().expect("字符串没提取出来懒得处理的错误"),
-    )),
-    Err(err) => {
-      return Err(anyhow::Error::new(CrawlerErr::NetworkError {
-        url: url2,
-        msg: err.to_string(),
-      }));
-    }
-  })
-}
 
 //改造 返回错误 而不是返回Html
 pub fn get_temp_sync(url: &String) -> Result<Html> {
@@ -118,7 +102,7 @@ pub fn get_temp_sync(url: &String) -> Result<Html> {
             Ok(text) => text,
             Err(_) => {
               index += 1;
-              break;
+              continue;
             },
           };
 
