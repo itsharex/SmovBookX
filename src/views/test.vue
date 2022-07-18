@@ -25,6 +25,8 @@
 
     <el-button type="danger" @click="test14">悬浮图标测试</el-button>
 
+    <el-button type="danger" @click="test15">测试打开新窗口</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -210,8 +212,10 @@ export default defineComponent({
       webview = new WebviewWindow("test2", {
         url: "/test2",
         title: "测试窗口",
-        width: 30,
-        height: 60,
+        width: 20,
+        height: 10,
+        minWidth: 50,
+        minHeight: 50,
         center: true,
         visible: false,
         alwaysOnTop: true,
@@ -222,6 +226,10 @@ export default defineComponent({
       });
       webview.show();
       webview.unminimize();
+    };
+
+    const test15 = () => {
+        request("create_new_window",{label:"test",effect:"",path:""});
     };
 
     return {
@@ -245,6 +253,7 @@ export default defineComponent({
       test12,
       test13,
       test14,
+      test15,
     };
   },
 });

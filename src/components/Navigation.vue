@@ -41,7 +41,7 @@
         </navigation-item>
       </div>
 
-<!-- bg-liuguang -->
+      <!-- bg-liuguang -->
       <div>
         <navigation-item
           :choose="nav.choose"
@@ -153,22 +153,22 @@ export default defineComponent({
     } as any);
 
     onMounted(() => {
-      webview = new WebviewWindow("seek", {
-        url: "/seek",
-        title: "检索列表",
-        width: 500,
-        height: 700,
-        center: true,
-        visible: false,
-        alwaysOnTop: false,
-        skipTaskbar: true,
-        resizable: false,
-        decorations: false,
-      });
+      // webview = new WebviewWindow("seek", {
+      //   url: "/seek",
+      //   title: "检索列表",
+      //   width: 500,
+      //   height: 700,
+      //   center: true,
+      //   visible: false,
+      //   alwaysOnTop: false,
+      //   skipTaskbar: true,
+      //   resizable: false,
+      //   decorations: false,
+      // });
 
-      webview.once("tauri://created", function () {
-        request("set_style", { effect: "", label: "seek" });
-      });
+      // webview.once("tauri://created", function () {
+      //   request("set_style", { effect: "", label: "seek" });
+      // });
 
       eventSeekStatus();
       linstenUpdate();
@@ -178,8 +178,6 @@ export default defineComponent({
     //增加控制 是否自动检测版本更新
     const linstenUpdate = async () => {
       Updater.value = await checkUpdate();
-
-      console.log(Updater.value);
     };
 
     const eventHfsStatus = async () => {
@@ -203,9 +201,6 @@ export default defineComponent({
         await listen("seek_status", (event: any) => {
           console.log(event);
           onLoad.value = eval(event.payload.toLowerCase());
-          // if (event.payload.code != 200) {
-          //   alert.error(event.payload.msg);
-          // }
         }))();
     };
 
@@ -225,13 +220,7 @@ export default defineComponent({
     const onLoad = ref(false);
 
     const goSeek = () => {
-      webview.show();
-      webview.unminimize();
-
-      webview.setAlwaysOnTop(true);
-      setTimeout(() => {
-        webview.setAlwaysOnTop(false);
-      }, 50);
+      request("go_seek");
     };
 
     const hfs = () => {

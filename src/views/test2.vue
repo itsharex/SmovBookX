@@ -13,9 +13,8 @@ let show = false;
 <style lang='less' scoped>
 .test2{
   background-color: blue;
-  display: flex;
-  width: 90vw;
-  height: 90vh;
-  border-radius: 50%;
+  width: 100vw;
+  height: 100vh;
+  // border-radius: 50%;
 }
 </style>

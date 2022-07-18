@@ -43,23 +43,94 @@ pub fn perform_request(endpoint: String, body: RequestBody) -> String {
 }
 
 #[command]
-pub async fn create_new_window(label: String, url: String, window: Window) {
+pub async fn create_new_window(label: String, effect: String, path: String, window: Window) {
   match window.get_window(&label) {
     Some(win) => set_focus(label, win),
     None => {
-      println!("{}", &label.clone());
-      Window::builder(
-        &window,
-        &label.clone(),
-        WindowUrl::External(format!("http://localhost:3000/{}", url).parse().unwrap()),
-      )
-      .focus()
-      .title(label.clone())
-      .center()
-      .min_inner_size(800.0, 600.0)
-      .decorations(false)
-      .build()
-      .unwrap();
+      let window = Window::builder(&window, &label.clone(), WindowUrl::App(path.into()))
+        .focus()
+        .title(label.clone())
+        .center()
+        .min_inner_size(800.0, 600.0)
+        .decorations(false)
+        .build()
+        .unwrap();
+
+      set_shadow(&window, true).unwrap();
+      clear_blur(&window).unwrap();
+      clear_acrylic(&window).unwrap();
+      clear_mica(&window).unwrap();
+
+      match effect.as_str() {
+        "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
+        "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
+        "mica" => apply_mica(&window).unwrap(),
+        _ => (),
+      };
+    }
+  };
+}
+
+#[command]
+pub async fn go_seek(window: Window) {
+  match window.get_window("seek") {
+    Some(win) => set_focus("seek".to_string(), win),
+    None => {
+      let window = Window::builder(&window, "seek", WindowUrl::App("seek".into()))
+        .focus()
+        .title("检索列表")
+        .center()
+        .min_inner_size(400.0, 700.0)
+        .decorations(false)
+        .skip_taskbar(false)
+        .resizable(false)
+        .transparent(true)
+        .build()
+        .unwrap();
+
+      set_shadow(&window, true).unwrap();
+      clear_blur(&window).unwrap();
+      clear_acrylic(&window).unwrap();
+      clear_mica(&window).unwrap();
+
+      match "" {
+        "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
+        "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
+        "mica" => apply_mica(&window).unwrap(),
+        _ => (),
+      };
+    }
+  };
+}
+
+#[command]
+pub async fn go_detail(label: String, url: String, window: Window) {
+  match window.get_window("seek") {
+    Some(win) => set_focus("seek".to_string(), win),
+    None => {
+      let window = Window::builder(&window, "seek", WindowUrl::App("seek".into()))
+        .focus()
+        .title("检索列表")
+        .center()
+        .min_inner_size(400.0, 700.0)
+        .decorations(false)
+        .skip_taskbar(false)
+        .resizable(false)
+        .transparent(true)
+        .build()
+        .unwrap();
+
+      set_shadow(&window, true).unwrap();
+      clear_blur(&window).unwrap();
+      clear_acrylic(&window).unwrap();
+      clear_mica(&window).unwrap();
+
+      match "" {
+        "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
+        "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
+        "mica" => apply_mica(&window).unwrap(),
+        _ => (),
+      };
     }
   };
 }
