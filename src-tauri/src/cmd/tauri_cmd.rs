@@ -80,7 +80,7 @@ pub async fn go_seek(window: Window) {
         .focus()
         .title("检索列表")
         .center()
-        .min_inner_size(400.0, 700.0)
+        .inner_size(400.0, 700.0)
         .decorations(false)
         .skip_taskbar(false)
         .resizable(false)
@@ -89,9 +89,6 @@ pub async fn go_seek(window: Window) {
         .unwrap();
 
       set_shadow(&window, true).unwrap();
-      clear_blur(&window).unwrap();
-      clear_acrylic(&window).unwrap();
-      clear_mica(&window).unwrap();
 
       match "" {
         "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
@@ -105,17 +102,15 @@ pub async fn go_seek(window: Window) {
 
 #[command]
 pub async fn go_detail(label: String, url: String, window: Window) {
-  match window.get_window("seek") {
-    Some(win) => set_focus("seek".to_string(), win),
+  match window.get_window(&label) {
+    Some(win) => set_focus(label, win),
     None => {
-      let window = Window::builder(&window, "seek", WindowUrl::App("seek".into()))
+      let window = Window::builder(&window, String::from(&label), WindowUrl::App(url.into()))
         .focus()
-        .title("检索列表")
+        .title(String::from(&label))
         .center()
-        .min_inner_size(400.0, 700.0)
+        .min_inner_size(800.0, 600.0)
         .decorations(false)
-        .skip_taskbar(false)
-        .resizable(false)
         .transparent(true)
         .build()
         .unwrap();
@@ -125,7 +120,7 @@ pub async fn go_detail(label: String, url: String, window: Window) {
       clear_acrylic(&window).unwrap();
       clear_mica(&window).unwrap();
 
-      match "" {
+      match "blur" {
         "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
         "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
         "mica" => apply_mica(&window).unwrap(),

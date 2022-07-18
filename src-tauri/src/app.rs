@@ -452,20 +452,17 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
 
 /// 监听app事件
 pub fn handle_app_event(app_handle: &AppHandle<Wry>, run_event: RunEvent) {
-
-  if let RunEvent::WindowEvent { label, event,.. } = run_event {
-
-    if let tauri::WindowEvent::CloseRequested { api,.. } = event {
+  if let RunEvent::WindowEvent { label, event, .. } = run_event {
+    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
       let app_handle = app_handle.clone();
-      if label == "main" || label == "seek"  {
-              let app_handle = app_handle.clone();
-              app_handle.get_window(&label).unwrap().hide().unwrap();
-              // use the exposed close api, and prevent the event loop to close
-              api.prevent_close();
-            }
-    }    
+      if label == "main" || label == "seek" {
+        let app_handle = app_handle.clone();
+        app_handle.get_window(&label).unwrap().hide().unwrap();
+        // use the exposed close api, and prevent the event loop to close
+        api.prevent_close();
+      }
+    }
   }
-
 }
 
 /// 创建pid文件
@@ -527,9 +524,16 @@ pub fn lock_single() {
 #[inline]
 pub fn init_app_shadows(app: &mut tauri::App<Wry>) {
   use window_shadows::set_shadow;
+  use window_vibrancy::{apply_acrylic, apply_blur, apply_mica};
   match app.get_window("main") {
     Some(window) => {
       set_shadow(&window, true).unwrap();
+      match "" {
+        "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
+        "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
+        "mica" => apply_mica(&window).unwrap(),
+        _ => (),
+      };
     }
     None => {}
   };

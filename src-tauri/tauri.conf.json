@@ -75,7 +75,7 @@
         "decorations": false,
         "resizable": true,
         "fullscreen": false,
-        "transparent": false,
+        "transparent": true,
         "focus":true,
         "fileDropEnabled":false
       }

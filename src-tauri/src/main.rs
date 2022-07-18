@@ -73,6 +73,7 @@ async fn main() {
       cmd::tauri_cmd::set_style,
       cmd::tauri_cmd::get_local_ip,
       cmd::tauri_cmd::go_seek,
+      cmd::tauri_cmd::go_detail,
       hfs::axum_hfs::run_hfs,
       crawler::crawler::smov_crawler
     ])

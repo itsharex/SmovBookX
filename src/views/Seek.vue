@@ -1,5 +1,5 @@
 <template>
-    <el-container>
+    <el-container class="seekMain">
         <!-- 检索页面悬浮球 四月份 -->
         <el-header class="header" height="40px">
             <action-bar :imize="false" :minImize="false" :top="true">
@@ -588,6 +588,10 @@ const deleteTask = (row: { status: number; id: any; }) => {
 <style lang="less">
 .vxe-table--body-wrapper {
     overflow: overlay;
+}
+
+.seekMain{
+    background-color: white;
 }
 
 </style>

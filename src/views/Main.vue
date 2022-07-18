@@ -1,7 +1,7 @@
 import { ElLoading } from "element-plus";
 
 <template>
-  <div class="app">
+  <div class="app index">
     <el-container>
       <el-header class="WindowHeader" height="40px">
         <action-bar data-tauri-drag-region>
@@ -127,6 +127,10 @@ body {
 .updateIco {
   height: 100%;
   width: 20px;
+}
+
+.index {
+  background-color: white;
 }
 </style>
 

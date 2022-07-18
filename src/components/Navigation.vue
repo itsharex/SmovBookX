@@ -153,23 +153,6 @@ export default defineComponent({
     } as any);
 
     onMounted(() => {
-      // webview = new WebviewWindow("seek", {
-      //   url: "/seek",
-      //   title: "检索列表",
-      //   width: 500,
-      //   height: 700,
-      //   center: true,
-      //   visible: false,
-      //   alwaysOnTop: false,
-      //   skipTaskbar: true,
-      //   resizable: false,
-      //   decorations: false,
-      // });
-
-      // webview.once("tauri://created", function () {
-      //   request("set_style", { effect: "", label: "seek" });
-      // });
-
       eventSeekStatus();
       linstenUpdate();
       eventHfsStatus();

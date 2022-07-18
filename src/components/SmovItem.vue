@@ -35,31 +35,21 @@ import { getAll, WebviewWindow, availableMonitors } from '@tauri-apps/api/window
 import { title } from 'process';
 import { join } from 'path/posix';
 import { ElSteps } from 'element-plus';
+import { request } from '../util/invoke';
 export default defineComponent({
     name: 'SmovItem',
     props: ['data'],
     setup(props, { emit }) {
 
         const openDetail = async () => {
-
-            const webview = new WebviewWindow(props.data.name, {
-                url: '/SmovDetail/' + props.data.id,
-                title: props.data.name,
-                center: true,
-                minHeight: 600,
-                minWidth: 800,
-                decorations: false,
-                fileDropEnabled: false
-            });
-
-            invoke("set_focus", { label: props.data.name });
-
-            webview.once('tauri://created', function () {
-                invoke("set_style", { effect: "", label: props.data.name });
-            })
-            webview.once('tauri://close-requested', function (e) {
-                console.log(e.windowLabel)
-            })
+            // 仅记录一下单次监听的写法
+            // webview.once('tauri://created', function () {
+            //     invoke("set_style", { effect: "", label: props.data.name });
+            // })
+            // webview.once('tauri://close-requested', function (e) {
+            //     console.log(e.windowLabel)
+            // })
+            request("go_detail",{label: props.data.name, url: '/SmovDetail/' + props.data.id,});
 
         }
         return {
