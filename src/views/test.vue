@@ -23,6 +23,8 @@
 
     <el-button type="danger" @click="test13">爬虫测试(家里)</el-button>
 
+    <el-button type="danger" @click="test14">悬浮图标测试</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -189,12 +191,37 @@ export default defineComponent({
       });
     };
 
+    let webview: any = null;
+
+    onMounted(() => {});
+
     const test13 = async () => {
       await request("smov_crawler", {
         retrievingSmov: {
-          id: 1, seek_name: 'IPVR-075', smov_id: 1, status: 3
+          id: 1,
+          seek_name: "IPVR-075",
+          smov_id: 1,
+          status: 3,
         },
       });
+    };
+
+    const test14 = () => {
+      webview = new WebviewWindow("test2", {
+        url: "/test2",
+        title: "测试窗口",
+        width: 30,
+        height: 60,
+        center: true,
+        visible: false,
+        alwaysOnTop: true,
+        // skipTaskbar: true,
+        resizable: false,
+        decorations: false,
+        transparent: true,
+      });
+      webview.show();
+      webview.unminimize();
     };
 
     return {
@@ -217,6 +244,7 @@ export default defineComponent({
       test11,
       test12,
       test13,
+      test14,
     };
   },
 });

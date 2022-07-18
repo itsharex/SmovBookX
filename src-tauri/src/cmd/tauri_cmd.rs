@@ -160,7 +160,6 @@ pub fn set_style(effect: String, label: String, window: Window) {
       clear_blur(&window).unwrap();
       clear_acrylic(&window).unwrap();
       clear_mica(&window).unwrap();
-      println!("{}", effect);
       match effect.as_str() {
         "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
         "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),

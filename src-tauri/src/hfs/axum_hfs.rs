@@ -37,7 +37,7 @@ pub async fn run_hfs(window: Window) {
       .layer(TraceLayer::new_for_http());
 
     let addr = SocketAddr::from((conf.config.address, conf.config.port));
-    tracing::debug!("listening on {}", addr);
+    tracing::info!("listening on {}", addr);
 
     let server = match axum::Server::try_bind(&addr) {
       Ok(ser) => ser,

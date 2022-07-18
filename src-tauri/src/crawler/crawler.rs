@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use crate::{
-  crawler::{error::CrawlerErr, network::{sava_pic_sync,get_temp_sync}},
+  crawler::{
+    error::CrawlerErr,
+    network::{get_temp_sync, sava_pic_sync},
+  },
   model::smov::{RetrievingSmov, SmovFileSeek, SmovSeek},
   response::response::Response,
   serve::file::TidySmov,
@@ -10,10 +13,10 @@ use crate::{
 use anyhow::Result;
 
 ///考虑在爬虫实现热更新 模板引擎的错误尝试 模板引擎可能并不适合爬虫 有没有直接从云端获取结构的办法 哎 到时候再解决吧
-use scraper::{ElementRef,  Selector};
+use scraper::{ElementRef, Selector};
 use tauri::command;
 
-use super::client::{CLIENT, MAIN_URL};
+use super::client::MAIN_URL;
 
 #[command]
 pub async fn smov_crawler(retrieving_smov: RetrievingSmov) -> Response<Option<i32>> {
@@ -163,7 +166,12 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<()> {
   for detail in video_meta_panel.select(&selector) {
     if let Some(strong_type_el) = detail.select(&strong_selector).next() {
       match strong_type_el.inner_html().as_str() {
-        "時長:" => smov_seek.duration = get_value_unique(detail, &value_selector).replace(" 分鍾", "").parse::<i32>().unwrap(),
+        "時長:" => {
+          smov_seek.duration = get_value_unique(detail, &value_selector)
+            .replace(" 分鍾", "")
+            .parse::<i32>()
+            .unwrap()
+        }
         "日期:" => smov_seek.release_time = get_value_unique(detail, &value_selector),
         "導演:" => smov_seek.directors = get_value_unique(detail, &value_selector),
         "片商:" => smov_seek.makers = get_value_unique(detail, &value_selector),
@@ -198,7 +206,7 @@ pub async fn smov_crawler_program(format: String, id: i64) -> Result<()> {
   }
 
   smov_seek.insert_by_path_name().unwrap();
-  
+
   Ok(())
 }
 
@@ -208,7 +216,7 @@ fn get_value_unique(el: ElementRef, selector: &Selector) -> String {
   let mut values = "".to_string();
   for value in text {
     values = format!("{}{}", values, value);
-  };
+  }
 
   values
 }
@@ -227,11 +235,7 @@ fn get_value(el: ElementRef, selector: &Selector) -> Vec<String> {
 }
 
 fn get_value_actors(el: ElementRef, selector: &Selector) -> Vec<String> {
-
-  let el =  el
-  .select(selector)
-  .next()
-  .unwrap();
+  let el = el.select(selector).next().unwrap();
   //先获取演员部分
   let selectors = Selector::parse("a").unwrap();
 
@@ -240,7 +244,6 @@ fn get_value_actors(el: ElementRef, selector: &Selector) -> Vec<String> {
   //再获取标记部分
   let selectors = Selector::parse("strong").unwrap();
   let flags = el.select(&selectors);
-
 
   let value = flags
     .map(|x| {
@@ -257,5 +260,3 @@ fn get_value_actors(el: ElementRef, selector: &Selector) -> Vec<String> {
 
   value
 }
-
-

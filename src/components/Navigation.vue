@@ -27,7 +27,7 @@
           :index="-2"
           :show="true"
           @click="goSeek"
-          :class="onLoad ? 'bg-liuguang' : ''"
+          :class="onLoad ? 'rainbow' : ''"
           :ico="HelpFilled"
         >
           <el-icon
@@ -41,6 +41,7 @@
         </navigation-item>
       </div>
 
+<!-- bg-liuguang -->
       <div>
         <navigation-item
           :choose="nav.choose"
@@ -48,7 +49,7 @@
           :index="-3"
           :show="true"
           @click.stop="hfs"
-          :class="HfsStatus == 2 ? 'bg-liuguang' : ''"
+          :class="HfsStatus == 2 ? 'rainbow' : ''"
           :ico="Platform"
         >
           <div class="qrScann">
@@ -143,11 +144,6 @@ export default defineComponent({
         { name: "首页", path: "/SomvView", ico: markRaw(HomeFilled) },
         { name: "检索", path: "/SomvFile", ico: markRaw(Menu) },
         { name: "设置", path: "/setting", ico: markRaw(Tools) },
-        {
-          name: "首页",
-          path: "/index",
-          show: process.env.NODE_ENV === "development",
-        },
         {
           name: "测试",
           path: "/test",
@@ -573,5 +569,73 @@ export default defineComponent({
   flex-grow: 1;
   justify-content: end;
   margin-right: 12px;
+}
+
+@-webkit-keyframes rotate {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(1turn);
+    transform-origin: center;
+  }
+}
+.rainbow {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  padding: 2rem;
+}
+.rainbow::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  left: -50%;
+  /* top: -50%; */
+  width: 200%;
+  height: 600%;
+  background-color: #399953;
+  background-repeat: no-repeat;
+  background-size: 50% 50%, 50% 50%;
+  background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+  background-image: linear-gradient(#399953, #399953),
+    linear-gradient(#fbb300, #fbb300), linear-gradient(#d53e33, #d53e33),
+    linear-gradient(#377af5, #377af5);
+  -webkit-animation: rotate 7s linear infinite;
+  animation: rotate 7s linear infinite;
+}
+.rainbow::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 3.5px;
+  top: 3.5px;
+  width: calc(100% - 7px);
+  height: calc(100% - 7px);
+  background: white;
+  border-radius: 3px;
+  -webkit-animation: opacityChange 3s infinite alternate;
+  animation: opacityChange 3s infinite alternate;
+}
+
+@-webkit-keyframes opacityChange {
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes opacityChange {
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 </style>

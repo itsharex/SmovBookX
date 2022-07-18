@@ -11,8 +11,9 @@ pub enum CrawlerErr {
   #[error("IO错误:{msg},path:{path}")]
   IOError { msg: String, path: String },
   #[error("其他错误")]
+  #[warn(dead_code)]
   OtherError(String),
-  #[error("unknown data store error")]
+  #[error("unknown error")]
   Unknown,
 }
 

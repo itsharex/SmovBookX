@@ -38,15 +38,11 @@ const router = createRouter({
                 {
                     path: '/test',
                     component: test,
-                    redirect: '/test2',
+                    redirect: '/test1',
                     children: [
                         {
                             path: '/test1',
                             component: () => import("../views/test1.vue")
-                        },
-                        {
-                            path: '/test2',
-                            component: () => import("../views/test2.vue")
                         }
                     ]
                 },
@@ -67,6 +63,10 @@ const router = createRouter({
         {
             path: '/SmovDetail/:Id',
             component: () => import("../views/SmovDetail.vue")
+        },
+        {
+            path: '/test2',
+            component: () => import("../views/test2.vue")
         },
     ],
 

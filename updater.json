@@ -1,11 +1,11 @@
 {
-    "name":"v0.1.8",
-    "notes":"测试版本优化了大量的界面 新增了部分功能",
-    "pub_date":"2022-04-02T21:52:57Z",
+    "name":"v0.1.9",
+    "notes":"修改了爬虫程序，优化爬虫返回，修改获取页面保存图片为同步模式，优化代码",
+    "pub_date":"2022-07-18T09:52:57Z",
     "platforms": {
         "win64": {
-            "signature":"dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReDdsMkgrcVpPSzRjRHFraWM3L0ZXYmpoMW5HRVVEVlJLQVByaDhlZFVsTU8zcFFocjk1eHo0ZVVYbllzbkxSWUdQRUNuS3h0SWhuVjZhejZYWjlKSW9XVGN6T2VJWWdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjQ4OTA3NDY3CWZpbGU6RDpcRGV2XHRhdXJpXFNtb3ZCb29rWFxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9TbW92Qm9va18wLjEuOF94NjRfemgtQ04ubXNpLnppcApHcHBNaXVmOWthVTJxNW1QUmV4blBBWlFpNjRlaElWOWM3N1NvM3F2VGQyd3lRYThzak1IelN4ZXRnd3pucEpFMXEvS2x6MXROak82R1lhSHh1NXlCUT09Cg==",
-            "url":"https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/SmovBook_0.1.8_x64_zh-CN.msi.zip?version=0.1.8"
+            "signature":"dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReDdsMkgrcVpPS3lQZHVTMUZMaTZyUDJmUHZyU0JCcVJmaUF2UzUyemRzOUtFUjVaenB2Zk02MUpWSXh5RWRIcTdRVHVUNk5DOHgxemFnN0d5UWt3UzViWG5rdWhjbncwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU4MTA5Mzk1CWZpbGU6QzpcVXNlcnNcTGVyaVxEb2N1bWVudHNcRGV2XHRhdXJpXFNtb3ZCb29rWFxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9TbW92Qm9va18wLjEuOV94NjRfemgtQ04ubXNpLnppcApucUdZMjl3TG5ORzM0RjBFSWNJY1ZZeWIzZHVOZ0JYL2NFdkVtY2V2VnBXYncrNkdlSExzU0tac2MyQ21Ga0JkL25VVXFWUkdzM3I3NU1TbkFuTEpEQT09Cg==",
+            "url":"https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/SmovBook_0.1.9_x64_zh-CN.msi.zip?version=0.1.9"
         }
     }
 }

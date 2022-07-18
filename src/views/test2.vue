@@ -1,12 +1,21 @@
 <template>
-    <div>
-        <el-button v-if="show" type="primary" @click="show = !show">Primary</el-button>
-        <el-button v-if="show" type="success" @click="show = !show">Success</el-button>
-    </div>
+  <div data-tauri-drag-region class = "test2">
+   
+    
+  </div>
 </template>
 
 <script lang='ts' setup>
+import { WebviewWindow } from "@tauri-apps/api/window";
 let show = false;
+
 </script>
 <style lang='less' scoped>
+.test2{
+  background-color: blue;
+  display: flex;
+  width: 90vw;
+  height: 90vh;
+  border-radius: 50%;
+}
 </style>

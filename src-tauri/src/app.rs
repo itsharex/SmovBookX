@@ -457,7 +457,7 @@ pub fn handle_app_event(app_handle: &AppHandle<Wry>, run_event: RunEvent) {
 
     if let tauri::WindowEvent::CloseRequested { api,.. } = event {
       let app_handle = app_handle.clone();
-      if label == "main" || label == "seek" {
+      if label == "main" || label == "seek"  {
               let app_handle = app_handle.clone();
               app_handle.get_window(&label).unwrap().hide().unwrap();
               // use the exposed close api, and prevent the event loop to close

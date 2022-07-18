@@ -100,7 +100,16 @@ pub fn get_temp_sync(url: &String) -> Result<Html> {
           let text = &res.text();
           let text = match text {
             Ok(text) => text,
-            Err(_) => {
+            Err(err) => {
+              tracing::error!(
+                "请求网页{}出现错误，重新提取，错误原因:{}",
+                String::from(url),
+                err.to_string()
+              );
+              ret = Err(anyhow::Error::new(CrawlerErr::NetworkError {
+                url: String::from(url),
+                msg: err.to_string(),
+              }));
               index += 1;
               continue;
             },
@@ -109,6 +118,11 @@ pub fn get_temp_sync(url: &String) -> Result<Html> {
           return Ok(Html::parse_fragment(text));
         }
         Err(err) => {
+          tracing::error!(
+            "请求网页{}出现错误，重新提取，错误原因:{}",
+            String::from(url),
+            err.to_string()
+          );
           ret = Err(anyhow::Error::new(CrawlerErr::NetworkError {
             url: String::from(url),
             msg: err.to_string(),
