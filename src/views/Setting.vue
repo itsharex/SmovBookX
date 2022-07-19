@@ -52,7 +52,7 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { dialog } from "@tauri-apps/api";
 import { OpenDialogOptions } from "@tauri-apps/api/dialog";
 import { request } from "../util/invoke";
-import { Close } from '@element-plus/icons-vue';
+import { Close } from "@element-plus/icons-vue";
 import XEUtils from "xe-utils";
 
 const { $alert } = getCurrentInstance()!.appContext.config.globalProperties;
@@ -60,11 +60,9 @@ const { $alert } = getCurrentInstance()!.appContext.config.globalProperties;
 const conf = ref({
   conf: {
     thread: 0,
-    tidy_folder: ""
+    tidy_folder: "",
   },
-  seek_folder: [
-
-  ]
+  seek_folder: [],
 } as any);
 
 const tidy = ref();
@@ -73,10 +71,10 @@ const seek = ref();
 const setSeekFolder = (path: any) => {
   request("insert_folder", { path: path }).then((callback: any) => {
     if (callback.code == 200) {
-      $alert.success("添加成功")
+      $alert.success("添加成功");
       conf.value.seek_folder.push({
-        id:callback.data,
-        path:path
+        id: callback.data,
+        path: path,
       });
       seek.value.clean();
     }
@@ -87,34 +85,31 @@ const initSettingData = () => {
   request("get_setting_data").then((res: any) => {
     console.log(res);
     conf.value = res.data;
-  })
-}
+  });
+};
 
 const setTidyFolder = (res: any) => {
   request("update_tidy_folder", { path: res }).then(() => {
     conf.value.conf.tidy_folder = res;
     tidy.value.clean();
-  }
-
-  );
+  });
 };
 
 const deleteSeekFolder = (id: any) => {
   request("delete_folder", { id: id }).then((res: any) => {
-    $alert.success("删除成功")
-    XEUtils.remove(conf.value.seek_folder, item => item.id === id)
-  })
-}
+    $alert.success("删除成功");
+    XEUtils.remove(conf.value.seek_folder, (item) => item.id === id);
+  });
+};
 
 onMounted(() => {
   initSettingData();
-})
-
+});
 </script>
 
 <style lang="less" scoped>
 .title {
-  font-size: 30px;
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
   padding: 12px;
@@ -147,6 +142,7 @@ onMounted(() => {
 .seek {
   span {
     cursor: pointer;
+    text-decoration: underline;
   }
 }
 
@@ -165,7 +161,7 @@ onMounted(() => {
     align-items: center;
     width: 20px;
     .el-icon {
-      margin-right: 7px;
+      margin-right: 0.5rem;
       cursor: pointer;
     }
   }

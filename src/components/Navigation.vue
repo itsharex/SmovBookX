@@ -248,7 +248,7 @@ export default defineComponent({
       HfsStatus,
       hfs,
       Iphone,
-      qrOpen,
+      qrOpen
     };
   },
 });
@@ -306,7 +306,7 @@ export default defineComponent({
   flex-grow: 1;
   display: flex;
   flex-direction: column-reverse;
-  margin-bottom: 12px;
+  margin-bottom: 1rem;
   width: 100%;
 
   .setting {
@@ -540,7 +540,7 @@ export default defineComponent({
   display: flex;
   flex-grow: 1;
   justify-content: end;
-  margin-right: 12px;
+  margin-right: 1rem;
 }
 
 @-webkit-keyframes rotate {

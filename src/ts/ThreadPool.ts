@@ -19,6 +19,8 @@ export module ThreadPool {
         window: any;
         autoRun: boolean;
         loading: boolean;
+        time: boolean;
+        timeInterval: any;
         constructor({ size, runningFlag, autoRun }) {
             this.size = size;
 
@@ -32,6 +34,7 @@ export module ThreadPool {
             this.runningProcessorCount = 0;  //正在执行中的线程
 
             this.index = 0;
+            this.time = false;
 
             this.window = getAll().filter(val => {
                 return val.label === 'main'
@@ -47,6 +50,10 @@ export module ThreadPool {
             if (this.isRunning()) {
                 return;
             }
+
+            this.timeInterval = setInterval(() => {
+                this.time = !this.time
+            }, 1000);
 
             this.runningFlag = true;
 
@@ -65,6 +72,7 @@ export module ThreadPool {
                 if (!this.isRunning()) {
                     this.window.emit("seek_status", this.runningFlag);
                     this.delLoading = false;
+                    window.clearInterval(this.timeInterval);
                     window.clearInterval(seek);
                 }
             }, 50)

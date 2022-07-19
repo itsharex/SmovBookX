@@ -5,6 +5,7 @@
 declare module 'vue' {
   export interface GlobalComponents {
     ActionBar: typeof import('./components/ActionBar.vue')['default']
+    ActionBarButton: typeof import('./components/ActionBarButton.vue')['default']
     Artplayer: typeof import('./components/Artplayer.vue')['default']
     Dialog: typeof import('./components/dialog/dialog.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']

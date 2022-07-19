@@ -3,7 +3,7 @@ import { ElLoading } from "element-plus";
 <template>
   <div class="app index">
     <el-container>
-      <el-header class="WindowHeader" height="40px">
+      <el-header class="WindowHeader" height="2.1rem">
         <action-bar data-tauri-drag-region>
           <div class="quickButton" v-if="false">
           </div>

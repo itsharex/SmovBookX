@@ -100,7 +100,7 @@ export default defineComponent({
   width: 100%;
   background: @log_background;
   box-shadow: @log_shadow_close; // 顶部阴影
-  font-size: small;
+  font-size: 1rem;
 }
 
 .logDiv {

@@ -120,7 +120,7 @@ pub async fn go_detail(label: String, url: String, window: Window) {
       clear_acrylic(&window).unwrap();
       clear_mica(&window).unwrap();
 
-      match "blur" {
+      match "acrylic" {
         "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
         "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
         "mica" => apply_mica(&window).unwrap(),

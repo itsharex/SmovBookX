@@ -36,12 +36,14 @@ pub async fn smov_crawler(retrieving_smov: RetrievingSmov) -> Response<Option<i3
 pub async fn smov_crawler_program(format: String, id: i64) -> Result<()> {
   let url = format!("{}/search?q={}&f=all", *MAIN_URL, format);
 
-  let selector = Selector::parse(".movie-list").unwrap();
+  
 
   let fragment = match get_temp_sync(&url) {
     Ok(html) => html,
     Err(err) => return Err(err),
   };
+
+  let selector = Selector::parse(".movie-list").unwrap();
 
   let movie_list = match fragment.select(&selector).next() {
     Some(list) => list,

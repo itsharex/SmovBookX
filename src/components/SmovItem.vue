@@ -75,7 +75,7 @@ export default defineComponent({
     width: 160px;
     border-radius: 6px;
     box-shadow: var(--el-box-shadow-light);
-    margin: 10px;
+    margin: 0.5rem;
     cursor: pointer;
     transition: all 0.1s;
 }
@@ -85,10 +85,10 @@ export default defineComponent({
 }
 
 .name {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin-top: 0.4rem;
+    margin-bottom: 0.2rem;
 }
 
 .titleDiv {
@@ -103,11 +103,11 @@ export default defineComponent({
     display: -webkit-box;
     word-break: break-all;
     text-overflow: ellipsis;
-    font-size: 13px;
+    font-size: 0.8rem;
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
 }
 </style>
