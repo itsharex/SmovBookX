@@ -128,29 +128,3 @@ SmovBookM优化
 5）软件内播放器需要给一个窗口
 
 界面优化 各种fontsize 修改为rem 或em单位
-
-
-
-
-
-[default]
-address = "127.0.0.1"
-port = 8000
-workers = 16
-keep_alive = 5
-ident = "Rocket"
-log_level = "normal"
-temp_dir = ""
-cli_colors = true
-
-[default.limits]
-forms = "64 kB"
-json = "1 MiB"
-msgpack = "2 MiB"
-"file/jpg" = "5 MiB"
-
-[default.shutdown]
-ctrlc = true
-signals = ["term", "hup"]
-grace = 5
-mercy = 5

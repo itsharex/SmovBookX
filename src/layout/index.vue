@@ -16,6 +16,7 @@ import {
 
 const logs = ref("" as any);
 const seek = ref(false);
+const AlwaysOnTop = ref(false);
 //定义一个全局值 ，可以由前端打印日志
 provide("log", logs);
 
@@ -25,6 +26,7 @@ watch(seek, () => {
 
 //检索状态全局值
 provide("seek", seek);
+provide("AlwaysOnTop", AlwaysOnTop);
 
 onMounted(() => {
   disableMenu();

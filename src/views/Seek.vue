@@ -1,5 +1,18 @@
 <template>
-  <el-container class="seekMain">
+  <div
+    class="FloatingBallMain"
+    :class="pool.isRunning() ? 'onLoad' : ''"
+    v-show="!Suspended"
+    @click="ChangeSuspended"
+  >
+    <div
+      class="FloatingBall"
+      :class="pool.isRunning() ? 'onLoadOut' : ''"
+      data-tauri-drag-region
+    ></div>
+  </div>
+
+  <el-container class="seekMain" v-show="Suspended">
     <!-- 检索页面悬浮球 四月份 -->
     <el-header class="header" height="2.1rem">
       <action-bar :imize="false" :minImize="false" :top="true">
@@ -21,8 +34,6 @@
 
           <find theme="filled" size="16" fill="#333" v-show="pool.time" />
         </action-bar-button>
-
-        <!-- <p class="status">状态:{{ pool.isRunning() ? '是' : '否' }}</p> -->
       </action-bar>
     </el-header>
     <el-main class="main">
@@ -59,6 +70,8 @@
                         >
                             <delete />
                         </el-icon>-->
+
+            <el-button type="success" @click="ChangeSuspended">ceshi</el-button>
           </div>
 
           <div class="filtersDiv">
@@ -219,10 +232,13 @@ import {
   Find,
   LoadingOne,
 } from "@icon-park/vue-next";
+import { request } from "../util/invoke";
 
 const Tasks = ref({} as VxeTableInstance);
 
 const HotLoading = ref(false);
+
+const Suspended = ref(true);
 
 const openStatus = ref([
   true, //wait
@@ -335,6 +351,19 @@ const SussChange = (val: any) => {
     $table.setFilter(column, filter);
     $table.updateData();
   }
+};
+
+const AlwaysOnTop: any = inject("AlwaysOnTop");
+
+const ChangeSuspended = () => {
+  request("change_seek_suspended", { flag: Suspended.value }).finally(() => {
+    Suspended.value = !Suspended.value;
+    //重置窗口是否置顶
+    if (Suspended.value) {
+      console.log(AlwaysOnTop.value);
+      getCurrent().setAlwaysOnTop(AlwaysOnTop.value);
+    }
+  });
 };
 
 const WaitChange = (val: any) => {
@@ -568,8 +597,275 @@ const deleteTask = (row: { status: number; id: any }) => {
   }
 }
 
+@keyframes rotatingOut {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+}
+
 .onLoad {
   animation: rotating 3s linear infinite;
+}
+
+.onLoadOut {
+  animation: rotatingOut 3s linear infinite;
+}
+
+.FloatingBall {
+  background-color: #edb72c;
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+.FloatingBallMain {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  background-color: #c7415b;
+  background-image: linear-gradient(
+      45deg,
+      #edb72c 50%,
+      transparent 0,
+      transparent 100%,
+      #edb72c 0
+    ),
+    linear-gradient(
+      45deg,
+      #edb72c 50%,
+      transparent 0,
+      transparent 100%,
+      #edb72c 0
+    );
+
+  border-radius: 50%;
+}
+
+.bg-liuguang {
+  animation: liuguang 2s infinite linear;
+}
+
+#app {
+  overflow: hidden;
+}
+
+@keyframes liuguang {
+  0% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 0%,
+      #ffa0ec 100%,
+      #8a8af4 200%,
+      #ffa0ec 300%
+    );
+  }
+
+  5% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -10%,
+      #ffa0ec 90%,
+      #8a8af4 190%,
+      #ffa0ec 290%
+    );
+  }
+
+  10% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -20%,
+      #ffa0ec 80%,
+      #8a8af4 180%,
+      #ffa0ec 280%
+    );
+  }
+
+  15% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -30%,
+      #ffa0ec 70%,
+      #8a8af4 170%,
+      #ffa0ec 270%
+    );
+  }
+
+  20% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -40%,
+      #ffa0ec 60%,
+      #8a8af4 160%,
+      #ffa0ec 260%
+    );
+  }
+
+  25% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -50%,
+      #ffa0ec 50%,
+      #8a8af4 150%,
+      #ffa0ec 250%
+    );
+  }
+
+  30% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -60%,
+      #ffa0ec 40%,
+      #8a8af4 140%,
+      #ffa0ec 240%
+    );
+  }
+
+  35% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -70%,
+      #ffa0ec 30%,
+      #8a8af4 130%,
+      #ffa0ec 230%
+    );
+  }
+
+  40% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -80%,
+      #ffa0ec 20%,
+      #8a8af4 120%,
+      #ffa0ec 220%
+    );
+  }
+
+  45% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -90%,
+      #ffa0ec 10%,
+      #8a8af4 110%,
+      #ffa0ec 210%
+    );
+  }
+
+  50% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -100%,
+      #ffa0ec 0%,
+      #8a8af4 100%,
+      #ffa0ec 200%
+    );
+  }
+
+  55% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -110%,
+      #ffa0ec -10%,
+      #8a8af4 90%,
+      #ffa0ec 190%
+    );
+  }
+
+  60% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -120%,
+      #ffa0ec -20%,
+      #8a8af4 80%,
+      #ffa0ec 180%
+    );
+  }
+
+  65% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -130%,
+      #ffa0ec -30%,
+      #8a8af4 70%,
+      #ffa0ec 170%
+    );
+  }
+
+  70% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -140%,
+      #ffa0ec -40%,
+      #8a8af4 60%,
+      #ffa0ec 160%
+    );
+  }
+
+  75% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -150%,
+      #ffa0ec -50%,
+      #8a8af4 50%,
+      #ffa0ec 150%
+    );
+  }
+
+  80% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -160%,
+      #ffa0ec -60%,
+      #8a8af4 40%,
+      #ffa0ec 140%
+    );
+  }
+
+  85% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -170%,
+      #ffa0ec -70%,
+      #8a8af4 30%,
+      #ffa0ec 130%
+    );
+  }
+
+  90% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -180%,
+      #ffa0ec -80%,
+      #8a8af4 20%,
+      #ffa0ec 120%
+    );
+  }
+
+  95% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -190%,
+      #ffa0ec -90%,
+      #8a8af4 10%,
+      #ffa0ec 110%
+    );
+  }
+
+  100% {
+    background: linear-gradient(
+      to bottom right,
+      #8a8af4 -200%,
+      #ffa0ec -100%,
+      #8a8af4 0%,
+      #ffa0ec 100%
+    );
+  }
 }
 </style>
 

@@ -45,7 +45,8 @@ import { Copy, Close, Minus, Lock, Pin } from "@icon-park/vue-next";
 
 const window = getCurrent();
 
-const AlwaysOnTop = ref(false);
+//这个值需要保存到顶部 让所有组件都能访问到
+const AlwaysOnTop:any = inject("AlwaysOnTop");
 
 const ChangeAlwaysOnTop = () => {
   AlwaysOnTop.value = !AlwaysOnTop.value;

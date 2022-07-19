@@ -9,7 +9,7 @@ use window_vibrancy::{
 };
 
 use tauri::api::dialog;
-use tauri::{command, Manager, Window, WindowUrl};
+use tauri::{command, LogicalSize, Manager, PhysicalSize, Size, Window, WindowUrl};
 
 extern crate toml;
 use crate::app::Conf;
@@ -51,7 +51,7 @@ pub async fn create_new_window(label: String, effect: String, path: String, wind
         .focus()
         .title(label.clone())
         .center()
-        .min_inner_size(800.0, 600.0)
+        .inner_size(30.0, 30.0)
         .decorations(false)
         .build()
         .unwrap();
@@ -74,7 +74,13 @@ pub async fn create_new_window(label: String, effect: String, path: String, wind
 #[command]
 pub async fn go_seek(window: Window) {
   match window.get_window("seek") {
-    Some(win) => set_focus("seek".to_string(), win),
+    Some(win) => {
+      // win.emit_all("seek_single", "").unwrap();
+      win.unminimize().unwrap();
+      win.set_focus().unwrap();
+      win.show().unwrap();
+      
+    }
     None => {
       let window = Window::builder(&window, "seek", WindowUrl::App("seek".into()))
         .focus()
@@ -98,6 +104,35 @@ pub async fn go_seek(window: Window) {
       };
     }
   };
+}
+
+#[command]
+pub async fn change_seek_suspended(flag: bool, window: Window) {
+  match flag {
+    true => {
+      let phy = Size::Physical(PhysicalSize {
+        width: 60, //50
+        height: 40, //30
+      });
+      set_shadow(&window, false).unwrap();
+      window.set_size(phy).unwrap();
+
+      window.set_skip_taskbar(true).unwrap();
+      window.set_always_on_top(true).unwrap();
+    }
+    false => {
+      set_shadow(&window, true).unwrap();
+      window
+        .set_size(Size::Logical(LogicalSize {
+          width: 400.0,
+          height: 800.0,
+        }))
+        .unwrap();
+
+      window.set_skip_taskbar(false).unwrap();
+      window.set_always_on_top(false).unwrap();
+    }
+  }
 }
 
 #[command]

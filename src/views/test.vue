@@ -209,8 +209,8 @@ export default defineComponent({
     };
 
     const test14 = () => {
-      webview = new WebviewWindow("test2", {
-        url: "/test2",
+      webview = new WebviewWindow("test", {
+        url: "/test",
         title: "测试窗口",
         width: 20,
         height: 10,
