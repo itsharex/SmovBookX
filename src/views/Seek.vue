@@ -35,7 +35,7 @@
           <loading class="onLoad" theme="outline" size="16" fill="#ff2648" />
         </action-bar-button>
 
-        <action-bar-button v-show="!pool.isRunning()" @click="ChangeSuspended">
+        <action-bar-button @click="ChangeSuspended">
           <multilayer-sphere theme="outline" size="16" fill="#333" />
         </action-bar-button>
 
@@ -275,6 +275,8 @@ let pool = reactive(
 
 onUpdated(() => {});
 
+onBeforeUpdate(() => {});
+
 const filterStatusMethod: VxeColumnPropTypes.FilterMethod = ({
   value,
   row,
@@ -373,15 +375,20 @@ const SussChange = (val: any) => {
 const AlwaysOnTop: any = inject("AlwaysOnTop");
 
 const ChangeSuspended = () => {
-  //先隐藏窗口 窗口还未隐藏 就 开始了修改位置
-  Suspended.value = !Suspended.value;
+  request("change_seek_suspended", { flag: Suspended.value }).then(() => {
+    Suspended.value = !Suspended.value;
 
-  request("change_seek_suspended", { flag: !Suspended.value }).finally(() => {
+    // nextTick(() => {
+    //   getCurrent().show();
+    // });
+
     
-    //getCurrent().show();
+
+    setTimeout(() => {
+      getCurrent().show();
+    }, 50);
     //重置窗口是否置顶
     if (Suspended.value) {
-      console.log(AlwaysOnTop.value);
       getCurrent().setAlwaysOnTop(AlwaysOnTop.value);
     }
   });
@@ -406,11 +413,6 @@ const removeAll = () => {
   invoke("remove_smov_seek_status", { id: data })
     .then((res: any) => {
       if (res.code == 200) {
-        ElMessage({
-          showClose: true,
-          message: "将" + data.length + "条数据移出队列",
-          type: "success",
-        });
         Tasks.value.remove();
         pool.tasks = [];
         pool.index = 0;

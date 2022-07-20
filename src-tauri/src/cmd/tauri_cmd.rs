@@ -9,7 +9,7 @@ use window_vibrancy::{
 };
 
 use tauri::api::dialog;
-use tauri::{command, LogicalPosition, LogicalSize, Manager, Position, Size, Window, WindowUrl};
+use tauri::{command, LogicalSize, Manager, PhysicalPosition, Position, Size, Window, WindowUrl};
 
 extern crate toml;
 use crate::app::Conf;
@@ -107,31 +107,52 @@ pub async fn go_seek(window: Window) {
 
 #[command]
 pub async fn change_seek_suspended(flag: bool, window: Window) {
-  // window.minimize().unwrap();
+  //方向错误
+  //不应该用显示与否去做交互
+  //窗口不应该做显示隐藏
+  //而是应该在当前的悬浮球上 从左上角做一个 水波动画 就可以避免这些问题 而且对于交互来说更加科学一点
+
+  // 方案一 窗口隐藏加载 但是点击会不跟手
   window.hide().unwrap();
+  std::thread::sleep(std::time::Duration::from_millis(200));
+
+  // 方案二：窗口大小设置为0 不会造成残影问题
+  // let phy = Size::Logical(LogicalSize {
+  //   width: 1.0,
+  //   height: 1.0,
+  // });
+  // window.set_size(phy).unwrap();
+
   match flag {
     true => {
-      let position = Position::Logical(LogicalPosition {
-        x: 1500.0,
-        y: 100.0,
-      });
+      let position = window.current_monitor().unwrap();
 
-      //大小未确认在不同电脑是否有差别
+      let position = position.unwrap();
+
+      let position = Position::Logical(
+        PhysicalPosition {
+          x: position.size().width - (position.size().width / 8),
+          y: position.size().height / 8,
+        }
+        .to_logical(position.scale_factor()),
+      );
+
       let phy = Size::Logical(LogicalSize {
         width: 60.0,  //50
         height: 40.0, //30
       });
+
       set_shadow(&window, false).unwrap();
       window.set_position(position).unwrap();
       window.set_size(phy).unwrap();
 
       window.set_skip_taskbar(true).unwrap();
       window.set_always_on_top(true).unwrap();
-      window.show().unwrap();
-      // window.unminimize().unwrap();
+      //window.show().unwrap();
     }
     false => {
       set_shadow(&window, true).unwrap();
+      //因为先设置了大小 然后修改了位置 且不管显示隐藏都会有一个动画的过程 导致双击悬浮球会出现残影
       window
         .set_size(Size::Logical(LogicalSize {
           width: 400.0,
@@ -139,12 +160,12 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
         }))
         .unwrap();
 
+      // window.center().unwrap();
+      //位置不应该在中间 应该在点击的位置
       window.center().unwrap();
-
       window.set_skip_taskbar(false).unwrap();
       window.set_always_on_top(false).unwrap();
-      window.show().unwrap();
-      // window.unminimize().unwrap();
+      //window.show().unwrap();
     }
   }
 }
