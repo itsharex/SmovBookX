@@ -9,7 +9,7 @@ use window_vibrancy::{
 };
 
 use tauri::api::dialog;
-use tauri::{command, LogicalSize, Manager, PhysicalSize, Size, Window, WindowUrl};
+use tauri::{command, LogicalPosition, LogicalSize, Manager, Position, Size, Window, WindowUrl};
 
 extern crate toml;
 use crate::app::Conf;
@@ -79,7 +79,6 @@ pub async fn go_seek(window: Window) {
       win.unminimize().unwrap();
       win.set_focus().unwrap();
       win.show().unwrap();
-      
     }
     None => {
       let window = Window::builder(&window, "seek", WindowUrl::App("seek".into()))
@@ -108,17 +107,28 @@ pub async fn go_seek(window: Window) {
 
 #[command]
 pub async fn change_seek_suspended(flag: bool, window: Window) {
+  // window.minimize().unwrap();
+  window.hide().unwrap();
   match flag {
     true => {
-      let phy = Size::Physical(PhysicalSize {
-        width: 60, //50
-        height: 40, //30
+      let position = Position::Logical(LogicalPosition {
+        x: 1500.0,
+        y: 100.0,
+      });
+
+      //大小未确认在不同电脑是否有差别
+      let phy = Size::Logical(LogicalSize {
+        width: 60.0,  //50
+        height: 40.0, //30
       });
       set_shadow(&window, false).unwrap();
+      window.set_position(position).unwrap();
       window.set_size(phy).unwrap();
 
       window.set_skip_taskbar(true).unwrap();
       window.set_always_on_top(true).unwrap();
+      window.show().unwrap();
+      // window.unminimize().unwrap();
     }
     false => {
       set_shadow(&window, true).unwrap();
@@ -129,8 +139,12 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
         }))
         .unwrap();
 
+      window.center().unwrap();
+
       window.set_skip_taskbar(false).unwrap();
       window.set_always_on_top(false).unwrap();
+      window.show().unwrap();
+      // window.unminimize().unwrap();
     }
   }
 }

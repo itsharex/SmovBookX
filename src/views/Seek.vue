@@ -3,13 +3,28 @@
     class="FloatingBallMain"
     :class="pool.isRunning() ? 'onLoad' : ''"
     v-show="!Suspended"
-    @click="ChangeSuspended"
+    @dblclick="ChangeSuspended"
+    data-tauri-drag-region
   >
     <div
       class="FloatingBall"
       :class="pool.isRunning() ? 'onLoadOut' : ''"
       data-tauri-drag-region
-    ></div>
+    >
+      <!-- <p class="FloatingBallText" data-tauri-drag-region>
+        <span class="PoolALL">{{ pool.tasks.length }}</span>
+        <span class="Separate">-</span>
+        <span class="PoolSuss">{{
+            XEUtils.filter(pool.tasks, item => item.status == 1).length
+        }}</span>
+        <span class="Separate">-</span>
+        <span class="PoolFail">
+          {{
+             XEUtils.filter(pool.tasks, item => item.status == 2).length
+          }}</span
+        >
+      </p> -->
+    </div>
   </div>
 
   <el-container class="seekMain" v-show="Suspended">
@@ -20,12 +35,15 @@
           <loading class="onLoad" theme="outline" size="16" fill="#ff2648" />
         </action-bar-button>
 
+        <action-bar-button v-show="!pool.isRunning()" @click="ChangeSuspended">
+          <multilayer-sphere theme="outline" size="16" fill="#333" />
+        </action-bar-button>
+
         <action-bar-button @click="removeAll">
           <delete theme="outline" size="16" fill="#333" />
         </action-bar-button>
 
         <action-bar-button v-show="!pool.isRunning()" @click="start">
-          <!-- <pause theme="outline" fill="#333" size="20" /> -->
           <find theme="outline" size="16" fill="#333" />
         </action-bar-button>
 
@@ -70,8 +88,6 @@
                         >
                             <delete />
                         </el-icon>-->
-
-            <el-button type="success" @click="ChangeSuspended">ceshi</el-button>
           </div>
 
           <div class="filtersDiv">
@@ -231,6 +247,7 @@ import {
   Delete,
   Find,
   LoadingOne,
+  MultilayerSphere,
 } from "@icon-park/vue-next";
 import { request } from "../util/invoke";
 
@@ -356,8 +373,12 @@ const SussChange = (val: any) => {
 const AlwaysOnTop: any = inject("AlwaysOnTop");
 
 const ChangeSuspended = () => {
-  request("change_seek_suspended", { flag: Suspended.value }).finally(() => {
-    Suspended.value = !Suspended.value;
+  //先隐藏窗口 窗口还未隐藏 就 开始了修改位置
+  Suspended.value = !Suspended.value;
+
+  request("change_seek_suspended", { flag: !Suspended.value }).finally(() => {
+    
+    //getCurrent().show();
     //重置窗口是否置顶
     if (Suspended.value) {
       console.log(AlwaysOnTop.value);
@@ -619,7 +640,10 @@ const deleteTask = (row: { status: number; id: any }) => {
   width: 80%;
   height: 80%;
   border-radius: 50%;
-  box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .FloatingBallMain {
   width: 100vw;
@@ -630,6 +654,7 @@ const deleteTask = (row: { status: number; id: any }) => {
   margin: 0;
   padding: 0;
   background-color: #c7415b;
+  cursor: all-scroll;
   background-image: linear-gradient(
       45deg,
       #edb72c 50%,
@@ -866,6 +891,23 @@ const deleteTask = (row: { status: number; id: any }) => {
       #ffa0ec 100%
     );
   }
+}
+
+.FloatingBallText {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.Separate {
+  color: black;
+}
+
+.PoolSuss {
+  color: black;
+}
+
+.PoolFail {
+  color: black;
 }
 </style>
 
