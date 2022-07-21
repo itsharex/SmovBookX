@@ -29,7 +29,7 @@
     </div>
   </transition>
 
-  <transition name="none">
+  <transition name="el-zoom-in-center">
     <el-container class="seekMain" v-show="Suspended == 1">
       <!-- 检索页面悬浮球 四月份 -->
       <el-header class="header" height="2.1rem">
@@ -213,7 +213,7 @@
         </div>
       </el-main>
     </el-container>
-    </transition>
+  </transition>
 </template>
 
 <script lang='ts' setup>
@@ -378,11 +378,15 @@ const SussChange = (val: any) => {
 
 const AlwaysOnTop: any = inject("AlwaysOnTop");
 
-const ChangeSuspended = () => {
+const ChangeSuspended = (event: any) => {
   let flag = Suspended.value == 1 ? true : false;
   Suspended.value = 0;
 
-  request("change_seek_suspended", { flag: flag }).then(() => {
+  request("change_seek_suspended", {
+    flag: flag,
+    x: event.screenX,
+    y: event.screenY,
+  }).then(() => {
     Suspended.value = flag ? 2 : 1;
     // setTimeout(() => {
     //   getCurrent().show();
