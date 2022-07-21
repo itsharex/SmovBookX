@@ -75,6 +75,7 @@ async fn main() {
       cmd::tauri_cmd::go_seek,
       cmd::tauri_cmd::go_detail,
       cmd::tauri_cmd::change_seek_suspended,
+      cmd::tauri_cmd::change_seek_shadow,
       hfs::axum_hfs::run_hfs,
       crawler::crawler::smov_crawler
     ])

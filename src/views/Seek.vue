@@ -1,17 +1,18 @@
 <template>
-  <div
-    class="FloatingBallMain"
-    :class="pool.isRunning() ? 'onLoad' : ''"
-    v-show="!Suspended"
-    @dblclick="ChangeSuspended"
-    data-tauri-drag-region
-  >
+  <transition name="el-zoom-in-center">
     <div
-      class="FloatingBall"
-      :class="pool.isRunning() ? 'onLoadOut' : ''"
+      class="FloatingBallMain"
+      :class="pool.isRunning() ? 'onLoad' : ''"
+      v-show="Suspended == 2"
+      @dblclick="ChangeSuspended"
       data-tauri-drag-region
     >
-      <!-- <p class="FloatingBallText" data-tauri-drag-region>
+      <div
+        class="FloatingBall"
+        :class="pool.isRunning() ? 'onLoadOut' : ''"
+        data-tauri-drag-region
+      >
+        <!-- <p class="FloatingBallText" data-tauri-drag-region>
         <span class="PoolALL">{{ pool.tasks.length }}</span>
         <span class="Separate">-</span>
         <span class="PoolSuss">{{
@@ -24,43 +25,45 @@
           }}</span
         >
       </p> -->
+      </div>
     </div>
-  </div>
+  </transition>
 
-  <el-container class="seekMain" v-show="Suspended">
-    <!-- 检索页面悬浮球 四月份 -->
-    <el-header class="header" height="2.1rem">
-      <action-bar :imize="false" :minImize="false" :top="true">
-        <action-bar-button v-show="pool.delLoading">
-          <loading class="onLoad" theme="outline" size="16" fill="#ff2648" />
-        </action-bar-button>
+  <transition name="none">
+    <el-container class="seekMain" v-show="Suspended == 1">
+      <!-- 检索页面悬浮球 四月份 -->
+      <el-header class="header" height="2.1rem">
+        <action-bar :imize="false" :minImize="false" :top="true">
+          <action-bar-button v-show="pool.delLoading">
+            <loading class="onLoad" theme="outline" size="16" fill="#ff2648" />
+          </action-bar-button>
 
-        <action-bar-button @click="ChangeSuspended">
-          <multilayer-sphere theme="outline" size="16" fill="#333" />
-        </action-bar-button>
+          <action-bar-button @click="ChangeSuspended">
+            <multilayer-sphere theme="outline" size="16" fill="#333" />
+          </action-bar-button>
 
-        <action-bar-button @click="removeAll">
-          <delete theme="outline" size="16" fill="#333" />
-        </action-bar-button>
+          <action-bar-button @click="removeAll">
+            <delete theme="outline" size="16" fill="#333" />
+          </action-bar-button>
 
-        <action-bar-button v-show="!pool.isRunning()" @click="start">
-          <find theme="outline" size="16" fill="#333" />
-        </action-bar-button>
+          <action-bar-button v-show="!pool.isRunning()" @click="start">
+            <find theme="outline" size="16" fill="#333" />
+          </action-bar-button>
 
-        <action-bar-button v-show="pool.isRunning()" @click="stop">
-          <find theme="outline" size="16" fill="#333" v-show="!pool.time" />
+          <action-bar-button v-show="pool.isRunning()" @click="stop">
+            <find theme="outline" size="16" fill="#333" v-show="!pool.time" />
 
-          <find theme="filled" size="16" fill="#333" v-show="pool.time" />
-        </action-bar-button>
-      </action-bar>
-    </el-header>
-    <el-main class="main">
-      <!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
-      <div class="seek">
-        <div class="settingDiv">
-          <div class="buttonDiv">
-            <!-- 图标 方案一  -->
-            <!-- <el-icon
+            <find theme="filled" size="16" fill="#333" v-show="pool.time" />
+          </action-bar-button>
+        </action-bar>
+      </el-header>
+      <el-main class="main">
+        <!-- 版本3 删除会出现卡死现象  方案为 数组队列和虚拟渲染的界面 -->
+        <div class="seek">
+          <div class="settingDiv">
+            <div class="buttonDiv">
+              <!-- 图标 方案一  -->
+              <!-- <el-icon
                             :size="30"
                             @click="start"
                             class="control"
@@ -88,10 +91,10 @@
                         >
                             <delete />
                         </el-icon>-->
-          </div>
+            </div>
 
-          <div class="filtersDiv">
-            <!-- <p>
+            <div class="filtersDiv">
+              <!-- <p>
                             错误
                             <el-switch v-model="openStatus[2]" @change="ErrChange" />
                         </p>
@@ -103,15 +106,15 @@
                             未检索
                             <el-switch v-model="openStatus[0]" @change="WaitChange" />
                         </p>-->
+            </div>
           </div>
-        </div>
 
-        <div v-if="HotLoading" class="load">
-          <span>Loading...</span>
-        </div>
+          <div v-if="HotLoading" class="load">
+            <span>Loading...</span>
+          </div>
 
-        <div class="smovList">
-          <!-- 
+          <div class="smovList">
+            <!-- 
               大数据时有严重的渲染问题 考虑使用vxe重写这个块 或者 自己写一个异步的加入线程 一百条一百条加  
               测试发现四千条数据的传输时间已经到了300ms 这个速度非常不满意 对于用户可能要做 表格loading 加 分批传输 加 进度条的的功能
               但是进度条还有个问题 渲染是个异步的过程 在渲染时很可能会出现 几百条数据一次性 突然出现 这个时肯定的 有没有其他办法优化用户的体验
@@ -128,88 +131,89 @@
 
               4.线程池不存方法，方法在每次用的时候生成一个 
                     -->
-          <vxe-table
-            border="none"
-            show-overflow
-            resizable
-            keep-source
-            height="100%"
-            :loading="pool.loading"
-            ref="Tasks"
-            :row-config="{ isHover: false, height: 63 }"
-            :show-header="false"
-            :tooltip-config="{ showAll: false, enterDelay: 9999999 }"
-          >
-            <template #empty>
-              <el-empty
-                style="line-height: 50px"
-                description="没有其他数据了哦"
-              ></el-empty>
-            </template>
-
-            <vxe-column
-              field="is_active"
-              title="对象"
-              align="center"
-              class-name="smovColumn"
+            <vxe-table
+              border="none"
+              show-overflow
+              resizable
+              keep-source
+              height="100%"
+              :loading="pool.loading"
+              ref="Tasks"
+              :row-config="{ isHover: false, height: 63 }"
+              :show-header="false"
+              :tooltip-config="{ showAll: false, enterDelay: 9999999 }"
             >
-              <template #default="{ row }" class="smovColumn">
-                <div class="smov">
-                  <div
-                    class="smovCard"
-                    :class="
-                      row.status == 1
-                        ? 'smovCard_suss'
-                        : row.status == 2
-                        ? 'smovCard_fail'
-                        : row.status == 3
-                        ? 'smovCard_seeking'
-                        : ''
-                    "
-                  >
-                    <div class="smovName">{{ row.seek_name }}</div>
-                    <div class="loadingDiv" v-if="row.status == 3">
-                      <loading-one
-                        theme="outline"
-                        size="16"
-                        fill="#4a4a4a"
-                        class="is-loading onLoad"
-                      />
-                    </div>
+              <template #empty>
+                <el-empty
+                  style="line-height: 50px"
+                  description="没有其他数据了哦"
+                ></el-empty>
+              </template>
 
-                    <div class="close">
-                      <el-button
-                        type="danger"
-                        size="small"
-                        color="#b1b3b8"
-                        @click="deleteTask(row)"
-                        v-if="row.status != 3"
-                        :icon="DeleteFilled"
-                        circle
-                      ></el-button>
+              <vxe-column
+                field="is_active"
+                title="对象"
+                align="center"
+                class-name="smovColumn"
+              >
+                <template #default="{ row }" class="smovColumn">
+                  <div class="smov">
+                    <div
+                      class="smovCard"
+                      :class="
+                        row.status == 1
+                          ? 'smovCard_suss'
+                          : row.status == 2
+                          ? 'smovCard_fail'
+                          : row.status == 3
+                          ? 'smovCard_seeking'
+                          : ''
+                      "
+                    >
+                      <div class="smovName">{{ row.seek_name }}</div>
+                      <div class="loadingDiv" v-if="row.status == 3">
+                        <loading-one
+                          theme="outline"
+                          size="16"
+                          fill="#4a4a4a"
+                          class="is-loading onLoad"
+                        />
+                      </div>
+
+                      <div class="close">
+                        <el-button
+                          type="danger"
+                          size="small"
+                          color="#b1b3b8"
+                          @click="deleteTask(row)"
+                          v-if="row.status != 3"
+                          :icon="DeleteFilled"
+                          circle
+                        ></el-button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </template>
-            </vxe-column>
+                </template>
+              </vxe-column>
 
-            <vxe-column
-              field="status"
-              :visible="false"
-              :filters="[
-                { label: '错误', value: 2, checked: openStatus[2] },
-                { label: '等待', value: 0, checked: openStatus[0] },
-                { label: '成功', value: 1, checked: openStatus[1] },
-                { label: '正在执行', value: 3, checked: openStatus[3] },
-              ]"
-            ></vxe-column>
-          </vxe-table>
+              <vxe-column
+                field="status"
+                :visible="false"
+                :filters="[
+                  { label: '错误', value: 2, checked: openStatus[2] },
+                  { label: '等待', value: 0, checked: openStatus[0] },
+                  { label: '成功', value: 1, checked: openStatus[1] },
+                  { label: '正在执行', value: 3, checked: openStatus[3] },
+                ]"
+              ></vxe-column>
+            </vxe-table>
+          </div>
+
+          <div class="zw"></div>
         </div>
-
-        <div class="zw"></div>
-      </div>
-    </el-main>
-  </el-container>
+      </el-main>
+    </el-container>
+    </transition>
 </template>
 
 <script lang='ts' setup>
@@ -255,7 +259,7 @@ const Tasks = ref({} as VxeTableInstance);
 
 const HotLoading = ref(false);
 
-const Suspended = ref(true);
+const Suspended = ref(1);
 
 const openStatus = ref([
   true, //wait
@@ -375,20 +379,18 @@ const SussChange = (val: any) => {
 const AlwaysOnTop: any = inject("AlwaysOnTop");
 
 const ChangeSuspended = () => {
-  request("change_seek_suspended", { flag: Suspended.value }).then(() => {
-    Suspended.value = !Suspended.value;
+  let flag = Suspended.value == 1 ? true : false;
+  Suspended.value = 0;
 
-    // nextTick(() => {
+  request("change_seek_suspended", { flag: flag }).then(() => {
+    Suspended.value = flag ? 2 : 1;
+    // setTimeout(() => {
     //   getCurrent().show();
-    // });
-
-    
-
-    setTimeout(() => {
-      getCurrent().show();
-    }, 50);
+    // }, 50);
     //重置窗口是否置顶
-    if (Suspended.value) {
+    if (Suspended.value == 1) {
+      // request("change_seek_shadow");
+
       getCurrent().setAlwaysOnTop(AlwaysOnTop.value);
     }
   });

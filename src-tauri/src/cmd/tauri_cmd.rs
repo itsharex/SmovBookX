@@ -113,8 +113,8 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
   //而是应该在当前的悬浮球上 从左上角做一个 水波动画 就可以避免这些问题 而且对于交互来说更加科学一点
 
   // 方案一 窗口隐藏加载 但是点击会不跟手
-  window.hide().unwrap();
-  std::thread::sleep(std::time::Duration::from_millis(200));
+  // window.hide().unwrap();
+  // std::thread::sleep(std::time::Duration::from_millis(200));
 
   // 方案二：窗口大小设置为0 不会造成残影问题
   // let phy = Size::Logical(LogicalSize {
@@ -131,8 +131,8 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
 
       let position = Position::Logical(
         PhysicalPosition {
-          x: position.size().width - (position.size().width / 8),
-          y: position.size().height / 8,
+          x: position.size().width - (position.size().width / 8), //8
+          y: position.size().height / 8,                          //8
         }
         .to_logical(position.scale_factor()),
       );
@@ -143,6 +143,7 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
       });
 
       set_shadow(&window, false).unwrap();
+      std::thread::sleep(std::time::Duration::from_millis(175));
       window.set_position(position).unwrap();
       window.set_size(phy).unwrap();
 
@@ -151,8 +152,9 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
       //window.show().unwrap();
     }
     false => {
-      set_shadow(&window, true).unwrap();
-      //因为先设置了大小 然后修改了位置 且不管显示隐藏都会有一个动画的过程 导致双击悬浮球会出现残影
+      std::thread::sleep(std::time::Duration::from_millis(175));
+
+      //因为先设置了大小 然后修改了位置 且不管显示隐藏都会有一个动画的过程 导致双击悬浮球会出现残影 windows的动画导致闪屏
       window
         .set_size(Size::Logical(LogicalSize {
           width: 400.0,
@@ -160,14 +162,23 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
         }))
         .unwrap();
 
-      // window.center().unwrap();
       //位置不应该在中间 应该在点击的位置
       window.center().unwrap();
+
+      set_shadow(&window, true).unwrap();
+
       window.set_skip_taskbar(false).unwrap();
       window.set_always_on_top(false).unwrap();
+
       //window.show().unwrap();
     }
   }
+}
+
+#[command]
+pub async fn change_seek_shadow(window: Window) {
+  std::thread::sleep(std::time::Duration::from_millis(100));
+  set_shadow(&window, true).unwrap();
 }
 
 #[command]
