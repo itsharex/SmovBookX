@@ -126,7 +126,6 @@ import { Menu, VideoCameraFilled } from '@element-plus/icons-vue';
 import { getCurrent } from "@tauri-apps/api/window";
 import { shell } from "@tauri-apps/api";
 import { join } from "@tauri-apps/api/path";
-import { ElMessage } from "element-plus";
 
 export default defineComponent({
     props: {
@@ -335,11 +334,11 @@ export default defineComponent({
 }
 
 .key {
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 600;
 }
 .value {
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 500;
     a {
         color: brown;
@@ -351,7 +350,7 @@ export default defineComponent({
     display: flex;
     flex-wrap: wrap;
     .tag {
-        font-size: 15px;
+        font-size: 1rem;
         margin-right: 5px;
         a {
             color: brown;

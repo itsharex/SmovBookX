@@ -4,7 +4,10 @@
  */
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{
+  collections::HashMap,
+  net::{IpAddr, Ipv4Addr},
+};
 use toml::Value;
 
 #[cfg(not(target_os = "windows"))]
@@ -50,6 +53,7 @@ use tracing_subscriber::{
 
 lazy_static! {
   pub static ref APP: Mutex<App> = Mutex::new(App::new());
+  pub static ref HFSCONFIG: Mutex<HfsConfig> = Mutex::new(HfsConfig::new());
 }
 
 struct JsonVisitor<'a>(&'a mut BTreeMap<String, serde_json::Value>);
@@ -216,10 +220,13 @@ pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
     .with_thread_names(true)
     .with_target(false)
     .with_file(false)
-    .pretty();
+    .with_line_number(false)
+    .pretty(); //美化 虽然我觉的也没美化多少
 
   let debug_log = tracing_subscriber::fmt::layer()
     .with_writer(Arc::new(file))
+    .with_ansi(false)
+    .with_file(true)
     .with_filter(filter::LevelFilter::INFO);
 
   let now_log = stdout_log
@@ -251,16 +258,47 @@ pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
 }
 
 /// app配置map
+#[derive(Deserialize, Serialize, Clone)]
 pub struct App {
   pub app_dir: PathBuf,
   pub conf: Conf,
   pub msg: String,
 }
 
-#[derive(Deserialize, Serialize,Clone)]
+#[derive(Deserialize, Serialize, Clone)]
+pub struct HfsConfig {
+  pub config: HfsConfigs,
+  pub runing: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Conf {
   pub tidy_folder: PathBuf,
   pub thread: i64, //检索线程数
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct HfsConfigs {
+  pub address: IpAddr,
+
+  pub port: u16,
+
+  pub temp_dir: PathBuf,
+}
+
+impl HfsConfigs {
+  pub fn default() -> HfsConfigs {
+    let cfg = tauri::Config::default();
+    let app_path = match tauri::api::path::app_dir(&cfg) {
+      None => PathBuf::new(),
+      Some(p) => p.join("SmovBook"),
+    };
+    HfsConfigs {
+      address: IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+      port: 3225,
+      temp_dir: app_path.join("hfs_temp"),
+    }
+  }
 }
 
 impl App {
@@ -276,7 +314,7 @@ impl App {
     };
     match tauri::api::path::app_dir(&cfg) {
       None => app.app_dir = PathBuf::new(),
-      Some(p) => app.app_dir = p.join("smovbook"),
+      Some(p) => app.app_dir = p.join("SmovBook"),
     };
 
     //此时文件可能不存在 调用一次app new 在懒加载不能做这个处理，，
@@ -303,6 +341,35 @@ impl App {
   }
 }
 
+impl HfsConfig {
+  pub fn new() -> HfsConfig {
+    let cfg = tauri::Config::default();
+    let app_path = match tauri::api::path::app_dir(&cfg) {
+      None => PathBuf::new(),
+      Some(p) => p.join("SmovBook"),
+    };
+    let conf = app_path.join("hfs.toml");
+    let mut str_val = String::new();
+
+    File::open(conf)
+      .unwrap()
+      .read_to_string(&mut str_val)
+      .unwrap();
+
+    let config: Value = toml::from_str(&str_val).unwrap();
+
+    let config = config.as_table().unwrap().get("default").unwrap();
+
+    let config: HfsConfigs = config.clone().try_into().unwrap();
+
+    let hfs_config = HfsConfig {
+      config,
+      runing: false,
+    };
+
+    hfs_config
+  }
+}
 /// 创建任务栏图标
 #[cfg(target_os = "windows")]
 pub fn create_try() -> SystemTray {
@@ -384,9 +451,10 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
 }
 
 /// 监听app事件
-pub fn handle_app_event(app_handle: &AppHandle<Wry>, event: RunEvent) {
-  match event {
-    RunEvent::CloseRequested { label, api, .. } => {
+pub fn handle_app_event(app_handle: &AppHandle<Wry>, run_event: RunEvent) {
+  if let RunEvent::WindowEvent { label, event, .. } = run_event {
+    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+      let app_handle = app_handle.clone();
       if label == "main" || label == "seek" {
         let app_handle = app_handle.clone();
         app_handle.get_window(&label).unwrap().hide().unwrap();
@@ -394,7 +462,6 @@ pub fn handle_app_event(app_handle: &AppHandle<Wry>, event: RunEvent) {
         api.prevent_close();
       }
     }
-    _ => {}
   }
 }
 
@@ -457,24 +524,37 @@ pub fn lock_single() {
 #[inline]
 pub fn init_app_shadows(app: &mut tauri::App<Wry>) {
   use window_shadows::set_shadow;
+  use window_vibrancy::{apply_acrylic, apply_blur, apply_mica};
   match app.get_window("main") {
     Some(window) => {
       set_shadow(&window, true).unwrap();
+      match "" {
+        "blur" => apply_blur(&window, Some((238, 238, 244, 100))).unwrap(),
+        "acrylic" => apply_acrylic(&window, Some((238, 238, 244, 100))).unwrap(),
+        "mica" => apply_mica(&window).unwrap(),
+        _ => (),
+      };
     }
     None => {}
   };
 }
 
-/// 发送拉起请求
+/// 发送拉起请求  拉起请求有问题 要修改 主要是 获取焦点的问题
 fn send_wake_up() {
-  tauri::async_runtime::block_on(async {
-    let res = UdpSocket::bind("127.0.0.1:24253").await.unwrap();
-    let mut data = [0u8; 16];
-    for i in 0..16 {
-      data[i] = 1 as u8
-    }
-    res.send_to(&data, "127.0.0.1:24254").await.unwrap();
-  });
+  let _ = thread::Builder::new()
+    .name(String::from("send_wake_up"))
+    .spawn(move || {
+      let _s = tauri::async_runtime::block_on(async move {
+        let res = UdpSocket::bind("127.0.0.1:24253").await.unwrap();
+        let mut data = [0u8; 16];
+        for i in 0..16 {
+          data[i] = 1 as u8
+        }
+        res.send_to(&data, "127.0.0.1:24254").await.unwrap();
+      });
+    })
+    .unwrap()
+    .join();
 }
 #[cfg(target_os = "windows")]
 fn open_reg_key() -> std::io::Result<()> {
@@ -528,20 +608,51 @@ pub async fn listen_single(window: Window) {
       loop {
         let mut buf = [0; 32];
         let (size, _) = socket.recv_from(&mut buf).await.expect("出现错误");
-        if size != 16 {
-          return Ok(());
-        };
-        // check status
-        let mut status = true;
-        for item in &buf[0..size] {
-          if *item as i32 != 1 {
-            status = false;
-            break;
+        if size == 16 {
+          // check status
+          let mut status = true;
+          for item in &buf[0..size] {
+            if *item as i32 != 1 {
+              status = false;
+              break;
+            }
           }
-        }
-        if status {
-          let _ = window.emit_all("main_single", "");
+          if status {
+            let _ = window.emit_all("main_single", "");
+          };
         };
       }
     });
+}
+
+///开发环境
+//#[cfg(debug_assertions)] #[cfg(not(debug_assertions))] 环境配置
+pub fn init_hfs() -> bool {
+  let cfg = tauri::Config::default();
+  let app_path = match tauri::api::path::app_dir(&cfg) {
+    None => PathBuf::new(),
+    Some(p) => p.join("SmovBook"),
+  };
+  let conf = app_path.join("hfs.toml");
+
+  if !conf.exists() {
+    if let Ok(_) = File::create(&conf) {
+      let config = HfsConfigs::default();
+      let temp_path = app_path.join("hfs_temp");
+      if !temp_path.exists() {
+        create_dir_all(temp_path).expect("创建hfs缓存文件夹错误");
+      }
+
+      let config = toml::Value::try_from(&config).unwrap();
+
+      let mut map = toml::map::Map::new();
+
+      map.insert("default".to_string(), config);
+
+      let config = toml::to_string(&map).unwrap();
+
+      write(&conf, config).unwrap();
+    }
+  }
+  true
 }

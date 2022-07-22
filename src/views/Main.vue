@@ -1,9 +1,9 @@
 import { ElLoading } from "element-plus";
 
 <template>
-  <div class="app">
+  <div class="app index">
     <el-container>
-      <el-header class="WindowHeader" height="40px">
+      <el-header class="WindowHeader" height="2.1rem">
         <action-bar data-tauri-drag-region>
           <div class="quickButton" v-if="false">
           </div>
@@ -36,6 +36,7 @@ import 'element-plus/es/components/loading/style/css'
 import { checkUpdate, installUpdate } from '@tauri-apps/api/updater';
 import { relaunch } from '@tauri-apps/api/process';
 import { StarFilled } from '@element-plus/icons-vue';
+import { request } from '../util/invoke';
 const log = false;
 
 const Updater: any = ref({})
@@ -45,23 +46,7 @@ const UpdatePopover = ref({
   show: false
 });
 
-//增加控制 是否自动检测版本更新
-const linstenUpdate = async () => {
-  Updater.value = await checkUpdate();
 
-  console.log(Updater.value)
-}
-
-const install = async () => {
-  const loading = ElLoading.service({
-    lock: true,
-    text: '正在下载更新，下载完成后会自动更新',
-  })
-  await installUpdate();
-  await relaunch();
-}
-
-linstenUpdate();
 
 </script>
 
@@ -142,6 +127,10 @@ body {
 .updateIco {
   height: 100%;
   width: 20px;
+}
+
+.index {
+  background-color: white;
 }
 </style>
 

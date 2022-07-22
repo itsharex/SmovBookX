@@ -15,6 +15,7 @@ export const request = (eventName: string, params?: InvokeArgs | undefined) => {
                 resolve(res)
             })
             .catch(e => {
+                console.log(e)
                 alert.error(e.toString())
                 reject(e)
             })

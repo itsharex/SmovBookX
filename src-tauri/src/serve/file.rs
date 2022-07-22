@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use tracing::info;
 
 use crate::model::smov::SmovFile;
 use crate::serve::smov_file::retrieve_all;
@@ -19,7 +18,7 @@ pub struct TidySmov<'a> {
 }
 
 impl TidySmov<'_> {
-  pub async fn tidy(self: &Self) -> Result<PathBuf> {
+  pub fn tidy(self: &Self) -> Result<PathBuf> {
     let tidy_path = &crate::app::APP.lock().conf.tidy_folder.clone();
     let smov_file = SmovFile::query_by_id(self.id).expect("查询数据库信息出现错误");
 
@@ -42,8 +41,8 @@ impl TidySmov<'_> {
       tracing::error!(message = "数据已被物理删除");
       return Err(anyhow!("Missing attribute: {}", "数据已被物理删除"));
     }
-    info!("来源文件夹:{:?}", &file_file_path);
-    info!("对象文件夹:{:?}", &tidy_file_path);
+    tracing::info!("来源文件夹:{:?}", &file_file_path);
+    tracing::info!("对象文件夹:{:?}", &tidy_file_path);
     //判断是否单文件
     if is_single(&smov_file.path) {
       //如果是单文件在整理目录新建文件夹 迁移视频文件

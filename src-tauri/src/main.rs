@@ -8,6 +8,8 @@ extern crate lazy_static;
 
 mod app;
 mod cmd;
+mod crawler;
+mod hfs;
 mod model;
 mod response;
 mod serve;
@@ -23,10 +25,16 @@ async fn main() {
         app::webview2_is_installed(_app);
       }
       if !app::init_app_dir() {
+        tracing::error!("工作目录初始化失败！");
         panic!("工作目录初始化失败！");
       }
       if !app::init_app_log(_app) {
+        tracing::error!("日志系统初始化失败！");
         panic!("日志系统初始化失败！");
+      }
+      if !app::init_hfs() {
+        tracing::error!("文件服务器配置初始化错误！");
+        panic!("文件服务器配置初始化错误！");
       }
       app::init_app_shadows(_app);
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
@@ -63,9 +71,16 @@ async fn main() {
       cmd::tauri_cmd::set_focus,
       cmd::tauri_cmd::create_new_window,
       cmd::tauri_cmd::set_style,
+      cmd::tauri_cmd::get_local_ip,
+      cmd::tauri_cmd::go_seek,
+      cmd::tauri_cmd::go_detail,
+      cmd::tauri_cmd::change_seek_suspended,
+      cmd::tauri_cmd::change_seek_shadow,
+      hfs::axum_hfs::run_hfs,
+      crawler::crawler::smov_crawler
     ])
     .build(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .expect("error while running tauri application"); //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息
 
   _app.run(app::handle_app_event);
 }

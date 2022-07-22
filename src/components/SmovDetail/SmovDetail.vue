@@ -174,7 +174,7 @@ export default defineComponent({
 <style lang='less' scoped>
 .note {
     font-weight: 700;
-    font-size: 12px;
+    font-size: 0.8rem;
     text-align: justify;
     text-justify: inter-ideograph;
     margin-top: 2px;
@@ -229,14 +229,14 @@ export default defineComponent({
 
 .title {
     font-weight: 700;
-    font-size: 30px;
+    font-size: 1.4rem;
 }
 .key {
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 600;
 }
 .value {
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 500;
     a {
         color: brown;
@@ -244,7 +244,7 @@ export default defineComponent({
     }
 }
 .smovTitle {
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 600;
     text-align: justify;
     text-justify: inter-ideograph;
@@ -255,7 +255,7 @@ export default defineComponent({
     display: flex;
     flex-wrap: wrap;
     .tag {
-        font-size: 15px;
+        font-size: 1rem;
         margin-right: 5px;
         a {
             color: brown;

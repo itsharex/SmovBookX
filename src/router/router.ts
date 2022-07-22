@@ -18,7 +18,8 @@ const router = createRouter({
                     path: '/index',
                     component: Index,
                     meta: {
-                        keepAlive: true
+                        keepAlive: true,
+                        label: "index"
                     }
                 },
                 {
@@ -38,17 +39,6 @@ const router = createRouter({
                 {
                     path: '/test',
                     component: test,
-                    redirect: '/test2',
-                    children: [
-                        {
-                            path: '/test1',
-                            component: () => import("../views/test1.vue")
-                        },
-                        {
-                            path: '/test2',
-                            component: () => import("../views/test2.vue")
-                        }
-                    ]
                 },
                 {
                     path: '/setting',
@@ -61,6 +51,7 @@ const router = createRouter({
 
         },
         {
+            name: "seek",
             path: '/seek',
             component: () => import("../views/Seek.vue")
         },

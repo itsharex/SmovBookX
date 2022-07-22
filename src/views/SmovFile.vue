@@ -2,15 +2,28 @@
   <div class="fileMain">
     <div class="toolBar">
       <!-- 剑气纵横三万里  一剑光寒十九洲-->
-      <el-button type="primary" :icon="Files" :loading="false" @click="getSelectEvent">检索</el-button>
-      <el-button type="warning" :icon="Close" :loading="false" @click="changeStatusAll">切换</el-button>
+      <el-button
+        type="primary"
+        :icon="Files"
+        :loading="false"
+        @click="getSelectEvent"
+        >检索</el-button
+      >
+      <el-button
+        type="warning"
+        :icon="Close"
+        :loading="false"
+        @click="changeStatusAll"
+        >切换</el-button
+      >
       <el-button type="primary" :icon="Refresh" @click="initFn">重载</el-button>
       <el-button
         type="warning"
         :icon="Refresh"
         @click="toInit"
         :loading="File.FileInitLoading"
-      >检索文件系统</el-button>
+        >检索文件系统</el-button
+      >
       <el-input
         v-model="search"
         class="search"
@@ -34,7 +47,10 @@
       :scroll-y="{ gt: 100 }"
     >
       <template #empty>
-        <el-empty style="line-height:50px" description="没有其他数据了哦"></el-empty>
+        <el-empty
+          style="line-height: 50px"
+          description="没有其他数据了哦"
+        ></el-empty>
       </template>
       <vxe-column type="seq"></vxe-column>
       <vxe-column type="checkbox" width="6%"></vxe-column>
@@ -56,7 +72,10 @@
         title="可用"
         width="10%"
         :filter-multiple="false"
-        :filters="[{ label: '可用', value: 1, checked: true }, { label: '不可用', value: 0, checked: false }]"
+        :filters="[
+          { label: '可用', value: 1, checked: true },
+          { label: '不可用', value: 0, checked: false },
+        ]"
       >
         <template #default="{ row }">
           <span>{{ row.is_active == 1 ? "是" : "否" }}</span>
@@ -75,7 +94,13 @@
       </vxe-column>
     </vxe-table>
 
-    <el-dialog v-model="File.show" title="回调" width="50%" destroy-on-close center>
+    <el-dialog
+      v-model="File.show"
+      title="回调"
+      width="50%"
+      destroy-on-close
+      center
+    >
       <p>
         检索到
         <span class="number">{{ File.data.add_size }}</span>
@@ -83,7 +108,8 @@
       </p>
       <p v-if="File.data.del_smov_file.length != 0">
         发现
-        <span class="number">{{ File.data.del_smov_file.length }}</span> 条被删除的数据
+        <span class="number">{{ File.data.del_smov_file.length }}</span>
+        条被删除的数据
       </p>
       <p>
         <el-checkbox
@@ -105,9 +131,8 @@
 import { defineComponent, ref, onMounted, reactive, inject } from "vue";
 import { VXETable, VxeTableInstance, VxeTableEvents } from "vxe-table";
 import { invoke } from "@tauri-apps/api/tauri";
-import XEUtils from 'xe-utils';
-import { ElMessage } from "element-plus";
-import { Files, Refresh, Search, Close, Select } from '@element-plus/icons-vue';
+import XEUtils from "xe-utils";
+import { Files, Refresh, Search, Close, Select } from "@element-plus/icons-vue";
 import { Log } from "../type/log";
 import { CurentTime } from "../util/time";
 
@@ -123,7 +148,7 @@ export default defineComponent({
 
     const xTable = ref({} as VxeTableInstance);
 
-    let logs = inject('log') as any;
+    let logs = inject("log") as any;
 
     const { $alert } = getCurrentInstance()!.appContext.config.globalProperties;
 
@@ -132,7 +157,7 @@ export default defineComponent({
       loading: false,
       data: {} as any,
       del: true,
-      FileInitLoading: false
+      FileInitLoading: false,
     });
 
     const findList = () => {
@@ -157,21 +182,33 @@ export default defineComponent({
       const searchs = XEUtils.toValueString(search.value).trim().toLowerCase();
       const backdata = $table.getTableData().fullData;
       if (searchs) {
-        const filterRE = new RegExp(searchs, 'gi')
-        const searchProps = ['seekname', 'realname', 'extension']
-        const rest = $table.getTableData().fullData.filter(item => searchProps.some(key => XEUtils.toValueString(item[key]).toLowerCase().indexOf(searchs) > -1))
-        const data = rest.map(row => {
-          const item = Object.assign({}, row)
-          searchProps.forEach(key => {
-            item[key] = XEUtils.toValueString(item[key]).replace(filterRE, match => `${match}`)
-          })
-          return item
-        })
+        const filterRE = new RegExp(searchs, "gi");
+        const searchProps = ["seekname", "realname", "extension"];
+        const rest = $table
+          .getTableData()
+          .fullData.filter((item) =>
+            searchProps.some(
+              (key) =>
+                XEUtils.toValueString(item[key])
+                  .toLowerCase()
+                  .indexOf(searchs) > -1
+            )
+          );
+        const data = rest.map((row) => {
+          const item = Object.assign({}, row);
+          searchProps.forEach((key) => {
+            item[key] = XEUtils.toValueString(item[key]).replace(
+              filterRE,
+              (match) => `${match}`
+            );
+          });
+          return item;
+        });
         $table.loadData(data);
       } else {
         $table.loadData(FileData);
       }
-    }
+    };
 
     const getSelectEvent = () => {
       const $table = xTable.value;
@@ -181,31 +218,30 @@ export default defineComponent({
       if (selectRecords.length != 0) {
         table.loading = true;
         for (let select of selectRecords) {
-          tasks.push(
-            {
-              id: 0,
-              smov_id: select.id,
-              seek_name: select.seekname,
-              status: 0
-            }
-          )
+          tasks.push({
+            id: 0,
+            smov_id: select.id,
+            seek_name: select.seekname,
+            status: 0,
+          });
         }
 
-        invoke("change_seek_status", { smov: tasks }).then((res: any) => {
-          if (res.code == 200) {
-            $alert.success('共' + tasks.length + '条加入到检索队列')
-          } else {
-            $alert.error('插入到检索队列出现错误,' + res.msg)
-          }
-        }
-        ).finally(() => {
-          table.loading = false;
-          //使用XEUtil进行删除
-          selectRecords.forEach(item => {
-            XEUtils.remove(FileData, toitem => toitem === item)
+        invoke("change_seek_status", { smov: tasks })
+          .then((res: any) => {
+            if (res.code == 200) {
+              $alert.success("共" + tasks.length + "条加入到检索队列");
+            } else {
+              $alert.error("插入到检索队列出现错误," + res.msg);
+            }
           })
-          $table.removeCheckboxRow();
-        })
+          .finally(() => {
+            table.loading = false;
+            //使用XEUtil进行删除
+            selectRecords.forEach((item) => {
+              XEUtils.remove(FileData, (toitem) => toitem === item);
+            });
+            $table.removeCheckboxRow();
+          });
       }
     };
 
@@ -216,12 +252,12 @@ export default defineComponent({
 
       if (selectRecords.length > 0) {
         table.loading = true;
-        const data = XEUtils.map(selectRecords, item => {
+        const data = XEUtils.map(selectRecords, (item) => {
           const a = {
             id: item.id,
-            is_active: item.is_active === 0 ? 1 : 0
+            is_active: item.is_active === 0 ? 1 : 0,
           };
-          return a
+          return a;
         });
 
         invoke("disable_smov", { id: data }).then((res: any) => {
@@ -237,41 +273,43 @@ export default defineComponent({
               }
               item.is_active = isActive;
               $table.reloadRow(item, null, "is_active");
-            })
+            });
             table.loading = false;
-            let msg = "共" + (selectRecords.length - enable) + "条数据被关闭," + enable + "条数据开启";
+            let msg =
+              "共" +
+              (selectRecords.length - enable) +
+              "条数据被关闭," +
+              enable +
+              "条数据开启";
             const log: Log = {
               time: CurentTime(),
-              thread: 'SmovFile.vue',
+              thread: "SmovFile.vue",
               msg: msg,
-              level: 'INFO'
-            }
+              level: "INFO",
+            };
             logs.value = log;
-            $alert.success(msg)
+            $alert.success(msg);
             initFn();
           }
-        })
-
+        });
       }
-
-    }
+    };
 
     const changActive = (row: any) => {
-
       const isActive = row.is_active == 1 ? 0 : 1;
 
-      invoke("change_active_status", { id: row.id, status: isActive }).then((res: any) => {
-        if (res.code == 200) {
-          const $table = xTable.value;
-          row.is_active = isActive;
-          $table.reloadRow(row, null, undefined)
-        } else {
-          $alert.error('关闭出现了一个问题' + res.msg)
-        }
-      }).finally(() => {
-
-      })
-    }
+      invoke("change_active_status", { id: row.id, status: isActive })
+        .then((res: any) => {
+          if (res.code == 200) {
+            const $table = xTable.value;
+            row.is_active = isActive;
+            $table.reloadRow(row, null, undefined);
+          } else {
+            $alert.error("关闭出现了一个问题" + res.msg);
+          }
+        })
+        .finally(() => {});
+    };
 
     onMounted(() => {
       initFn();
@@ -279,24 +317,20 @@ export default defineComponent({
 
     const initFn = () => {
       table.loading = true;
-      invoke("query_unretrieved").then((res) => {
-        let data: any = res;
-        if (data.code == 200) {
-          FileData = data.data;
-          findList();
-        }
-      }).finally(() => {
-        setTimeout(() => {
-          table.loading = false;
-        }, 500);
-
-      });
+      invoke("query_unretrieved")
+        .then((res) => {
+          let data: any = res;
+          if (data.code == 200) {
+            FileData = data.data;
+            findList();
+          }
+        })
     };
 
     //局部保存 直接修改元数据  经过测试 除了删除其他操作数据都会同步到元数据
     const editClosedEvent: VxeTableEvents.EditClosed = ({ row, column }) => {
       const $table = xTable.value;
-      const field = column.field;  //旧值 
+      const field = column.field; //旧值
       const cellValue = row[field]; //新值
 
       //更新数据库中的数据
@@ -328,36 +362,44 @@ export default defineComponent({
             File.value.data = data.data;
             File.value.show = true;
           } else {
-            $alert.error("出现了一个错误！")
+            $alert.error("出现了一个错误！");
           }
         })
         .catch(() => {
-          $alert.error("出现了一个错误！")
+          $alert.error("出现了一个错误！");
         })
         .finally(() => {
-          setTimeout(() => {
-            File.value.FileInitLoading = false;
-          }, 500);
+          // 取消状态更改延迟
+          // setTimeout(() => {
+          //   File.value.FileInitLoading = false;
+          // }, 500);
 
+          File.value.FileInitLoading = false;
         });
     };
 
     const FileClick = () => {
       File.value.loading = true;
       if (File.value.del && File.value.data.del_smov_file.length != 0) {
-        const data: number[] = XEUtils.map(File.value.data.del_smov_file as any[], item => item.id);
+        const data: number[] = XEUtils.map(
+          File.value.data.del_smov_file as any[],
+          (item) => item.id
+        );
         invoke("delete_smov", { id: data }).then((res: any) => {
-          if (res.code = 200) {
+          if ((res.code = 200)) {
             initFn();
-            $alert.success("检索成功,删除了" + File.value.data.del_smov_file.length + "条数据")
+            $alert.success(
+              "检索成功,删除了" +
+                File.value.data.del_smov_file.length +
+                "条数据"
+            );
           } else {
-            $alert.error("出现了一个错误！")
+            $alert.error("出现了一个错误！");
           }
-        }
-        )
-      };
+        });
+      }
       File.value.show = false;
-    }
+    };
 
     return {
       search,
@@ -377,7 +419,7 @@ export default defineComponent({
       Select,
       File,
       FileClick,
-      toInit
+      toInit,
     };
   },
 });

@@ -35,31 +35,21 @@ import { getAll, WebviewWindow, availableMonitors } from '@tauri-apps/api/window
 import { title } from 'process';
 import { join } from 'path/posix';
 import { ElSteps } from 'element-plus';
+import { request } from '../util/invoke';
 export default defineComponent({
     name: 'SmovItem',
     props: ['data'],
     setup(props, { emit }) {
 
         const openDetail = async () => {
-
-            const webview = new WebviewWindow(props.data.name, {
-                url: '/SmovDetail/' + props.data.id,
-                title: props.data.name,
-                center: true,
-                minHeight: 600,
-                minWidth: 800,
-                decorations: false,
-                fileDropEnabled: false
-            });
-
-            invoke("set_focus", { label: props.data.name });
-
-            webview.once('tauri://created', function () {
-                invoke("set_style", { effect: "", label: props.data.name });
-            })
-            webview.once('tauri://close-requested', function (e) {
-                console.log(e.windowLabel)
-            })
+            // 仅记录一下单次监听的写法
+            // webview.once('tauri://created', function () {
+            //     invoke("set_style", { effect: "", label: props.data.name });
+            // })
+            // webview.once('tauri://close-requested', function (e) {
+            //     console.log(e.windowLabel)
+            // })
+            request("go_detail",{label: props.data.name, url: '/SmovDetail/' + props.data.id,});
 
         }
         return {
@@ -85,7 +75,7 @@ export default defineComponent({
     width: 160px;
     border-radius: 6px;
     box-shadow: var(--el-box-shadow-light);
-    margin: 10px;
+    margin: 0.5rem;
     cursor: pointer;
     transition: all 0.1s;
 }
@@ -95,10 +85,10 @@ export default defineComponent({
 }
 
 .name {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin-top: 0.4rem;
+    margin-bottom: 0.2rem;
 }
 
 .titleDiv {
@@ -113,11 +103,11 @@ export default defineComponent({
     display: -webkit-box;
     word-break: break-all;
     text-overflow: ellipsis;
-    font-size: 13px;
+    font-size: 0.8rem;
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
 }
 </style>
