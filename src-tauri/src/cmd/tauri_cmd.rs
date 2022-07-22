@@ -156,26 +156,56 @@ pub async fn change_seek_suspended(flag: bool, x: u32, y: u32, window: Window) {
     false => {
       std::thread::sleep(std::time::Duration::from_millis(170));
 
-      let x_flag =
-        x < (position.size().width as f64 * position.scale_factor().ceil() / 2.0).ceil() as u32;
+      // 根据点击位置获取方法
+      // let x_flag =
+      //   x < (position.size().width as f64 / position.scale_factor().ceil() / 2.0).ceil() as u32;
 
-      let y_flag =
-        y < (position.size().height as f64 * position.scale_factor().ceil() / 2.0).ceil() as u32;
+      // let y_flag =
+      //   y < (position.size().height as f64 / position.scale_factor().ceil() / 2.0).ceil() as u32;
 
-      let position = Position::Logical(LogicalPosition {
-        x: {
-          match x_flag {
-            true => x.into(),
-            false => (x - 400).into(),
-          }
-        },
-        y: {
-          match y_flag {
-            true => y.into(),
-            false => (y - 800).into(),
-          }
-        },
-      });
+      // let position = Position::Logical(LogicalPosition {
+      //   x: {
+      //     match x_flag {
+      //       true => x as f64,
+      //       false => (x - 400) as f64,
+      //     }
+      //   },
+      //   y: {
+      //     match y_flag {
+      //       true => y as f64,
+      //       false => (y - 800) as f64,
+      //     }
+      //   },
+      // });
+
+      // println!(
+      //   "x:{},y:{},x_flag:{},y_flag:{},w:{},ws:{}",
+      //   window.inner_position().unwrap().x,
+      //   window.inner_position().unwrap().y,
+      //   x_flag,
+      //   y_flag,
+      //   position.size().width,
+      //   position.size().width as f64 / position.scale_factor()
+      // );
+
+      //根据窗口位置获取
+      let window_position = window.outer_position().unwrap();
+
+      let x_flag = window_position.x < (position.size().width / 2).try_into().unwrap();
+
+      let y_flag = window_position.y < (position.size().height / 2).try_into().unwrap();
+
+      let mut logical = window_position.to_logical(position.scale_factor());
+
+      if !x_flag {
+        logical.x = logical.x - 400.0 + 60.0;
+      };
+
+      if !y_flag {
+        logical.y = logical.y - 800.0 + 40.0;
+      }
+
+      let position = Position::Logical(logical);
 
       //判断当前点击的位置
       // let x_flag = x <
