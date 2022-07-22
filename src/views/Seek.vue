@@ -1,24 +1,19 @@
 <template>
   <!-- 当悬浮球正在旋转时 v_show的效果会延迟很长一段时间  经过测试 是onLoad 影响了 这个东西-->
   <transition name="el-zoom-in-center">
-    <div :class="pool.isRunning() && Suspended == 2 ? 'onLoad' : ''">
+    <div  v-show="Suspended == 2" >
       <div
         class="FloatingBallMain"
         v-show="Suspended == 2"
+        :class="pool.isRunning()? 'onLoad' : ''"
         @dblclick="ChangeSuspended"
-        data-tauri-drag-region
+        data-tauri-drag-regions
       >
         <div
           class="FloatingBall"
           :class="pool.isRunning() && Suspended == 2 ? 'onLoadOut' : ''"
           data-tauri-drag-region
         >
-          <!-- 
-        
-        
-      
-      
-      -->
           <!-- <p class="FloatingBallText" data-tauri-drag-region>
         <span class="PoolALL">{{ pool.tasks.length }}</span>
         <span class="Separate">-</span>
@@ -391,9 +386,7 @@ const ChangeSuspended = (event: any) => {
   Suspended.value = 0;
 
   request("change_seek_suspended", {
-    flag: flag,
-    x: event.screenX,
-    y: event.screenY,
+    flag: flag
   }).then(() => {
     Suspended.value = flag ? 2 : 1;
     // setTimeout(() => {

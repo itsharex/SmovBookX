@@ -9,10 +9,7 @@ use window_vibrancy::{
 };
 
 use tauri::api::dialog;
-use tauri::{
-  command, LogicalPosition, LogicalSize, Manager, PhysicalPosition, Position, Size, Window,
-  WindowUrl,
-};
+use tauri::{command, LogicalSize, Manager, PhysicalPosition, Position, Size, Window, WindowUrl};
 
 extern crate toml;
 use crate::app::Conf;
@@ -109,7 +106,7 @@ pub async fn go_seek(window: Window) {
 }
 
 #[command]
-pub async fn change_seek_suspended(flag: bool, x: u32, y: u32, window: Window) {
+pub async fn change_seek_suspended(flag: bool, window: Window) {
   let position = window.current_monitor().unwrap();
 
   let position = position.unwrap();
@@ -218,8 +215,6 @@ pub async fn change_seek_suspended(flag: bool, x: u32, y: u32, window: Window) {
         }))
         .unwrap();
 
-      //位置不应该在中间 应该在点击的位置
-      // window.center().unwrap();
       window.set_position(position).unwrap();
 
       set_shadow(&window, true).unwrap();
@@ -227,7 +222,6 @@ pub async fn change_seek_suspended(flag: bool, x: u32, y: u32, window: Window) {
       window.set_skip_taskbar(false).unwrap();
       window.set_always_on_top(false).unwrap();
 
-      //window.show().unwrap();
     }
   }
 }
