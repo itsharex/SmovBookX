@@ -86,9 +86,9 @@ pub async fn run_hfs(window: Window) {
 ///过时  已弃用
 #[command]
 pub async fn _run_hfs1(window: Window) {
-  let runing = &crate::app::HFSCONFIG.lock().clone().runing;
+  let running = &crate::app::HFSCONFIG.lock().clone().runing;
 
-  if *runing {
+  if *running {
     window
       .emit(
         "HFS://OperatingStatus",
