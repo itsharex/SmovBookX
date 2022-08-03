@@ -3,7 +3,7 @@ use axum::{
   http::StatusCode,
   response::IntoResponse,
   routing::{get, get_service},
-  Router, Json,
+  Json, Router,
 };
 use parking_lot::MutexGuard;
 use std::{io, net::SocketAddr, thread};
@@ -32,7 +32,7 @@ pub async fn run_hfs(window: Window) {
         "/resources",
         get_service(ServeDir::new(tidy_folder)).handle_error(handle_error),
       )
-      .route("/data",get(get_data))
+      .route("/data", get(get_data))
       .fallback(get_service(ServeDir::new(tidy_folder)).handle_error(handle_error))
       .layer(TraceLayer::new_for_http());
 

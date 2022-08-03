@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[warn(non_upper_case_globals)]
-const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv","wmv"];
+const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv", "wmv"];
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
 pub struct SmovFileBack {
@@ -198,16 +198,30 @@ impl Smov {
       let details = match path.read_dir() {
         Ok(res) => res,
         Err(err) => {
-          tracing::error!(message =format!("获取'{}'详情图片路径出现错误：'{}',请根据错误原因排查", self.name,err).as_str());
+          tracing::error!(
+            message = format!(
+              "获取'{}'详情图片路径出现错误：'{}',请根据错误原因排查",
+              self.name, err
+            )
+            .as_str()
+          );
           return Err(anyhow!("Missing attribute: {}", err));
         }
       };
-       for detail in details {
-          match detail{
-            Ok(res) => self.detail_img.insert(0, res.path().as_os_str().to_str().unwrap_or_else(||"").to_string()),
-            _ => {},
+      for detail in details {
+        match detail {
+          Ok(res) => self.detail_img.insert(
+            0,
+            res
+              .path()
+              .as_os_str()
+              .to_str()
+              .unwrap_or_else(|| "")
+              .to_string(),
+          ),
+          _ => {}
         }
-       }
+      }
     }
     Ok(())
   }
@@ -218,7 +232,7 @@ impl Smov {
     if img.exists() {
       self.thumbs_img = img.to_str().unwrap_or_else(|| "").to_string();
     };
-    
+
     Ok(())
   }
 }

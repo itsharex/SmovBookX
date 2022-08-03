@@ -103,7 +103,7 @@ impl TidySmov<'_> {
     )
     .expect("更新数据库出现了错误！,现在没有处理错误，凉凉");
 
-    Ok(img_path) 
+    Ok(img_path)
   }
 }
 
