@@ -45,8 +45,6 @@ pub fn smov_file() -> Result<SmovFileBack> {
 
   MutexGuard::unlock_fair(tidy_folder); //这里必须对内存锁的部分锁定
 
-  println!("{:?}", folders);
-
   let db_smov: HashSet<SmovFile> = SmovFile::query_db_file_unid()
     .unwrap()
     .into_iter()
@@ -66,7 +64,6 @@ pub fn smov_file() -> Result<SmovFileBack> {
 
   let smov = file_smov.difference(&db_smov).collect::<Vec<&SmovFile>>();
 
-  // let smov_del = db_smov.difference(&file_smov).into_iter().map(|x| x.clone()).collect::<Vec<SmovFile>>();
   let smov_del = db_smov.difference(&file_smov).collect::<Vec<&SmovFile>>();
 
   let smov_del = match SmovFile::query_by_path_name(smov_del) {
