@@ -100,6 +100,7 @@ export default defineComponent({
   width: 100%;
   display: flex;
   justify-content: center;
+  position:relative
 }
 
 .title {
@@ -115,5 +116,6 @@ export default defineComponent({
   margin-bottom: 0.2rem;
   font-weight: 500;
   color:  #A8ABB2;
+  position:absolute
 }
 </style>
