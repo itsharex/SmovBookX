@@ -68,12 +68,12 @@ export default defineComponent({
 <style lang='less' scoped>
 .smovImg {
   display: inline-block;
-  height: 160px;
+  height: 140px;
   object-fit: cover;
   border-radius: 6px;
 }
 .smovItem {
-  height: 220px;
+  height: 200px;
   border-radius: 6px;
   box-shadow: var(--el-box-shadow-light);
   margin: 0.5rem;
