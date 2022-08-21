@@ -1,17 +1,18 @@
-use crate::{hfs::api::system_api, response::response::Response};
-use axum::{http::StatusCode, response::IntoResponse, routing::get_service, Router, handler::Handler};
+use crate::{
+  hfs::{api::system_api, handle::handler_404},
+  response::response::Response,
+};
+use axum::{handler::Handler, Router};
 use parking_lot::MutexGuard;
-use std::{io, net::SocketAddr};
+use std::net::SocketAddr;
 use tauri::{command, Window};
 use tokio::{signal, sync::mpsc};
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::trace::TraceLayer;
 
 ///当前如果出现运行时错误 是出不来的 虽然出现的可能性不大 但是还是需要做的
 #[command]
 pub async fn run_hfs(window: Window) {
   let conf = &mut crate::app::HFSCONFIG.lock().clone();
-
-  let tidy_folder = &crate::app::APP.lock().clone().conf.tidy_folder;
 
   if conf.runing {
     window
@@ -23,7 +24,6 @@ pub async fn run_hfs(window: Window) {
   } else {
     let app: _ = Router::new()
       .nest("/smovbook", system_api())
-      .fallback(get_service(ServeDir::new(tidy_folder)).handle_error(handle_error))
       .fallback(handler_404.into_service())
       .layer(TraceLayer::new_for_http());
 
@@ -74,10 +74,6 @@ pub async fn run_hfs(window: Window) {
   }
 }
 
-async fn handle_error(_err: io::Error) -> impl IntoResponse {
-  (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong...")
-}
-
 async fn shutdown_signal(window: &Window) {
   let (tx, mut rx) = mpsc::unbounded_channel();
 
@@ -125,8 +121,4 @@ async fn shutdown_signal(window: &Window) {
         }).await.unwrap();
       },
   }
-}
-
-async fn handler_404() -> impl IntoResponse {
-  (StatusCode::NOT_FOUND, "nothing to see here")
 }

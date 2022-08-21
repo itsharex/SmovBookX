@@ -1,10 +1,25 @@
-use super::smov_method;
-use axum::{routing::get, Router};
+use super::{
+  handle::{file_handle_error, handler_404},
+  smov_method,
+};
+use axum::{
+  handler::Handler,
+  routing::{get, get_service},
+  Router,
+};
+use tower_http::services::ServeDir;
 
 pub fn system_api() -> Router {
   Router::new()
-    .nest("/app", data_api())
-    .route("/foo", get(|| async { "Hi from /foo" }))
+    .nest("/data", data_api())
+    .nest("/file", file_api())
+}
+
+pub fn file_api() -> Router {
+  let tidy_folder = &crate::app::APP.lock().clone().conf.tidy_folder;
+  //通过阅读代码 解决办法在 https://github.com/search?l=Rust&p=2&q=not_found_service&type=Code 应该要在 tower_http 设置not_found_fallback 即ServeDir::new(tidy_folder) 部分
+  let svc = get_service(ServeDir::new(tidy_folder)).handle_error(file_handle_error);
+  Router::new().nest("/", svc)
 }
 
 pub fn data_api() -> Router {
