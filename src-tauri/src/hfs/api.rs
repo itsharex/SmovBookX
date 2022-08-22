@@ -1,9 +1,5 @@
-use super::{
-  handle::{file_handle_error, handler_404},
-  smov_method,
-};
+use super::{handle::file_handle_error, smov_method};
 use axum::{
-  handler::Handler,
   routing::{get, get_service},
   Router,
 };
