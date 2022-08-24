@@ -36,7 +36,8 @@ thiserror = "1.0"
 tokio = {version = "1", features = ["full"] } 
 tokio-util = "0.7.2" 
 toml = "*" 
-tower-http = {version = "0.3.0", features = ["fs", "trace"] } 
+tower-http = {version = "0.3", features = ["fs", "trace"] } 
+tower = { version = "0.4",  features = ["full"] }
 tracing = "0.1" 
 tracing-subscriber = "0.3" 
 # ffmpeg-next = "5.0.2" 视频合并 待定项目

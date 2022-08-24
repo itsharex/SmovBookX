@@ -1,7 +1,7 @@
 use super::{handle::file_handle_error, smov_method};
 use axum::{
   routing::{get, get_service},
-  Router,
+  Router, response::IntoResponse,
 };
 use tower_http::services::ServeDir;
 
@@ -14,7 +14,14 @@ pub fn system_api() -> Router {
 pub fn file_api() -> Router {
   let tidy_folder = &crate::app::APP.lock().clone().conf.tidy_folder;
   //通过阅读代码 解决办法在 https://github.com/search?l=Rust&p=2&q=not_found_service&type=Code 应该要在 tower_http 设置not_found_fallback 即ServeDir::new(tidy_folder) 部分
-  let svc = get_service(ServeDir::new(tidy_folder)).handle_error(file_handle_error);
+  let svc = get_service(
+    ServeDir::new(tidy_folder).not_found_service(tower::service_fn(
+      |request: axum::http::Request<_>| async move {
+        std::io::Result::Ok(format!("{} not found", request.uri()).into_response())
+      },
+    )),
+  )
+  .handle_error(file_handle_error);
   Router::new().nest("/", svc)
 }
 
