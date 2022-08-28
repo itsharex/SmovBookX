@@ -3,6 +3,7 @@ use crate::{
   response::response::Response,
 };
 use axum::{handler::Handler, Router};
+use axum_server::tls_rustls::{RustlsAcceptor, RustlsConfig};
 use parking_lot::MutexGuard;
 use std::net::SocketAddr;
 use tauri::{command, Window};
@@ -10,9 +11,17 @@ use tokio::{signal, sync::mpsc};
 use tower_http::trace::TraceLayer;
 
 ///当前如果出现运行时错误 是出不来的 虽然出现的可能性不大 但是还是需要做的
+/// https://docs.rs/axum-server/latest/axum_server/struct.Handle.html#method.graceful_shutdown 
+/// https://github.com/tokio-rs/axum/blob/main/examples/tls-rustls/src/main.rs
+/// https://github.com/FiloSottile/mkcert 本地打包证书 
+/// https://letsencrypt.osfipin.com/ 证书申请
+/// 应当提供一张默认的 没用的证书  给选择的机会
+/// 尝试使用 axum_server实现 实现https的功能 
 #[command]
 pub async fn run_hfs(window: Window) {
   let conf = &mut crate::app::HFSCONFIG.lock().clone();
+
+  let hls_loca = crate::app::APP.lock().app_dir.clone();
 
   if conf.runing {
     window
@@ -30,6 +39,13 @@ pub async fn run_hfs(window: Window) {
     let addr = SocketAddr::from((conf.config.address, conf.config.port));
     tracing::info!("listening on {}", addr);
 
+    let hls_config = RustlsConfig::from_pem_file(
+      hls_loca.join("tls_certs").join("cert.pem"),
+      hls_loca.join("tls_certs").join("key.pem"),
+    )
+    .await
+    .unwrap();
+
     let server = match axum::Server::try_bind(&addr) {
       Ok(ser) => ser,
       Err(err) => {
@@ -41,10 +57,15 @@ pub async fn run_hfs(window: Window) {
         panic!("{}", msg)
       }
     };
-
     let server = server
       .serve(app.into_make_service())
       .with_graceful_shutdown(shutdown_signal(&window)); //和这里捕获错误
+
+     //axum_server::bind_rustls(addr, hls_config)
+    //   .serve(app.into_make_service())
+
+    //   .await
+    //   .unwrap();
 
     window
       .emit(
