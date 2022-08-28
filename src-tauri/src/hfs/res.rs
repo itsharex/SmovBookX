@@ -44,6 +44,7 @@ where
       data: self.data,
       msg: self.msg,
     };
+
     let json_string = match serde_json::to_string(&data) {
       Ok(v) => v,
       Err(e) => {

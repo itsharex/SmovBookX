@@ -17,3 +17,7 @@ pub async fn get_data_pagination(Query(page_params): Query<PageParams>) -> Res<L
     Err(err) => Res::with_err(&err.to_string()),
   }
 }
+
+pub async fn error_test() -> Res<String> {
+  Res::with_err(&"错误测试".to_string())
+}
