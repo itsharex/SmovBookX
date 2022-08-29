@@ -284,6 +284,8 @@ pub struct HfsConfigs {
   pub port: u16,
 
   pub temp_dir: PathBuf,
+
+  pub is_https: bool,
 }
 
 impl HfsConfigs {
@@ -297,6 +299,7 @@ impl HfsConfigs {
       address: IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
       port: 3225,
       temp_dir: app_path.join("hfs_temp"),
+      is_https:false
     }
   }
 }
