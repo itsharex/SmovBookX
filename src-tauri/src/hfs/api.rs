@@ -27,5 +27,6 @@ pub fn data_api() -> Router {
   Router::new()
     .route("/all", get(smov_method::get_data_all))
     .route("/pagination", get(smov_method::get_data_pagination))
+    .route("/single/:id", get(smov_method::get_data_single))
     .route("/error_test", get(smov_method::error_test))
 }

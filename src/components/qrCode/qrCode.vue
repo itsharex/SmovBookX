@@ -2,7 +2,7 @@
   <div>
     <el-dialog
       v-model="dialogVisible"
-      width="40%"
+      width="30%"
       @close="close"
       :show-close="false"
     >
@@ -17,7 +17,10 @@
       </template>
       <div class="qr" id="qrcode" ref="canvas"></div>
       <template #footer>
-        <span class="dialog-footer"> </span>
+        <div class="qr-footer">
+          <span class="dialog-footer">{{ qr }}</span>
+        </div>
+        
       </template>
     </el-dialog>
   </div>
@@ -43,9 +46,9 @@ export default defineComponent({
   },
   setup(props) {
     nextTick(() => {
-      const colorFore = "#e6c039";
-      const colorOut = "#c7415b";
-      const colorIn = "#c7415b";
+      const colorFore = "#000066";
+      const colorOut = "#000000";
+      const colorIn = "#000000";
       const canvas = qrcanvas({
         data: props.qr,
         correctLevel: "Q",
@@ -82,7 +85,7 @@ export default defineComponent({
 <style lang="less" scoped>
 .qr {
   width: 100%;
-  height: 300px;
+  height: 200px;
   display: flex;
   justify-content: center;
   align-content: center;
@@ -105,6 +108,16 @@ export default defineComponent({
     justify-content: space-between;
     font-size: 1.1rem;
     font-weight: 500;
+  }
+}
+
+.qr-footer{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  .dialog-footer{
+    font-weight: 600;
   }
 }
 </style>
