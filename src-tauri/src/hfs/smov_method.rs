@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use axum::extract::{Path, Query};
+use tokio::time::sleep;
 
 use crate::model::smov::Smov;
 
@@ -19,6 +22,7 @@ pub async fn get_data_pagination(Query(page_params): Query<PageParams>) -> Res<L
 }
 
 pub async fn get_data_single(Path(id): Path<i64>) -> Res<Smov> {
+  //sleep(Duration::from_secs(3)).await;
   match Smov::get_smov_by_id(id) {
     Ok(res) => Res::with_data(res),
     Err(err) => Res::with_err(&err.to_string()),
