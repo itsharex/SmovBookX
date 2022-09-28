@@ -5,6 +5,7 @@ use crate::model::folder::Folder;
 use crate::model::smov::{Smov, SmovFile};
 use anyhow::{anyhow, Result};
 use std::collections::HashSet;
+use std::ffi::OsStr;
 use std::fs;
 use std::hash::Hash;
 use std::path::Path;
@@ -12,6 +13,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[warn(non_upper_case_globals)]
 const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv", "wmv"];
+
+const SUB_TYPE: &'static [&'static str] = &["str", "ass"];
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
 pub struct SmovFileBack {
@@ -98,6 +101,18 @@ fn is_mov_type(extension: &String) -> bool {
   let mut flag = false;
   for val in FILE_TYPE.iter() {
     if extension.eq(val) {
+      flag = true;
+      break;
+    }
+  }
+  flag
+}
+
+fn is_sub_type(extension: &OsStr) -> bool {
+  let mut flag = false;
+  let extension = &extension.to_str().unwrap_or_else(|| "").to_string();
+  for val in SUB_TYPE.iter() {
+    if val.eq(extension) {
       flag = true;
       break;
     }
@@ -220,6 +235,50 @@ impl Smov {
         }
       }
     }
+    Ok(())
+  }
+
+  pub fn get_smov_sub_title(self: &mut Self) -> Result<()> {
+    let path = Path::new(&self.path);
+
+    let items = match path.read_dir() {
+      Ok(res) => res,
+      Err(err) => {
+        tracing::error!(
+          message = format!(
+            "获取'{}'详情根目录路径出现错误：'{}',请根据错误原因排查",
+            self.name, err
+          )
+          .as_str()
+        );
+        return Err(anyhow!("Missing attribute: {}", err));
+      }
+    };
+
+    for item in items {
+      match item {
+        Ok(res) => {
+          let extension = res.path();
+          let extension = extension.extension().unwrap_or_else(|| &OsStr::new(""));
+
+          if is_sub_type(extension) {
+            self.sub_title.insert(
+              0,
+              res
+                .path()
+                .as_os_str()
+                .to_str()
+                .unwrap_or_else(|| "")
+                .to_string(),
+            )
+          }
+          
+        }
+
+        _ => {}
+      }
+    }
+
     Ok(())
   }
 
