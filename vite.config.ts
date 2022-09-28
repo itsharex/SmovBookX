@@ -3,8 +3,6 @@ import vue from "@vitejs/plugin-vue";
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import OptimizationPersist from 'vite-plugin-optimize-persist'
-import PkgConfig from 'vite-plugin-package-config'
 // import { svgBuilder } from "./svgBuilder";
 
 export default defineConfig({
@@ -26,8 +24,6 @@ export default defineConfig({
       ],
       dts: 'src/components.d.ts',
     }),
-    PkgConfig(),
-    OptimizationPersist()
     // svgBuilder('./src/assets/svg/'),
   ],
   server: {

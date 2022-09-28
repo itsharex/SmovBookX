@@ -33,7 +33,6 @@ pub struct Smov {
   pub thumbs_img: String,
   pub main_img: String,
   pub detail_img: Vec<String>,
-  pub sub_title: Vec<String>,
 }
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
@@ -285,7 +284,6 @@ impl Smov {
           thumbs_img: String::from(""),
           main_img: String::from(""),
           detail_img: Vec::new(),
-          sub_title: Vec::new(),
         })
       })?;
       let mut smov_list: Vec<Smov> = Vec::new();
@@ -402,7 +400,6 @@ impl Smov {
               thumbs_img: String::from(""),
               main_img: String::from(""),
               detail_img: Vec::new(),
-              sub_title: Vec::new(),
             })
           },
         )
@@ -473,7 +470,6 @@ impl Smov {
       }
 
       smov.get_smov_img().unwrap();
-      smov.get_smov_sub_title().unwrap();
 
       Ok(smov)
     })
@@ -527,7 +523,6 @@ impl Smov {
           thumbs_img: String::from(""),
           main_img: String::from(""),
           detail_img: Vec::new(),
-          sub_title: Vec::new(),
         })
       })?;
       let mut list: Vec<Smov> = Vec::new();
