@@ -34,7 +34,7 @@ import { CircleCloseFilled } from "@element-plus/icons-vue";
 import { CopyLink } from "@icon-park/vue-next";
 import { ElMessage } from "element-plus";
 import useClipboard from "vue-clipboard3";
-import {alert} from "../../util/alert";
+import {alert} from "@/util/alert";
 
 
 const props = defineProps({

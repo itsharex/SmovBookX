@@ -27,7 +27,7 @@
 <script lang='ts'>
 import { defineComponent, ref } from "vue";
 import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
-import nonePic from "../assets/none_pic.png";
+import nonePic from "@/assets/none_pic.png";
 import mountDetail from "./SmovDetail/SmovDetail";
 import XEUtils from "xe-utils";
 import {

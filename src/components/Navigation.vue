@@ -115,9 +115,9 @@ import { checkUpdate, installUpdate } from "@tauri-apps/api/updater";
 import { relaunch } from "@tauri-apps/api/process";
 import { ElLoading } from "element-plus";
 import "element-plus/es/components/loading/style/css";
-import { request } from "../util/invoke";
+import { request } from "@/util/invoke";
 import mountContent from "./qrCode/qrCode";
-import { alert } from "../util/alert";
+import { alert } from "@/util/alert";
 export default defineComponent({
   name: "Navigation",
   props: [],

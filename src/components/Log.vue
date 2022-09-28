@@ -19,8 +19,8 @@
 import { defineComponent, ref, onMounted, inject, watch, computed, reactive, onUpdated, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from '@tauri-apps/api/event';
-import { Log } from '../type/log'
-import { CurentTime } from '../util/time'
+import { Log } from '@/type/log'
+import { CurentTime } from '@/util/time'
 
 //我需要一个seek页面的监听器 当传入的数量大于一定值时 我需要他转起来
 
