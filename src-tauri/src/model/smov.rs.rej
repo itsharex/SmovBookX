@@ -1,0 +1,9 @@
+diff a/src-tauri/src/model/smov.rs b/src-tauri/src/model/smov.rs	(rejected hunks)
+@@ -470,7 +470,6 @@
+       }
+ 
+       smov.get_smov_img().unwrap();
+-      smov.get_smov_sub_title().unwrap();
+ 
+       Ok(smov)
+     })
