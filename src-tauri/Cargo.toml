@@ -41,7 +41,7 @@ tower = {version = "0.4", features = ["full"] }
 tower-http = {version = "0.3", features = ["fs", "trace"] } 
 tracing = "0.1" 
 tracing-subscriber = "0.3" 
-# ffmpeg-next = "5.0.2" 视频合并 待定项目
+ffmpeg-next = "5.1.1"
 
 [target."cfg(any(target_os = \"windows\", target_os = \"macos\"))".dependencies]
 window-shadows = {git = "https://github.com/tauri-apps/window-shadows"}
@@ -60,3 +60,4 @@ winreg = "0.10.1"
 [features]
 custom-protocol = ["tauri/custom-protocol"]
 default = ["custom-protocol"]
+
