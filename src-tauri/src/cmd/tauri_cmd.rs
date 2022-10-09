@@ -365,4 +365,9 @@ pub fn get_local_ip() -> Response<Option<String>> {
     )
 }
 
+#[command]
+pub fn ffmpeg_test() {
+    
+}
+
 pub type MaybeString = Option<String>;

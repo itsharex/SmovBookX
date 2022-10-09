@@ -41,7 +41,7 @@ tower = {version = "0.4", features = ["full"] }
 tower-http = {version = "0.3", features = ["fs", "trace"] } 
 tracing = "0.1" 
 tracing-subscriber = "0.3" 
-ffmpeg-next = "5.1.1"
+ffmpeg-next = { version = "5", default-features = false, features = ["codec", "format", "software-resampling"] }
 
 [target."cfg(any(target_os = \"windows\", target_os = \"macos\"))".dependencies]
 window-shadows = {git = "https://github.com/tauri-apps/window-shadows"}
@@ -60,4 +60,8 @@ winreg = "0.10.1"
 [features]
 custom-protocol = ["tauri/custom-protocol"]
 default = ["custom-protocol"]
+# Build ffmpeg instead of using the host's.
+build-ffmpeg = ["ffmpeg-next/build"]
+ffmpeg-static = ["ffmpeg-next/static"]
+static = ["ffmpeg-static"]
 

@@ -6,7 +6,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri:dev": "env-cmd -r .env-cmdrc -e development tauri dev",
-    "tauri:build": "env-cmd -r .env-cmdrc -e production tauri build",
+    "tauri:build": "env-cmd -r .env-cmdrc -e production tauri build --features static",
     "tauri:build --debug": "env-cmd -r .env-cmdrc -e development tauri build --debug"
   },
   "dependencies": {
