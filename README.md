@@ -140,4 +140,14 @@ Item对象显示优化 根据图片大小设置宽度 高度固定
 
 数据库版本升级功能 升级版本检测sqlite版本
 
+# 环境变量需要配置 PKG_CONFIG_PATH
+# gst = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer" } 
+# gst-app = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-app"} 
+# gst-rtp = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-rtp"} 
+# gst-sdp = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-sdp" } 
+# gst-utils = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-utils"} 
+# gst-video = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-video" } 
+# gst-webrtc = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-webrtc" }
+# gst = { package = "gstreamer", git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs" }
+
 

@@ -1,7 +1,9 @@
+use anyhow::Error;
 use serde::Deserialize;
 use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::{Arc, Mutex};
 use std::sync::mpsc::channel;
 use window_shadows::set_shadow;
 use window_vibrancy::{
@@ -183,9 +185,9 @@ pub async fn change_seek_suspended(flag: bool, window: Window) {
             //根据窗口位置获取
             let window_position = window.outer_position().unwrap();
 
-            let x_flag = window_position.x < (position.size().width / 2).try_into().unwrap();
+            let x_flag = window_position.x < (position.size().width / 2) as i32;
 
-            let y_flag = window_position.y < (position.size().height / 2).try_into().unwrap();
+            let y_flag = window_position.y < (position.size().height / 2) as i32; 
 
             let mut logical = window_position.to_logical(position.scale_factor());
 
@@ -366,8 +368,9 @@ pub fn get_local_ip() -> Response<Option<String>> {
 }
 
 #[command]
-pub fn ffmpeg_test() {
-    
+pub fn ffmpeg_test() -> Result<(), Error> {
+
+    Ok(())
 }
 
 pub type MaybeString = Option<String>;
