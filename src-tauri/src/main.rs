@@ -20,7 +20,6 @@ mod media;
 #[tokio::main]
 async fn main() {
   app::lock_single();
-
   let _app = tauri::Builder::default()
     .setup(|_app| {
       if cfg!(target_os = "windows") {

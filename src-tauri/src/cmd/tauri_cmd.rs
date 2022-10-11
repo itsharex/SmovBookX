@@ -3,7 +3,6 @@ use serde::Deserialize;
 use std::fs::{write, File};
 use std::path::PathBuf;
 use std::process::Command;
-use std::sync::{Arc, Mutex};
 use std::sync::mpsc::channel;
 use window_shadows::set_shadow;
 use window_vibrancy::{
@@ -365,12 +364,6 @@ pub fn get_local_ip() -> Response<Option<String>> {
         Some(format!("{}:{}", local_ipaddress::get().unwrap(), port)),
         "获取成功",
     )
-}
-
-#[command]
-pub fn ffmpeg_test() -> Result<(), Error> {
-
-    Ok(())
 }
 
 pub type MaybeString = Option<String>;
