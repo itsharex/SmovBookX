@@ -1,10 +1,10 @@
 use std::fs::create_dir_all;
 
+use anyhow::anyhow;
 use anyhow::Error;
 use gstreamer::{
   prelude::Cast,
   traits::{ElementExt, GstObjectExt},
-  StructureRef,
 };
 
 use crate::model::smov::Smov;
@@ -26,10 +26,13 @@ impl Smov {
 
     gstreamer::init().unwrap();
 
-    let pipeline = gstreamer::parse_launch(&commond)
-      .unwrap()
-      .downcast::<gstreamer::Pipeline>()
-      .unwrap();
+    let pipeline = match gstreamer::parse_launch(&commond) {
+      Ok(ele) => ele.downcast::<gstreamer::Pipeline>().unwrap(),
+      Err(err) => {
+        tracing::error!("{}", err.message());
+        return Err(anyhow!("执行转码错误:{}", err));
+      }
+    };
 
     pipeline.set_state(gstreamer::State::Playing).unwrap();
 
