@@ -254,3 +254,20 @@ pub async fn get_setting_data() -> Response<Option<Map<String, Value>>> {
 
     Response::new(200, Some(inner_map), "设置信息获取成功")
 }
+
+#[command]
+pub async fn convert_smov2hls(id: i64) -> Response<Option<String>> {
+    let smov = match Smov::get_smov_by_id(id) {
+        Ok(res) => res,
+        Err(err) => {
+            tracing::error!(message = format!("{}", err).as_str());
+            return Response::new(300, None, format!("{}", err).as_str());
+        }
+    };
+
+    smov.to_hls().unwrap();
+    Response::ok(
+        None,
+        "获取成功",
+    )
+}

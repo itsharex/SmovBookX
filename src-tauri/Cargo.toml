@@ -18,10 +18,9 @@ axum = "0.5"
 axum-extra = "0.3" 
 axum-server = {version = "0.4", features = ["tls-rustls"] } 
 futures-util = "0.3.21" 
-gst = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer"} 
-gst-app = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-app"} 
-gst-pbutils = {git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs", package = "gstreamer-pbutils", features = ["v1_20"] } 
-gst-plugin-fmp4 = {git = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs"} 
+gstreamer = "0.18"
+gstreamer-app = "0.18"
+gstreamer-pbutils = {version = "0.18",features = ["v1_20"] }
 kuchiki = "0.8.1" 
 lazy_static = "*" 
 local_ipaddress = "0.1.3" 

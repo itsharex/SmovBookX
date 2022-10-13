@@ -151,3 +151,9 @@ Item对象显示优化 根据图片大小设置宽度 高度固定
 # gst = { package = "gstreamer", git = "https://gitlab.freedesktop.org/gstreamer/gstreamer-rs" }
 
 
+
+# 任务系统！！！ 重要 要做
+  负责所有任务的进度 包括检索 转码 
+  状态 未开始 开始 进度 完成 失败 暂停
+
+

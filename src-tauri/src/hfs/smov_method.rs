@@ -25,6 +25,10 @@ pub async fn get_data_single(Path(id): Path<i64>) -> Res<Smov> {
   }
 }
 
-pub async fn error_test() -> Res<String> {
-  Res::with_err(&"错误测试".to_string())
+pub async fn error() -> Res<String> {
+  Res::with_err(&"错误".to_string())
+}
+
+pub async fn msg() -> Res<String> {
+  Res::with_msg(&"消息".to_string())
 }

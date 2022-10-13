@@ -95,6 +95,8 @@
                 <el-button type="info" color="#C7415B" @click="close">关闭</el-button>
 
                 <el-button type="info" color="#C7415B" @click="toOpen">由本地播放器打开</el-button>
+
+                <el-button type="info" color="#C7415B" @click="convertSmov2Hls">转换hls</el-button>
             </template>
         </el-dialog>
     </div>
@@ -158,6 +160,10 @@ export default defineComponent({
             }
         };
 
+        const convertSmov2Hls = () =>{
+            
+        }
+
         return {
             option,
             style,
@@ -167,6 +173,7 @@ export default defineComponent({
             nonePic,
             dialogVisible: true,
             msg,
+            convertSmov2Hls
         };
     },
 });

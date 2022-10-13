@@ -65,6 +65,7 @@ async fn main() {
       cmd::cmd::get_smov_by_id,
       cmd::cmd::get_setting_data,
       cmd::cmd::delete_folder,
+      cmd::cmd::convert_smov2hls,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,
       cmd::tauri_cmd::open_in_explorer,
