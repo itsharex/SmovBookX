@@ -254,6 +254,7 @@ pub fn init_app_log(app: &mut tauri::App<Wry>) -> bool {
     .init();
 
   info!(message = "日志系统成功载入");
+
   true
 }
 
