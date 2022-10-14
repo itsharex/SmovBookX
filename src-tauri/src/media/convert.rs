@@ -26,6 +26,23 @@ impl Smov {
 
     gstreamer::init().unwrap();
 
+    #[cfg(debug_assertions)]
+    {
+
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        use std::path::Path;
+
+        let mut path = Path::new("./gst-plugins");
+        if !path.exists() {
+            path = Path::new("./gst-plugins");
+        }
+
+        gstreamer::Registry::get().scan_path(path);
+    }
+
     let pipeline = match gstreamer::parse_launch(&commond) {
       Ok(ele) => ele.downcast::<gstreamer::Pipeline>().unwrap(),
       Err(err) => {
@@ -63,6 +80,7 @@ impl Smov {
         MessageView::Element(ele) => {
           let structure = ele.structure().unwrap();
           let percent = structure.get::<i32>("percent").unwrap();
+          println!("{}", percent);
         }
         _ => {}
       }
