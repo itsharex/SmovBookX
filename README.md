@@ -156,4 +156,7 @@ Item对象显示优化 根据图片大小设置宽度 高度固定
   负责所有任务的进度 包括检索 转码 
   状态 未开始 开始 进度 完成 失败 暂停
 
+待定使用的框架 async-task  tokio(当前最佳实现 参考runtime task tokio::task::JoinSet)
+
+
 

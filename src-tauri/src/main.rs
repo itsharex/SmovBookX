@@ -16,6 +16,7 @@ mod serve;
 mod util;
 mod window;
 mod media;
+mod task;
 
 #[tokio::main]
 async fn main() {
