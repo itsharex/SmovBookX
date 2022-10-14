@@ -170,7 +170,7 @@
                 <File Id="PathFile_I180eb34f9e4b4d95a5a340e6d9cce1e7" Source="..\..\..\..\libs\orc-0.4-0.dll" />
             </Component>
             <Component Id="I5ab39050d8354e41b23aba4ebd656c07" Guid="c0cf80bd-811c-458f-acef-af41cbc63ae3" Win64="$(var.Win64)" KeyPath="yes">
-                <File Id="PathFile_I5ab39050d8354e41b23aba4ebd656c07" Source="..\..\..\..\libs\sqlite3.dll" />
+                <File Id="PathFile_I5ab39050d8354e41b23aba4ebd656c07" Source="..\..\..\..\libs\sqlite3-0.dll" />
             </Component>
             <Component Id="I66557c742c6d4ac98c437802df35d3c1" Guid="c46a89c1-6be8-4d60-9e38-e6923f55106b" Win64="$(var.Win64)" KeyPath="yes">
                 <File Id="PathFile_I66557c742c6d4ac98c437802df35d3c1" Source="..\..\..\..\libs\z-1.dll" />

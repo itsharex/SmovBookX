@@ -26,6 +26,7 @@ impl Smov {
 
     gstreamer::init().unwrap();
 
+    //可以配置GST_PLUGIN_PATH
     #[cfg(debug_assertions)]
     {
 
