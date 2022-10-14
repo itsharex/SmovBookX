@@ -25,8 +25,7 @@
 
         <Media Id="1" Cabinet="app.cab" EmbedCab="yes" />
 
-
-        <Icon Id="ProductIcon" SourceFile="D:\Dev\tauri\SmovBookX\src-tauri\target\release\resources\icon.ico"/>
+        <Icon Id="ProductIcon" SourceFile="..\..\resources\icon.ico"/>
         <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
         <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
         <!-- Remove repair -->
