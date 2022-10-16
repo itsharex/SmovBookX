@@ -626,6 +626,30 @@ pub async fn listen_single(window: Window) {
     });
 }
 
+pub fn listen_single_app(app: AppHandle) {
+  let _: tauri::async_runtime::JoinHandle<anyhow::Result<(), anyhow::Error>> =
+    tauri::async_runtime::spawn(async move {
+      let socket = UdpSocket::bind("127.0.0.1:24254").await?;
+      loop {
+        let mut buf = [0; 32];
+        let (size, _) = socket.recv_from(&mut buf).await.expect("出现错误");
+        if size == 16 {
+          // check status
+          let mut status = true;
+          for item in &buf[0..size] {
+            if *item as i32 != 1 {
+              status = false;
+              break;
+            }
+          }
+          if status {
+            let _ = app.emit_all("main_single", "");
+          };
+        };
+      }
+    });
+}
+
 ///开发环境
 //#[cfg(debug_assertions)] #[cfg(not(debug_assertions))] 环境配置
 pub fn init_hfs() -> bool {

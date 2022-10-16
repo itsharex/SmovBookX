@@ -10,27 +10,29 @@ mod app;
 mod cmd;
 mod crawler;
 mod hfs;
+mod media;
 mod model;
 mod response;
 mod serve;
+mod task;
 mod util;
 mod window;
-mod media;
-mod task;
 
 #[tokio::main]
 async fn main() {
   app::lock_single();
   let _app = tauri::Builder::default()
-    .setup(|_app| {
+    .setup(|app| {
+      app::listen_single_app(app.handle());
+      task::task_init_app(app.handle());
       if cfg!(target_os = "windows") {
-        app::webview2_is_installed(_app);
+        app::webview2_is_installed(app);
       }
       if !app::init_app_dir() {
         tracing::error!("工作目录初始化失败！");
         panic!("工作目录初始化失败！");
       }
-      if !app::init_app_log(_app) {
+      if !app::init_app_log(app) {
         tracing::error!("日志系统初始化失败！");
         panic!("日志系统初始化失败！");
       }
@@ -38,10 +40,11 @@ async fn main() {
         tracing::error!("文件服务器配置初始化错误！");
         panic!("文件服务器配置初始化错误！");
       }
-      app::init_app_shadows(_app);
+      app::init_app_shadows(app);
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())
     })
+    .manage(std::sync::Mutex::new(task::pool::TaskPool::new().unwrap()))
     .menu(app::create_app_menu())
     .on_menu_event(app::handle_event_app_menu_event)
     .system_tray(app::create_try())
@@ -80,10 +83,14 @@ async fn main() {
       cmd::tauri_cmd::change_seek_suspended,
       cmd::tauri_cmd::change_seek_shadow,
       hfs::axum_hfs::run_hfs,
-      crawler::crawler::smov_crawler
+      crawler::crawler::smov_crawler,
+      task::pool::add_task
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application"); //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息
+
+  //暂时meibanfa
+  // let task_fn = task::task::test1(&_app);
 
   _app.run(app::handle_app_event);
 }

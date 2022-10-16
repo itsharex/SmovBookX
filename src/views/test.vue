@@ -27,6 +27,9 @@
 
     <el-button type="danger" @click="test15">测试打开新窗口</el-button>
 
+    <el-button type="danger" @click="test17">测试TASK</el-button>
+    <el-button type="danger" @click="test17_2">测试TASK_2</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -232,6 +235,28 @@ export default defineComponent({
         request("create_new_window",{label:"test",effect:"",path:""});
     };
 
+    const test16 = () => {
+      emit("TASK://add_task_convert",{id:1,name:"test"}).then((res) => {
+        console.log(res);
+      });
+    };
+
+    const test16_2 = () => {
+      emit("TASK://get_task_len",{id:1,name:"test"}).then((res) => {
+        console.log(res);
+      });
+    };
+
+    const test17 = () => {
+      request("add_task");
+    };
+
+    const test17_2 = () => {
+      emit("TASK://get_task_len",{id:1,name:"test"}).then((res) => {
+        console.log(res);
+      });
+    };
+
     return {
       test,
       test1,
@@ -254,6 +279,10 @@ export default defineComponent({
       test13,
       test14,
       test15,
+      test16,
+      test16_2,
+      test17,
+      test17_2
     };
   },
 });

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::hfs::res::{ListData, PageParams};
 
-#[derive(Hash, Debug, Deserialize, Serialize)]
+#[derive(Hash, Debug, Deserialize, Serialize,Eq, PartialEq,Clone)]
 pub struct Smov {
   pub id: i64,
   pub name: String,  //云端
@@ -36,13 +36,13 @@ pub struct Smov {
   pub sub_title: Vec<String>,
 }
 
-#[derive(Hash, Debug, Deserialize, Serialize)]
+#[derive(Hash, Debug, Deserialize, Serialize,Eq, PartialEq,Clone)]
 pub struct Tag {
   id: i64,
   name: String,
 }
 
-#[derive(Hash, Debug, Deserialize, Serialize)]
+#[derive(Hash, Debug, Deserialize, Serialize,Eq, PartialEq,Clone)]
 pub struct Actor {
   id: i64,
   name: String,

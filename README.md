@@ -160,3 +160,11 @@ Item对象显示优化 根据图片大小设置宽度 高度固定
 
 
 
+rust闭包 https://blog.csdn.net/quicmous/article/details/123292918 
+全局状态(不推荐) https://stackoverflow.com/questions/27791532/how-do-i-create-a-global-mutable-singleton
+
+
+
+
+
+
