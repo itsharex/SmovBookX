@@ -164,6 +164,28 @@ rust闭包 https://blog.csdn.net/quicmous/article/details/123292918
 全局状态(不推荐) https://stackoverflow.com/questions/27791532/how-do-i-create-a-global-mutable-singleton
 
 
+#任务队列需要实现的功能
+
+1. 将需要执行的数据 实体化
+2. 固定池，能够做到一种类型只生成 配置的数量
+3. 能做到暂停
+4. 所有回调在任务中实现 
+5. 要在任务中 传入池子的appheader，否则无法回传 进度以及状态
+6. 不固定线程数 便于扩展线程数量
+7. 任务中需要能对pool中 当前不同类型运行数量做处理 
+8. 传入任务使用commond实现
+9. 需要有vec格式的传入 减少io
+
+
+当前真正需要解决的问题是 5 7
+commond传入任务 将数据插入 task队列 
+将每一个 任务封装成一个 async 然后通过 channel 或 tokio的unbounded_channel 来发送 开始消息和结束消息 
+AppHandle 在app外初始化 然后在setup 装载 最后 塞入manage
+
+#pool参考
+https://blog.csdn.net/m0_68007835/article/details/123956420
+
+
 
 
 
