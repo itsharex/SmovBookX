@@ -3,6 +3,8 @@
   windows_subsystem = "windows"
 )]
 
+use tauri::{AppHandle, Manager};
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -21,10 +23,12 @@ mod window;
 #[tokio::main]
 async fn main() {
   app::lock_single();
-  let _app = tauri::Builder::default()
+  let app = tauri::Builder::default()
     .setup(|app| {
       app::listen_single_app(app.handle());
       task::task_init_app(app.handle());
+      app.manage(std::sync::Mutex::new(task::pool::TaskPool::new(Some(app.app_handle())).unwrap()));
+      // app_handle = Some(app.handle());
       if cfg!(target_os = "windows") {
         app::webview2_is_installed(app);
       }
@@ -44,7 +48,6 @@ async fn main() {
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())
     })
-    .manage(std::sync::Mutex::new(task::pool::TaskPool::new().unwrap()))
     .menu(app::create_app_menu())
     .on_menu_event(app::handle_event_app_menu_event)
     .system_tray(app::create_try())
@@ -89,8 +92,7 @@ async fn main() {
     .build(tauri::generate_context!())
     .expect("error while running tauri application"); //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息
 
-  //暂时meibanfa
-  // let task_fn = task::task::test1(&_app);
+  //pool.lock().unwrap().join_app_handle(app.handle());
 
-  _app.run(app::handle_app_event);
+  app.run(app::handle_app_event);
 }
