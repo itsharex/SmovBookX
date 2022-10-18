@@ -1,15 +1,10 @@
-use std::{collections::HashMap, sync::Mutex, thread::sleep};
+use std::{collections::HashMap, sync::Mutex};
 
-use crate::model::smov::Smov;
-use gstreamer::glib::value;
-use rand::Rng;
+use crate::{model::smov::Smov, response::response::Response};
 use serde::{Deserialize, Serialize};
 use tauri::{command, AppHandle};
 use thiserror::Error;
-use tokio::{
-  runtime::{Builder, Runtime},
-  sync::mpsc,
-};
+use tokio::runtime::{Builder, Runtime};
 use uuid::Uuid;
 
 // 将线程池 注入tauri 使用commond 操作 不知道行不行
@@ -96,7 +91,7 @@ impl TaskPool {
       Err(err) => Err(PoolErr::PoolCreateError(err.to_string())),
     }
   }
-  pub fn add_task(self: &mut Self, task_ask: TaskAsk, task_type: TaskType) {
+  pub fn add_task(self: &mut Self, task_ask: TaskAsk, task_type: TaskType) -> String {
     //判断当前是否还有空余线程
     let task_size = self.exec_num.get(&TaskType::Convert).unwrap();
 
@@ -118,28 +113,23 @@ impl TaskPool {
         //self.run(uuid);
       });
     }
+
+    uuid
   }
 
   //每一次运行都需要重新做一个新的run
   pub async fn run(self: &mut Self, uuid: String) {
-    //let (tx, mut rx) = mpsc::unbounded_channel();
-
     let mut task_evenet = self.tasks.get(&uuid).unwrap().clone();
 
     //执行程序
-
-    //阻塞获取结果
-    //let task_status = rx.blocking_recv().unwrap_or_else(|| TaskStatus::Fail);
 
     // 更新task的状态
     //task_evenet.status = task_status;
     task_evenet.status = TaskStatus::Success;
     self.tasks.insert(uuid, task_evenet);
 
-    //&& self.status.eq(&PoolStatus::Pause)
-
     //判断是否有下一个task
-    if let (Some(task), true) = (self.get_next_task(), self.can_run()) {
+    if let (Some(_task), true) = (self.get_next_task(), self.can_run()) {
       //给pool 塞入下一个
     } else {
       //判断是否还有正在运行的线程
@@ -167,7 +157,9 @@ impl TaskPool {
     None
   }
 
-  pub async fn pause(self: &mut Self) {}
+  pub fn pause(self: &mut Self) {
+    self.status = PoolStatus::Pause;
+  }
 
   pub fn can_run(self: &Self) -> bool {
     self.status.eq(&PoolStatus::Idle) || self.status.eq(&PoolStatus::Running)
@@ -191,12 +183,19 @@ impl TaskEvent {
 }
 
 #[command]
-pub fn add_task(task_pool: tauri::State<Mutex<TaskPool>>) {
-  task_pool.lock().unwrap().add_task(
+pub fn add_task(task_pool: tauri::State<Mutex<TaskPool>>) -> Response<Option<String>> {
+  let uuid = task_pool.lock().unwrap().add_task(
     TaskAsk {
-      id: 2704,
+      id: 1,
       name: "TEST".to_string(),
     },
     TaskType::Convert,
   );
+
+  Response::ok(Some(uuid), "成功")
+}
+
+#[command]
+pub fn pause_pool(task_pool: tauri::State<Mutex<TaskPool>>) {
+  task_pool.lock().unwrap().pause();
 }

@@ -5,7 +5,7 @@ use crate::{
     error::CrawlerErr,
     network::{get_temp_sync, sava_pic_sync},
   },
-  model::smov::{RetrievingSmov, SmovFileSeek, SmovSeek},
+  model::smov::{RetrievingSmov, SmovFileSeek, SmovSeek, Smov},
   response::response::Response,
   serve::file::TidySmov,
   util::smov_format::SmovName,

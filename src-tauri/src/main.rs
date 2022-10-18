@@ -87,7 +87,8 @@ async fn main() {
       cmd::tauri_cmd::change_seek_shadow,
       hfs::axum_hfs::run_hfs,
       crawler::crawler::smov_crawler,
-      task::pool::add_task
+      task::pool::add_task,
+      task::pool::pause_pool
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application"); //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息

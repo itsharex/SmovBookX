@@ -248,7 +248,9 @@ export default defineComponent({
     };
 
     const test17 = () => {
-      request("add_task");
+      request("add_task").then((res) =>{
+        console.log(res)
+      });
     };
 
     const test17_2 = () => {
