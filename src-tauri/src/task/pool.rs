@@ -109,9 +109,9 @@ impl TaskPool {
         self.exec_num.get(&TaskType::Convert).unwrap() + 1,
       );
       //run 会阻塞 要放入异步运行时 但是这里有个问题 我的这个pool 不能在里面调pool 咋办呢 凉拌 不知道 再说把
-      self.pool.spawn(async move {
-        //self.run(uuid);
-      });
+      // self.pool.spawn(self.run(uuid.clone()));
+
+      //tokio::spawn(self.run(uuid));
     }
 
     uuid
