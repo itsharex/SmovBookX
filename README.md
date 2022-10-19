@@ -182,11 +182,12 @@ commond传入任务 将数据插入 task队列
 将每一个 任务封装成一个 async 然后通过 channel 或 tokio的unbounded_channel 来发送 开始消息和结束消息 
 AppHandle 在app外初始化 然后在setup 装载 最后 塞入manage
 
-#pool参考
+# pool参考
 https://blog.csdn.net/m0_68007835/article/details/123956420
 
 
-
+# type impl 参考 
+https://stackoverflow.com/questions/35568871/is-it-possible-to-implement-methods-on-type-aliases 
 
 
 
