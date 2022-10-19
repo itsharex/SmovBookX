@@ -1,7 +1,7 @@
-use std::{
-  collections::HashMap,
-  sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, sync::Arc};
+
+use parking_lot::{Mutex, MutexGuard};
+use rand::Rng;
 
 use crate::{model::smov::Smov, response::response::Response};
 use serde::{Deserialize, Serialize};
@@ -102,7 +102,7 @@ pub fn pool_new(app_handle: AppHandle) -> Result<SmovPool, PoolErr> {
 }
 
 fn pool_add_task(task_pool: SmovPool, task_ask: TaskAsk, task_type: TaskType) -> String {
-  let mut task_pool_lock = task_pool.lock().unwrap();
+  let mut task_pool_lock = task_pool.lock();
   let uuid = Uuid::new_v4().to_string();
 
   let task = TaskEvent::new(task_type, task_ask).unwrap();
@@ -134,21 +134,28 @@ fn pool_add_task(task_pool: SmovPool, task_ask: TaskAsk, task_type: TaskType) ->
 
 //取出数据后要解锁 不然会卡住
 async fn task_run(smov_pool: SmovPool, uuid: String) {
-  let mut pool = smov_pool.lock().unwrap();
+  let pool = smov_pool.lock();
 
   let task_event = pool.tasks.get(&uuid).unwrap().clone();
   let app_handle = &pool.app_handle;
 
   //生成task
-  let task = Task {
+  let _task = Task {
     task_event: &task_event,
     app_handle,
   };
 
   // 解锁pool
   // Mutex::unlock(pool);
+  MutexGuard::unlock_fair(pool);
+
+  let random = rand::thread_rng().gen_range(1..20);
+  std::thread::sleep(std::time::Duration::from_secs(random));
+
+  let mut pool = smov_pool.lock();
 
   let task_size = pool.exec_num.get(&TaskType::Convert).unwrap().clone();
+  println!("就当结束了吧{}", task_size);
   pool.exec_num.insert(TaskType::Convert, task_size - 1);
 }
 
@@ -270,5 +277,5 @@ pub fn add_task(task_pool: tauri::State<Arc<Mutex<TaskPool>>>) -> Response<Optio
 
 #[command]
 pub fn pause_pool(task_pool: tauri::State<Arc<Mutex<TaskPool>>>) {
-  task_pool.lock().unwrap().pause();
+  task_pool.lock().pause();
 }
