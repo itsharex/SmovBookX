@@ -1,4 +1,7 @@
-use std::{collections::HashMap, sync::Mutex};
+use std::{
+  collections::HashMap,
+  sync::{Arc, Mutex},
+};
 
 use crate::{model::smov::Smov, response::response::Response};
 use serde::{Deserialize, Serialize};
@@ -108,10 +111,18 @@ impl TaskPool {
         TaskType::Convert,
         self.exec_num.get(&TaskType::Convert).unwrap() + 1,
       );
-      //run 会阻塞 要放入异步运行时 但是这里有个问题 我的这个pool 不能在里面调pool 咋办呢 凉拌 不知道 再说把
+      //能否用Mutex包起来?
       //self.pool.spawn(self.run(uuid.clone()));
 
-      //tokio::spawn(self.run(uuid));
+      // tokio::spawn(self.run(uuid.clone()));
+
+      let exex_num = &self.exec_num;
+
+      let exec_num = Arc::new(Mutex::new(exex_num));
+
+      self.pool.spawn(async move {
+        // exec_num.lock().unwrap().insert(TaskType::Convert, 0);
+      });
     }
 
     uuid
