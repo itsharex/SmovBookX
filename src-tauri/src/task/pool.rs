@@ -4,9 +4,8 @@ use std::{
 };
 
 use crate::{model::smov::Smov, response::response::Response};
-use rand::Rng;
 use serde::{Deserialize, Serialize};
-use tauri::{command, AppHandle};
+use tauri::{command, AppHandle, Manager};
 use thiserror::Error;
 use tokio::runtime::{Builder, Runtime};
 use uuid::Uuid;
@@ -20,7 +19,7 @@ use uuid::Uuid;
 pub struct TaskPool {
   pub pool: Runtime,
   pub tasks: HashMap<String, TaskEvent>,
-  pub exec_num: Arc<Mutex<HashMap<TaskType, i64>>>,
+  pub exec_num: HashMap<TaskType, i64>,
   pub thread_num: i64,
   pub status: PoolStatus,
   pub app_handle: AppHandle,
@@ -32,6 +31,11 @@ pub struct TaskEvent {
   pub ask: Option<TaskAsk>,
   pub smov: Option<Smov>,
   pub status: TaskStatus,
+}
+
+struct Task<'a> {
+  task_event: &'a TaskEvent,
+  pub app_handle: &'a AppHandle,
 }
 
 #[derive(Eq, Hash, PartialEq, Deserialize, Serialize, Clone)]
@@ -77,52 +81,75 @@ pub enum TaskErr {
 
 pub type SmovPool = Arc<Mutex<TaskPool>>;
 
-pub trait PoolMethods {
-  fn pool_new(app_handle: AppHandle) -> Result<SmovPool, PoolErr>;
-  fn add_task(task_pool: Self, task_ask: TaskAsk, task_type: TaskType) -> String;
+pub fn pool_new(app_handle: AppHandle) -> Result<SmovPool, PoolErr> {
+  let thread_num = crate::app::APP.lock().conf.thread.clone();
+  match Builder::new_multi_thread().build() {
+    Ok(pool) => Ok(Arc::new(Mutex::new(TaskPool {
+      pool,
+      tasks: HashMap::new(),
+      exec_num: {
+        let mut map = HashMap::new();
+        map.insert(TaskType::Convert, 0);
+        map.insert(TaskType::Crawler, 0);
+        map
+      },
+      thread_num,
+      status: PoolStatus::Idle,
+      app_handle,
+    }))),
+    Err(err) => Err(PoolErr::PoolCreateError(err.to_string())),
+  }
 }
 
-impl PoolMethods for SmovPool {
-  fn pool_new(app_handle: AppHandle) -> Result<Self, PoolErr> {
-    let thread_num = crate::app::APP.lock().conf.thread.clone();
-    match Builder::new_multi_thread().build() {
-      Ok(pool) => Ok(Arc::new(Mutex::new(TaskPool {
-        pool,
-        tasks: HashMap::new(),
-        exec_num: {
-          let mut map = HashMap::new();
-          map.insert(TaskType::Convert, 0);
-          map.insert(TaskType::Crawler, 0);
-          Arc::new(Mutex::new(map))
-        },
-        thread_num,
-        status: PoolStatus::Idle,
-        app_handle,
-      }))),
-      Err(err) => Err(PoolErr::PoolCreateError(err.to_string())),
-    }
-  }
-  fn add_task(task_pool: Self, task_ask: TaskAsk, task_type: TaskType) -> String {
-    let mut task_pool_lock = task_pool.lock().unwrap();
-    let uuid = Uuid::new_v4().to_string();
+fn pool_add_task(task_pool: SmovPool, task_ask: TaskAsk, task_type: TaskType) -> String {
+  let mut task_pool_lock = task_pool.lock().unwrap();
+  let uuid = Uuid::new_v4().to_string();
 
-    let task = TaskEvent::new(task_type, task_ask).unwrap();
+  let task = TaskEvent::new(task_type, task_ask).unwrap();
 
-    task_pool_lock.tasks.insert(uuid.clone(), task);
+  task_pool_lock.tasks.insert(uuid.clone(), task);
 
-    // let task_size = task_pool_lock.exec_num.get(&TaskType::Convert).unwrap();
+  let task_size = task_pool_lock.exec_num.get(&TaskType::Convert).unwrap();
+
+  if task_size < &task_pool_lock.thread_num && task_pool_lock.can_run() {
+    let now_size = task_pool_lock
+      .exec_num
+      .get(&TaskType::Convert)
+      .unwrap()
+      .clone();
+
+    task_pool_lock
+      .exec_num
+      .insert(TaskType::Convert, now_size + 1);
 
     let task_pool_copy = task_pool.clone();
-    task_pool_lock.pool.spawn(async move {
-      let random = rand::thread_rng().gen_range(1..10);
-      std::thread::sleep(std::time::Duration::from_secs(random));
-      let mut p = task_pool_copy.lock().unwrap();
-      p.thread_num = p.thread_num + 1;
-      println!("测试{}", p.thread_num);
-    });
 
-    uuid
+    let task = task_run(task_pool_copy, uuid.clone());
+
+    task_pool_lock.pool.spawn(task);
   }
+
+  uuid
+}
+
+//取出数据后要解锁 不然会卡住
+async fn task_run(smov_pool: SmovPool, uuid: String) {
+  let mut pool = smov_pool.lock().unwrap();
+
+  let task_event = pool.tasks.get(&uuid).unwrap().clone();
+  let app_handle = &pool.app_handle;
+
+  //生成task
+  let task = Task {
+    task_event: &task_event,
+    app_handle,
+  };
+
+  // 解锁pool
+  // Mutex::unlock(pool);
+
+  let task_size = pool.exec_num.get(&TaskType::Convert).unwrap().clone();
+  pool.exec_num.insert(TaskType::Convert, task_size - 1);
 }
 
 impl TaskPool {
@@ -136,7 +163,7 @@ impl TaskPool {
           let mut map = HashMap::new();
           map.insert(TaskType::Convert, 0);
           map.insert(TaskType::Crawler, 0);
-          Arc::new(Mutex::new(map))
+          map
         },
         thread_num,
         status: PoolStatus::Idle,
@@ -145,46 +172,8 @@ impl TaskPool {
       Err(err) => Err(PoolErr::PoolCreateError(err.to_string())),
     }
   }
-  pub fn add_task(self: &mut Self, task_ask: TaskAsk, task_type: TaskType) -> String {
-    //判断当前是否还有空余线程
-    let mut binding = self.exec_num.lock().unwrap();
-    let task_size = binding.get(&TaskType::Convert).unwrap();
 
-    println!("测试");
-
-    let uuid = Uuid::new_v4().to_string();
-
-    let task = TaskEvent::new(task_type, task_ask).unwrap();
-
-    self.tasks.insert(uuid.clone(), task);
-
-    println!("测试1");
-
-    //当有空闲线程且 状态为空闲时 自动调用run 否则直接返回 因为在run里 会自动调用下一条
-    if task_size < &self.thread_num && self.can_run() {
-      let now_size = binding.get(&TaskType::Convert).unwrap().clone();
-      //更新当前类型线程进程数
-      binding.insert(TaskType::Convert, now_size + 1);
-
-      let exec_num_in_spawn = self.exec_num.clone();
-
-      //需要的值 ： exec_num , task ,exec_num 用来扣减数量
-      //问题 能否将 整个Mutex<TaskPool> 传进来 传进来后能够正常实现在spawn中调用么 或者我可以直接 Arc包裹这个
-      self.pool.spawn(async move {
-        let random = rand::thread_rng().gen_range(1..10);
-        std::thread::sleep(std::time::Duration::from_secs(random));
-        println!("测试4");
-        exec_num_in_spawn
-          .try_lock()
-          .unwrap()
-          .insert(TaskType::Convert, 0);
-      });
-    }
-
-    uuid
-  }
-
-  //每一次运行都需要重新创建一个新的run
+  //每一次运行都需要重新创建一个新的run 已弃用
   pub async fn run(self: &mut Self, uuid: String) {
     let mut task_evenet = self.tasks.get(&uuid).unwrap().clone();
 
@@ -199,15 +188,9 @@ impl TaskPool {
     if let (Some(_task), true) = (self.get_next_task(), self.can_run()) {
       //给pool 塞入下一个
     } else {
-      self.exec_num.lock().unwrap().insert(
+      self.exec_num.insert(
         TaskType::Convert,
-        self
-          .exec_num
-          .lock()
-          .unwrap()
-          .get(&TaskType::Convert)
-          .unwrap()
-          - 1,
+        self.exec_num.get(&TaskType::Convert).unwrap() - 1,
       );
 
       //判断是否还有正在运行的线程
@@ -218,7 +201,7 @@ impl TaskPool {
   pub fn get_exec_all_num(self: &Self) -> i64 {
     let mut exec_num = 0;
 
-    for (_, value) in self.exec_num.lock().unwrap().iter() {
+    for (_, value) in self.exec_num.iter() {
       exec_num = exec_num + value;
     }
     exec_num
@@ -258,19 +241,29 @@ impl TaskEvent {
   }
 }
 
+impl TaskEvent {}
+
+impl Task<'_> {
+  pub fn emit_status(self: &Self, task_status: TaskStatus) {
+    self.app_handle.emit_all("", "").unwrap();
+  }
+
+  pub fn emit_schedule(self: &Self) {
+    self.app_handle.emit_all("", "").unwrap();
+  }
+
+  pub fn join(self: &Self) {}
+}
+
 #[command]
 pub fn add_task(task_pool: tauri::State<Arc<Mutex<TaskPool>>>) -> Response<Option<String>> {
   let task_pool: SmovPool = task_pool.inner().clone();
   let task_ask = TaskAsk {
-    id: 0,
+    id: 1,
     name: "Test".to_string(),
   };
   Response::ok(
-    Some(PoolMethods::add_task(
-      task_pool,
-      task_ask,
-      TaskType::Convert,
-    )),
+    Some(pool_add_task(task_pool, task_ask, TaskType::Convert)),
     "成功",
   )
 }
