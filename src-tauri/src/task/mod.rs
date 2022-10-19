@@ -104,7 +104,7 @@ pub fn task_init_app(app: AppHandle) {
   let _: tauri::async_runtime::JoinHandle<()> = tauri::async_runtime::spawn(async move {
     let (tx, mut rx) = mpsc::unbounded_channel();
     let tx_len = tx.clone();
-    let thread = crate::app::APP.lock().conf.thread.clone();
+    let _thread = crate::app::APP.lock().conf.thread.clone();
     let mut pool: JoinMap<TaskEvent, bool> = JoinMap::new();
 
     let _ = &app.listen_global("TASK://add_task_convert", move |event| {
@@ -125,19 +125,19 @@ pub fn task_init_app(app: AppHandle) {
       let event_opt = rx.recv().await;
 
       if let Some(event) = event_opt {
-        match event.clone().event_type{
-            TaskEventType::AddTask(_) => {
-              pool.spawn(event.clone(), async move {
-                std::thread::sleep(std::time::Duration::from_secs(10));
-                println!("{}", &event.uuid);
-                true
-              });
-            },
-            TaskEventType::TasksLen => {
-              println!("{}", pool.len());
-            },
-            TaskEventType::RemoveTask => {},
-            TaskEventType::Error(_) => {},
+        match event.clone().event_type {
+          TaskEventType::AddTask(_) => {
+            pool.spawn(event.clone(), async move {
+              std::thread::sleep(std::time::Duration::from_secs(10));
+              println!("{}", &event.uuid);
+              true
+            });
+          }
+          TaskEventType::TasksLen => {
+            println!("{}", pool.len());
+          }
+          TaskEventType::RemoveTask => {}
+          TaskEventType::Error(_) => {}
         }
       }
     }

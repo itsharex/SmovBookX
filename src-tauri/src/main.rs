@@ -3,7 +3,7 @@
   windows_subsystem = "windows"
 )]
 
-use tauri::{AppHandle, Manager};
+use tauri::Manager;
 
 #[macro_use]
 extern crate lazy_static;
@@ -27,8 +27,9 @@ async fn main() {
     .setup(|app| {
       app::listen_single_app(app.handle());
       task::task_init_app(app.handle());
-      app.manage(std::sync::Mutex::new(task::pool::TaskPool::new(Some(app.app_handle())).unwrap()));
-      // app_handle = Some(app.handle());
+      app.manage(std::sync::Mutex::new(
+        task::pool::TaskPool::new(Some(app.app_handle())).unwrap(),
+      ));
       if cfg!(target_os = "windows") {
         app::webview2_is_installed(app);
       }
