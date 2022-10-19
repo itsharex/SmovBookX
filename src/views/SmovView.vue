@@ -30,7 +30,7 @@ export default defineComponent({
         const getSmov = () => {
             console.log(Date.now())
             invoke("get_all_smov").then((res: any) => {
-                if (res.code = 200) {
+                if (res.code == 200) {
                     console.log(res)
                     smovList.value = res.data;
                 }
