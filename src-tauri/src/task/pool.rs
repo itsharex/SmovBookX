@@ -1,7 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
 use parking_lot::{Mutex, MutexGuard};
-use rand::Rng;
 
 use crate::{
   crawler::crawler::smov_crawler_program_pool,
@@ -122,6 +121,8 @@ fn pool_add_task(task_pool: SmovPool, task_ask: TaskAsk, task_type: TaskType) ->
 
   let task_size = task_pool_lock.exec_num.get(&task_type).unwrap();
 
+  //将任务存入数据库
+
   if task_size < &task_pool_lock.thread_num && task_pool_lock.can_run() {
     let now_size = task_pool_lock.exec_num.get(&task_type).unwrap().clone();
 
@@ -137,7 +138,6 @@ fn pool_add_task(task_pool: SmovPool, task_ask: TaskAsk, task_type: TaskType) ->
   uuid
 }
 
-//取出数据后要解锁 不然会卡住
 async fn task_run(smov_pool: SmovPool, uuid: String) {
   let pool = smov_pool.lock();
 
@@ -155,13 +155,9 @@ async fn task_run(smov_pool: SmovPool, uuid: String) {
 
   task.join();
 
-  let random = rand::thread_rng().gen_range(1..20);
-  std::thread::sleep(std::time::Duration::from_secs(random));
-
   let mut pool = smov_pool.lock();
 
   let task_size = pool.exec_num.get(&TaskType::Convert).unwrap().clone();
-  println!("就当结束了吧{}", task_size);
   pool.exec_num.insert(TaskType::Convert, task_size - 1);
 }
 
@@ -267,6 +263,7 @@ impl Task<'_> {
       .unwrap();
   }
 
+  //进度还需要 msg消息
   pub fn emit_schedule(self: &Self, schedule: i64) {
     self
       .app_handle
@@ -329,3 +326,8 @@ pub fn add_task_crawler(
 pub fn pause_pool(task_pool: tauri::State<Arc<Mutex<TaskPool>>>) {
   task_pool.lock().pause();
 }
+
+//获取当前的所有线程包括未完成的
+
+
+//重构seek界面

@@ -190,4 +190,7 @@ https://blog.csdn.net/m0_68007835/article/details/123956420
 https://stackoverflow.com/questions/35568871/is-it-possible-to-implement-methods-on-type-aliases 
 
 
+seek 重构
+
+
 

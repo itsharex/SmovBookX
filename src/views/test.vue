@@ -248,13 +248,15 @@ export default defineComponent({
     };
 
     const test17 = () => {
-      request("add_task_convert", { id: 1, name: "test" }).then((res) => {
-        console.log(res);
-      });
+      request("add_task_crawler", { taskAsk: { id: 224, name: "test" } }).then(
+        (res) => {
+          console.log(res);
+        }
+      );
     };
 
     const test17_2 = () => {
-      emit("TASK://get_task_len", { id: 1, name: "test" }).then((res) => {
+      emit("TASK://get_task_len", { id: 224, name: "test" }).then((res) => {
         console.log(res);
       });
     };
