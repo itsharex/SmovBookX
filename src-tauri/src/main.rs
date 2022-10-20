@@ -88,7 +88,8 @@ async fn main() {
       cmd::tauri_cmd::change_seek_shadow,
       hfs::axum_hfs::run_hfs,
       crawler::crawler::smov_crawler,
-      task::pool::add_task,
+      task::pool::add_task_convert,
+      task::pool::add_task_crawler,
       task::pool::pause_pool
     ])
     .build(tauri::generate_context!())

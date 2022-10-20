@@ -8,9 +8,11 @@ use gstreamer::{
 };
 
 use crate::model::smov::Smov;
+use crate::task::pool::TaskStatus;
 
 impl Smov {
-  pub fn to_hls(self: &Self) -> Result<(), Error> {
+  pub fn to_hls(self: &Self, task: &crate::task::pool::Task<'_>) -> Result<(), Error> {
+    task.emit_status(TaskStatus::Running);
     let path = crate::app::APP.lock().clone().conf.tidy_folder;
     let media_folder = path.join(self.realname.clone());
 
@@ -28,20 +30,18 @@ impl Smov {
 
     //可以配置GST_PLUGIN_PATH
     #[cfg(debug_assertions)]
-    {
-
-    }
+    {}
 
     #[cfg(not(debug_assertions))]
     {
-        use std::path::Path;
+      use std::path::Path;
 
-        let mut path = Path::new("./gst-plugins");
-        if !path.exists() {
-            path = Path::new("./gst-plugins");
-        }
+      let mut path = Path::new("./gst-plugins");
+      if !path.exists() {
+        path = Path::new("./gst-plugins");
+      }
 
-        gstreamer::Registry::get().scan_path(path);
+      gstreamer::Registry::get().scan_path(path);
     }
 
     let pipeline = match gstreamer::parse_launch(&commond) {

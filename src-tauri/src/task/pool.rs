@@ -3,7 +3,12 @@ use std::{collections::HashMap, sync::Arc};
 use parking_lot::{Mutex, MutexGuard};
 use rand::Rng;
 
-use crate::{model::smov::Smov, response::response::Response};
+use crate::{
+  crawler::crawler::smov_crawler_program_pool,
+  model::smov::{RetrievingSmovPool, Smov},
+  response::response::Response,
+  util::smov_format::SmovName,
+};
 use serde::{Deserialize, Serialize};
 use tauri::{command, AppHandle, Manager};
 use thiserror::Error;
@@ -28,20 +33,26 @@ pub struct TaskPool {
 #[derive(Eq, Hash, PartialEq, Clone)]
 pub struct TaskEvent {
   pub event_type: TaskType,
-  pub ask: Option<TaskAsk>,
-  pub smov: Option<Smov>,
+  pub ask: TaskAsk,
   pub status: TaskStatus,
 }
 
-struct Task<'a> {
+pub struct Task<'a> {
   task_event: &'a TaskEvent,
-  pub app_handle: &'a AppHandle,
+  app_handle: &'a AppHandle,
+  uuid: String,
 }
 
 #[derive(Eq, Hash, PartialEq, Deserialize, Serialize, Clone)]
 pub struct TaskAsk {
   pub id: i64,
   pub name: String,
+}
+
+#[derive(Eq, Hash, PartialEq, Deserialize, Serialize, Clone, Debug)]
+pub struct TaskMessage<T> {
+  uuid: String,
+  data: T,
 }
 
 #[derive(Eq, Hash, PartialEq, Clone)]
@@ -57,7 +68,7 @@ pub enum PoolStatus {
   Idle,    //空闲
 }
 
-#[derive(Eq, Hash, PartialEq, Clone, Debug)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug, Deserialize, Serialize)]
 pub enum TaskStatus {
   Wait,    //等待
   Running, //正在运行
@@ -105,22 +116,16 @@ fn pool_add_task(task_pool: SmovPool, task_ask: TaskAsk, task_type: TaskType) ->
   let mut task_pool_lock = task_pool.lock();
   let uuid = Uuid::new_v4().to_string();
 
-  let task = TaskEvent::new(task_type, task_ask).unwrap();
+  let task = TaskEvent::new(task_type.clone(), task_ask).unwrap();
 
   task_pool_lock.tasks.insert(uuid.clone(), task);
 
-  let task_size = task_pool_lock.exec_num.get(&TaskType::Convert).unwrap();
+  let task_size = task_pool_lock.exec_num.get(&task_type).unwrap();
 
   if task_size < &task_pool_lock.thread_num && task_pool_lock.can_run() {
-    let now_size = task_pool_lock
-      .exec_num
-      .get(&TaskType::Convert)
-      .unwrap()
-      .clone();
+    let now_size = task_pool_lock.exec_num.get(&task_type).unwrap().clone();
 
-    task_pool_lock
-      .exec_num
-      .insert(TaskType::Convert, now_size + 1);
+    task_pool_lock.exec_num.insert(task_type, now_size + 1);
 
     let task_pool_copy = task_pool.clone();
 
@@ -137,17 +142,18 @@ async fn task_run(smov_pool: SmovPool, uuid: String) {
   let pool = smov_pool.lock();
 
   let task_event = pool.tasks.get(&uuid).unwrap().clone();
-  let app_handle = &pool.app_handle;
+  let app_handle = &pool.app_handle.clone();
 
   //生成task
-  let _task = Task {
+  let task = Task {
     task_event: &task_event,
     app_handle,
+    uuid,
   };
 
-  // 解锁pool
-  // Mutex::unlock(pool);
   MutexGuard::unlock_fair(pool);
+
+  task.join();
 
   let random = rand::thread_rng().gen_range(1..20);
   std::thread::sleep(std::time::Duration::from_secs(random));
@@ -234,15 +240,9 @@ impl TaskPool {
 
 impl TaskEvent {
   fn new(task_type: TaskType, task_ask: TaskAsk) -> Result<Self, TaskErr> {
-    let smov = match Smov::get_smov_by_id(task_ask.id) {
-      Ok(smov) => Some(smov),
-      Err(_) => return Err(TaskErr::_NotFound),
-    };
-
     Ok(TaskEvent {
       event_type: task_type,
-      ask: Some(task_ask),
-      smov,
+      ask: task_ask,
       status: TaskStatus::Wait,
     })
   }
@@ -250,27 +250,77 @@ impl TaskEvent {
 
 impl TaskEvent {}
 
+impl<T> TaskMessage<T> {
+  fn new(uuid: String, data: T) -> Self {
+    Self { uuid, data }
+  }
+}
+
 impl Task<'_> {
   pub fn emit_status(self: &Self, task_status: TaskStatus) {
-    self.app_handle.emit_all("", "").unwrap();
+    self
+      .app_handle
+      .emit_all(
+        "TASKPOOL://status_change",
+        TaskMessage::new(self.uuid.clone(), task_status),
+      )
+      .unwrap();
   }
 
-  pub fn emit_schedule(self: &Self) {
-    self.app_handle.emit_all("", "").unwrap();
+  pub fn emit_schedule(self: &Self, schedule: i64) {
+    self
+      .app_handle
+      .emit_all(
+        "TASKPOOL://schedule_change",
+        TaskMessage::new(self.uuid.clone(), schedule),
+      )
+      .unwrap();
   }
 
-  pub fn join(self: &Self) {}
+  //根据类型运行程序
+  pub fn join(self: &Self) {
+    let event_type = self.task_event.event_type.clone();
+    if event_type.eq(&TaskType::Convert) {
+      let smov = match Smov::get_smov_by_id(self.task_event.ask.id) {
+        Ok(smov) => Some(smov),
+        Err(_) => {
+          self.emit_status(TaskStatus::Fail);
+          return;
+        }
+      }
+      .unwrap();
+      smov.to_hls(&self).unwrap();
+    } else if event_type.eq(&TaskType::Crawler) {
+      let id = self.task_event.ask.id;
+      let retrieving_smov = RetrievingSmovPool::get_retriecing_smov_by_id(id.clone()).unwrap();
+
+      let format = SmovName::format_smov_name(&retrieving_smov.seek_name);
+
+      smov_crawler_program_pool(format, id, &self).unwrap();
+    }
+  }
 }
 
 #[command]
-pub fn add_task(task_pool: tauri::State<Arc<Mutex<TaskPool>>>) -> Response<Option<String>> {
+pub fn add_task_convert(
+  task_pool: tauri::State<Arc<Mutex<TaskPool>>>,
+  task_ask: TaskAsk,
+) -> Response<Option<String>> {
   let task_pool: SmovPool = task_pool.inner().clone();
-  let task_ask = TaskAsk {
-    id: 1,
-    name: "Test".to_string(),
-  };
   Response::ok(
     Some(pool_add_task(task_pool, task_ask, TaskType::Convert)),
+    "成功",
+  )
+}
+
+#[command]
+pub fn add_task_crawler(
+  task_pool: tauri::State<Arc<Mutex<TaskPool>>>,
+  task_ask: TaskAsk,
+) -> Response<Option<String>> {
+  let task_pool: SmovPool = task_pool.inner().clone();
+  Response::ok(
+    Some(pool_add_task(task_pool, task_ask, TaskType::Crawler)),
     "成功",
   )
 }

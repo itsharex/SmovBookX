@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::hfs::res::{ListData, PageParams};
 
-#[derive(Hash, Debug, Deserialize, Serialize,Eq, PartialEq,Clone)]
+#[derive(Hash, Debug, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct Smov {
   pub id: i64,
   pub name: String,  //云端
@@ -36,13 +36,13 @@ pub struct Smov {
   pub sub_title: Vec<String>,
 }
 
-#[derive(Hash, Debug, Deserialize, Serialize,Eq, PartialEq,Clone)]
+#[derive(Hash, Debug, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct Tag {
   id: i64,
   name: String,
 }
 
-#[derive(Hash, Debug, Deserialize, Serialize,Eq, PartialEq,Clone)]
+#[derive(Hash, Debug, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct Actor {
   id: i64,
   name: String,
@@ -100,6 +100,12 @@ pub struct RetrievingSmov {
   pub smov_id: i64,
   pub seek_name: String,
   pub status: i32,
+}
+
+#[derive(Hash, Debug, Deserialize, Serialize, Clone)]
+pub struct RetrievingSmovPool {
+  pub id: i64,
+  pub seek_name: String,
 }
 
 impl PartialEq for SmovFile {
@@ -1150,8 +1156,21 @@ impl SMOVBOOK {
   }
 }
 
-impl RetrievingSmov {
-  // pub fn change_seek_status(self:Self, )
+impl RetrievingSmovPool {
+  pub fn get_retriecing_smov_by_id(id: i64) -> Result<Self, rusqlite::Error> {
+    exec(|conn| {
+      conn.query_row_and_then(
+        "SELECT id ,seekname FROM smov where id = ?1",
+        params![id],
+        |row| {
+          Ok(RetrievingSmovPool {
+            id: row.get(0)?,
+            seek_name: row.get(1)?,
+          })
+        },
+      )
+    })
+  }
 }
 
 impl SmovFileSeek {

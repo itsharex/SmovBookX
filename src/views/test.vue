@@ -64,7 +64,7 @@ import { WebviewWindow } from "@tauri-apps/api/window";
 import { request } from "../util/invoke";
 import { Bowl, Box } from "@element-plus/icons-vue";
 import mountContent from "../components/qrCode/qrCode";
-import { emit } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 
 export default defineComponent({
   setup() {
@@ -232,32 +232,44 @@ export default defineComponent({
     };
 
     const test15 = () => {
-        request("create_new_window",{label:"test",effect:"",path:""});
+      request("create_new_window", { label: "test", effect: "", path: "" });
     };
 
     const test16 = () => {
-      emit("TASK://add_task_convert",{id:1,name:"test"}).then((res) => {
+      emit("TASK://add_task_convert", { id: 1, name: "test" }).then((res) => {
         console.log(res);
       });
     };
 
     const test16_2 = () => {
-      emit("TASK://get_task_len",{id:1,name:"test"}).then((res) => {
+      emit("TASK://get_task_len", { id: 1, name: "test" }).then((res) => {
         console.log(res);
       });
     };
 
     const test17 = () => {
-      request("add_task").then((res) =>{
-        console.log(res)
+      request("add_task_convert", { id: 1, name: "test" }).then((res) => {
+        console.log(res);
       });
     };
 
     const test17_2 = () => {
-      emit("TASK://get_task_len",{id:1,name:"test"}).then((res) => {
+      emit("TASK://get_task_len", { id: 1, name: "test" }).then((res) => {
         console.log(res);
       });
     };
+
+    const addTaskEvent = () => {
+      !(async () =>
+        await listen("TASKPOOL://status_change", (event: any) => {
+          console.log("消息");
+          console.log(event);
+        }))();
+    };
+
+    onMounted(() => {
+      addTaskEvent();
+    });
 
     return {
       test,
@@ -284,7 +296,7 @@ export default defineComponent({
       test16,
       test16_2,
       test17,
-      test17_2
+      test17_2,
     };
   },
 });
