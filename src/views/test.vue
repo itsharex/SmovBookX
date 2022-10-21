@@ -30,6 +30,8 @@
     <el-button type="danger" @click="test17">测试TASK</el-button>
     <el-button type="danger" @click="test17_2">测试TASK_2</el-button>
 
+    <el-button type="danger" @click="test18">打开TaskPool窗口</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -261,6 +263,20 @@ export default defineComponent({
       });
     };
 
+    const test18 = () => {
+      webview = new WebviewWindow("TaskPool", {
+        url: "/TaskPool",
+        title: "任务",
+        width: 600,
+        height: 500,
+        decorations: false,
+        transparent: true,
+        resizable: false,
+      });
+      webview.show();
+      webview.unminimize();
+    };
+
     const addTaskEvent = () => {
       !(async () =>
         await listen("TASKPOOL://status_change", (event: any) => {
@@ -270,7 +286,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      addTaskEvent();
+      //addTaskEvent();
     });
 
     return {
@@ -299,6 +315,7 @@ export default defineComponent({
       test16_2,
       test17,
       test17_2,
+      test18,
     };
   },
 });
