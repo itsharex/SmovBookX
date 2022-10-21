@@ -59,6 +59,10 @@ const router = createRouter({
             path: '/SmovDetail/:Id',
             component: () => import("../views/SmovDetail.vue")
         },
+        {
+            path: '/TaskPool',
+            component: () => import("../views/TaskPool.vue")
+        },
     ],
 
 })
