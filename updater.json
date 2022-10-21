@@ -3,7 +3,7 @@
     "notes":"修改了爬虫程序，优化爬虫返回，修改获取页面保存图片为同步模式，优化代码",
     "pub_date":"2022-07-18T09:52:57Z",
     "platforms": {
-        "win64": {
+        "windows-x86_64": {
             "signature":"dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReDdsMkgrcVpPS3lQZHVTMUZMaTZyUDJmUHZyU0JCcVJmaUF2UzUyemRzOUtFUjVaenB2Zk02MUpWSXh5RWRIcTdRVHVUNk5DOHgxemFnN0d5UWt3UzViWG5rdWhjbncwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNjU4MTA5Mzk1CWZpbGU6QzpcVXNlcnNcTGVyaVxEb2N1bWVudHNcRGV2XHRhdXJpXFNtb3ZCb29rWFxzcmMtdGF1cmlcdGFyZ2V0XHJlbGVhc2VcYnVuZGxlL21zaS9TbW92Qm9va18wLjEuOV94NjRfemgtQ04ubXNpLnppcApucUdZMjl3TG5ORzM0RjBFSWNJY1ZZeWIzZHVOZ0JYL2NFdkVtY2V2VnBXYncrNkdlSExzU0tac2MyQ21Ga0JkL25VVXFWUkdzM3I3NU1TbkFuTEpEQT09Cg==",
             "url":"https://dwdev-generic.pkg.coding.net/smovbook/smovbookx/SmovBook_0.1.9_x64_zh-CN.msi.zip?version=0.1.9"
         }

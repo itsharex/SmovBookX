@@ -86,10 +86,8 @@ pub fn sava_pic_sync(url: String, name: String, path: PathBuf) -> Result<()> {
   })
 }
 
-
 //改造 返回错误 而不是返回Html
 pub fn get_temp_sync(url: &String) -> Result<Html> {
-
   tracing::info!("请求网址,{}", String::from(url));
 
   block_in_place(|| {
@@ -115,7 +113,7 @@ pub fn get_temp_sync(url: &String) -> Result<Html> {
               }));
               index += 1;
               continue;
-            },
+            }
           };
 
           return Ok(Html::parse_fragment(text));

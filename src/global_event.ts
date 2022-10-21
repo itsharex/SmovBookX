@@ -4,9 +4,12 @@ import { request } from './util/invoke';
 
 let label = getCurrent().label;
 
-if (label == "main") {
-    !(async () => await request("listen_single"))()
-}
+// if (label == "main") {
+//     !(async () => await request("listen_single"))()
+// }
+
+// !(async () => await request("task_init"))()
+
 
 !(async () => await listen(label + '_single', (event) => {
     let current = getCurrent()

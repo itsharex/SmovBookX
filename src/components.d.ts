@@ -22,6 +22,7 @@ declare module 'vue' {
     ElPopover: typeof import('element-plus/es')['ElPopover']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     FileInput: typeof import('./components/FileInput.vue')['default']
     ImgTray: typeof import('./components/ImgTray.vue')['default']
     Log: typeof import('./components/Log.vue')['default']

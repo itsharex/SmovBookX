@@ -3,6 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import { resolve } from "path";
 // import { svgBuilder } from "./svgBuilder";
 
 export default defineConfig({
@@ -30,7 +31,7 @@ export default defineConfig({
     hmr: { overlay: false },
   },
   resolve: {
-    alias: { vue: "vue/dist/vue.esm-bundler.js" },
+    alias: { vue: "vue/dist/vue.esm-bundler.js" ,'@': resolve('src')},
   },
   define: {
     'process.env': process.env

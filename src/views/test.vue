@@ -27,6 +27,9 @@
 
     <el-button type="danger" @click="test15">测试打开新窗口</el-button>
 
+    <el-button type="danger" @click="test17">测试TASK</el-button>
+    <el-button type="danger" @click="test17_2">测试TASK_2</el-button>
+
     <!-- <el-icon v-if="show" @click="show = !show">
             <component :is="Bowl"></component>
         </el-icon>
@@ -61,7 +64,7 @@ import { WebviewWindow } from "@tauri-apps/api/window";
 import { request } from "../util/invoke";
 import { Bowl, Box } from "@element-plus/icons-vue";
 import mountContent from "../components/qrCode/qrCode";
-import { emit } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 
 export default defineComponent({
   setup() {
@@ -229,8 +232,46 @@ export default defineComponent({
     };
 
     const test15 = () => {
-        request("create_new_window",{label:"test",effect:"",path:""});
+      request("create_new_window", { label: "test", effect: "", path: "" });
     };
+
+    const test16 = () => {
+      emit("TASK://add_task_convert", { id: 1, name: "test" }).then((res) => {
+        console.log(res);
+      });
+    };
+
+    const test16_2 = () => {
+      emit("TASK://get_task_len", { id: 1, name: "test" }).then((res) => {
+        console.log(res);
+      });
+    };
+
+    const test17 = () => {
+      request("add_task_crawler", { taskAsk: { id: 224, name: "test" } }).then(
+        (res) => {
+          console.log(res);
+        }
+      );
+    };
+
+    const test17_2 = () => {
+      emit("TASK://get_task_len", { id: 224, name: "test" }).then((res) => {
+        console.log(res);
+      });
+    };
+
+    const addTaskEvent = () => {
+      !(async () =>
+        await listen("TASKPOOL://status_change", (event: any) => {
+          console.log("消息");
+          console.log(event);
+        }))();
+    };
+
+    onMounted(() => {
+      addTaskEvent();
+    });
 
     return {
       test,
@@ -254,6 +295,10 @@ export default defineComponent({
       test13,
       test14,
       test15,
+      test16,
+      test16_2,
+      test17,
+      test17_2,
     };
   },
 });

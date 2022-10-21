@@ -7,4 +7,3 @@ dist-ssr
 .vscode
 *.lock
 .tauri
-.env-cmdrc

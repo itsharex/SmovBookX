@@ -1,0 +1,262 @@
+<?if $(sys.BUILDARCH)="x86"?>
+<?define Win64 = "no" ?>
+<?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+<?elseif $(sys.BUILDARCH)="x64"?>
+<?define Win64 = "yes" ?>
+<?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+<?else?>
+<?error Unsupported value of sys.BUILDARCH=$(sys.BUILDARCH)?>
+<?endif?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" Name="SmovBook" UpgradeCode="1797d7b0-3042-5cc1-b322-82531485407b" Language="!(loc.TauriLanguage)" Manufacturer="leri" Version="0.2.0">
+
+        <Package Id="*" Keywords="Installer" InstallerVersion="450" Languages="0" Compressed="yes" InstallScope="perMachine" SummaryCodepage="!(loc.TauriCodepage)"/>
+
+        <!-- https://docs.microsoft.com/en-us/windows/win32/msi/reinstallmode -->
+        <!-- reinstall all files; rewrite all registry entries; reinstall all shortcuts -->
+        <Property Id="REINSTALLMODE" Value="amus" />
+
+        <MajorUpgrade AllowDowngrades="yes" Schedule="afterInstallValidate" />
+
+        <InstallExecuteSequence>
+            <RemoveShortcuts>Installed AND NOT UPGRADINGPRODUCTCODE</RemoveShortcuts>
+        </InstallExecuteSequence>
+
+        <Media Id="1" Cabinet="app.cab" EmbedCab="yes" />
+
+        <Icon Id="ProductIcon" SourceFile="..\..\resources\icon.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
+        <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+        <!-- Remove repair -->
+        <SetProperty Id="ARPNOMODIFY" Value="1" After="InstallValidate" Sequence="execute"/>
+
+        <!-- initialize with previous InstallDir -->
+        <Property Id="INSTALLDIR">
+            <RegistrySearch Id="PrevInstallDirReg" Root="HKCU" Key="Software\leri\SmovBook" Name="InstallDir" Type="raw"/>
+        </Property>
+
+        <!-- launch app checkbox -->
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.LaunchApp)" />
+        <Property Id="WixShellExecTarget" Value="[!Path]" />
+        <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+
+        <UI>
+            <!-- launch app checkbox -->
+            <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+
+            <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+
+            <!-- Skip license dialog -->
+            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">1</Publish>
+            <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">1</Publish>
+        </UI>
+
+        <UIRef Id="WixUI_InstallDir" />
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="DesktopFolder" Name="Desktop">
+                <Component Id="ApplicationShortcutDesktop" Guid="*">
+                    <Shortcut Id="ApplicationDesktopShortcut" Name="SmovBook" Description="Runs SmovBook" Target="[!Path]" WorkingDirectory="INSTALLDIR" />
+                    <RemoveFolder Id="DesktopFolder" On="uninstall" />
+                    <RegistryValue Root="HKCU" Key="Software\leri\SmovBook" Name="Desktop Shortcut" Type="integer" Value="1" KeyPath="yes" />
+                </Component>
+            </Directory>
+            <Directory Id="$(var.PlatformProgramFilesFolder)" Name="PFiles">
+                <Directory Id="INSTALLDIR" Name="SmovBook"/>
+            </Directory>
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="SmovBook"/>
+            </Directory>
+        </Directory>
+
+        <DirectoryRef Id="INSTALLDIR">
+            <Component Id="RegistryEntries" Guid="*">
+                <RegistryKey Root="HKCU" Key="Software\leri\SmovBook">
+                    <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLDIR]" KeyPath="yes" />
+                </RegistryKey>
+            </Component>
+            <Component Id="Path" Guid="0a617070-5d59-5439-b65f-a24bbc70a324" Win64="$(var.Win64)">
+                <File Id="Path" Source="..\..\SmovBook.exe" KeyPath="yes" Checksum="yes"/>
+            </Component>
+            <Directory Id="GSTPLUGINS" Name="gst-plugins">
+                <!-- <Component Id="I0b0a31cc1c244b7g9326bbec1dadfc6b" Guid="7f0a3fca-187a-4fc2-8cba-8aab705422b3" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I0b0a31cc1c244b7g9326bbec1dadfc6b" Source="..\..\..\..\libs\ffi-7.dll" />
+                </Component> -->
+                <Component Id="I378d6d5e22464e1296192558b4f89262" DiskId="1" Guid="F5C08F2D-6180-4B53-AD79-85EBC19C2173" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I378d6d5e22464e1296192558b4f89262" Name="gstaudioparsers.dll" Source="..\..\..\..\libs\gst-plugins\gstaudioparsers.dll" />
+                </Component>
+                <Component Id="I44485834e46945148ab3899d8595de41" DiskId="1" Guid="00022B3A-81D3-4D73-9C0D-9538ACE32AE0" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I44485834e46945148ab3899d8595de41" Name="gstcoreelements.dll" Source="..\..\..\..\libs\gst-plugins\gstcoreelements.dll" />
+                </Component>
+                <Component Id="I9327fc92ff4f42a293fc9c20fa47c22e" DiskId="1" Guid="C266992C-CC49-4145-8F0F-833D44324CA5" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I9327fc92ff4f42a293fc9c20fa47c22e" Name="gstdebug.dll" Source="..\..\..\..\libs\gst-plugins\gstdebug.dll" />
+                </Component>
+                <Component Id="I7963b88bf6b34606ae0cf1a1f90a3d3d" DiskId="1" Guid="02A80804-0681-4CF1-A809-78F34C8F26A6" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I7963b88bf6b34606ae0cf1a1f90a3d3d" Name="gsthls.dll" Source="..\..\..\..\libs\gst-plugins\gsthls.dll" />
+                </Component>
+                <Component Id="I372dafcea71d4e2a907c6e012e3bd0cd" DiskId="1" Guid="F9582358-B48F-4850-82D2-F8B8C384CFDA" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I372dafcea71d4e2a907c6e012e3bd0cd" Name="gstisomp4.dll" Source="..\..\..\..\libs\gst-plugins\gstisomp4.dll" />
+                </Component>
+                <Component Id="I97f7a50553bc4a808e0ac652ab077694" DiskId="1" Guid="F841C2BF-207A-46B6-B059-E9F67DF96579" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I97f7a50553bc4a808e0ac652ab077694" Name="gstmpegtsmux.dll" Source="..\..\..\..\libs\gst-plugins\gstmpegtsmux.dll" />
+                </Component>
+                <Component Id="I64a94ad79f4f4cd3918df0bd66e6dafc" DiskId="1" Guid="17FB30EA-70A0-44C7-ACA2-6895A6EA96B0" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_I64a94ad79f4f4cd3918df0bd66e6dafc" Name="gstmultifile.dll" Source="..\..\..\..\libs\gst-plugins\gstmultifile.dll" />
+                </Component>
+                <Component Id="Id302dbbc10e14cf981346c14248de861" DiskId="1" Guid="96A2FC3E-C225-4E55-AAC5-3206F10724F7" Win64="$(var.Win64)" KeyPath="yes">
+                    <File Id="PathFile_Id302dbbc10e14cf981346c14248de861" Name="gstvideoparsersbad.dll" Source="..\..\..\..\libs\gst-plugins\gstvideoparsersbad.dll" />
+                </Component>
+            </Directory>
+            <Component Id="I0b0a31cc5c294b7b9326bbec9dafac6b" Guid="4e1acc5c-21c2-4334-8e08-a47bee5f3976" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I0b0a31cc5c294b7b9326bbec9dafac6b" Source="..\..\..\..\libs\ffi-7.dll" />
+            </Component>
+            <Component Id="I5c5e784bb79e4313a0cae08266fa418b" Guid="02ef78a6-2b50-4a76-b62d-8057a81e54f6" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I5c5e784bb79e4313a0cae08266fa418b" Source="..\..\..\..\libs\gio-2.0-0.dll" />
+            </Component>
+            <Component Id="Id77ad62029c64d94822fe56cc5256783" Guid="0a4b9e33-60fc-46bd-92a4-c93b2f9ffaa9" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_Id77ad62029c64d94822fe56cc5256783" Source="..\..\..\..\libs\glib-2.0-0.dll" />
+            </Component>
+            <Component Id="I671c6f145a6a41d08a8eb324aeb7a203" Guid="dd5650ff-7590-4885-8be1-2c1edf131d6e" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I671c6f145a6a41d08a8eb324aeb7a203" Source="..\..\..\..\libs\gmodule-2.0-0.dll" />
+            </Component>
+            <Component Id="I6ca75ab16d8f4b7eaf51e6599dc5d823" Guid="56ffa312-3f7c-4621-ac8c-f284aec38022" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I6ca75ab16d8f4b7eaf51e6599dc5d823" Source="..\..\..\..\libs\gobject-2.0-0.dll" />
+            </Component>
+            <Component Id="I93161a701a0745dfa08331ba827ce3bc" Guid="87161b49-e620-4011-9e81-32b5d4a6df9d" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I93161a701a0745dfa08331ba827ce3bc" Source="..\..\..\..\libs\gstadaptivedemux-1.0-0.dll" />
+            </Component>
+            <Component Id="I154a9ac20c74471995967dce8e35428c" Guid="91b5a87a-4b35-4882-8561-3eae1acddb33" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I154a9ac20c74471995967dce8e35428c" Source="..\..\..\..\libs\gstaudio-1.0-0.dll" />
+            </Component>
+            <Component Id="I77f86b91a966417ca325446c68c22d8c" Guid="9c8dfb92-3ba8-4537-9a9b-c0b2efc2acce" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I77f86b91a966417ca325446c68c22d8c" Source="..\..\..\..\libs\gstbase-1.0-0.dll" />
+            </Component>
+            <Component Id="I012d1a4a69b8423aa7b5e6541ac2f9d2" Guid="3fcde31f-f9f1-46c5-996c-d6ff67cd1eec" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I012d1a4a69b8423aa7b5e6541ac2f9d2" Source="..\..\..\..\libs\gstcodecparsers-1.0-0.dll" />
+            </Component>
+            <Component Id="Ib15ef4a436d6415fb1407f4420a668b9" Guid="7951ea85-7013-412c-b3ea-d46926f68089" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_Ib15ef4a436d6415fb1407f4420a668b9" Source="..\..\..\..\libs\gstmpegts-1.0-0.dll" />
+            </Component>
+            <Component Id="Ib68c9e1ce1634c7499f4b95cf927fe65" Guid="d502af16-adb8-4b20-b426-9183b3d4823f" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_Ib68c9e1ce1634c7499f4b95cf927fe65" Source="..\..\..\..\libs\gstpbutils-1.0-0.dll" />
+            </Component>
+            <Component Id="I56e6cd8c3cf443a3b768dc95b2da48ae" Guid="9a0683b2-1d44-4592-8c70-a0a4aacc53e9" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I56e6cd8c3cf443a3b768dc95b2da48ae" Source="..\..\..\..\libs\gstreamer-1.0-0.dll" />
+            </Component>
+            <Component Id="I5b7b5a965acd4af8ad9d15020863a733" Guid="ee8eb501-3293-4a8f-b3cf-900e169d3313" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I5b7b5a965acd4af8ad9d15020863a733" Source="..\..\..\..\libs\gstriff-1.0-0.dll" />
+            </Component>
+            <Component Id="I61d23a72fec54c408599b0d1d7980ae9" Guid="384efc79-ba13-4421-b0e3-e0b3d2580822" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I61d23a72fec54c408599b0d1d7980ae9" Source="..\..\..\..\libs\gstrtp-1.0-0.dll" />
+            </Component>
+            <Component Id="Ibb61c5927fee47b3b4efa839bd1e0e98" Guid="cb7a6fe2-6bdc-43b0-9715-992d87a15ffa" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_Ibb61c5927fee47b3b4efa839bd1e0e98" Source="..\..\..\..\libs\gsttag-1.0-0.dll" />
+            </Component>
+            <Component Id="I19fd632731054241bdd126b0181e3567" Guid="5ae0e995-14a8-4be5-82f3-d5e066155d16" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I19fd632731054241bdd126b0181e3567" Source="..\..\..\..\libs\gsturidownloader-1.0-0.dll" />
+            </Component>
+            <Component Id="I84053fc4036c45dda7ef69594eb85a8c" Guid="4745b040-19a2-4bc8-98e8-eae2c1ee762c" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I84053fc4036c45dda7ef69594eb85a8c" Source="..\..\..\..\libs\gstvideo-1.0-0.dll" />
+            </Component>
+            <Component Id="I34f6d72c503a496fab1e68c24d401b41" Guid="9ed2a713-1137-44dc-867d-95cec014a8d6" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I34f6d72c503a496fab1e68c24d401b41" Source="..\..\..\..\libs\intl-8.dll" />
+            </Component>
+            <Component Id="I1b7d8358352b41a5a7d635eceb1f4cd1" Guid="0423e4c6-fb68-4570-a081-c9bcf81e6a2a" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I1b7d8358352b41a5a7d635eceb1f4cd1" Source="..\..\..\..\libs\libcrypto-1_1-x64.dll" />
+            </Component>
+            <Component Id="I180eb34f9e4b4d95a5a340e6d9cce1e7" Guid="8af880bf-80bf-46c2-ac7a-8812d2803c9e" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I180eb34f9e4b4d95a5a340e6d9cce1e7" Source="..\..\..\..\libs\orc-0.4-0.dll" />
+            </Component>
+            <Component Id="I5ab39050d8354e41b23aba4ebd656c07" Guid="c0cf80bd-811c-458f-acef-af41cbc63ae3" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I5ab39050d8354e41b23aba4ebd656c07" Source="..\..\..\..\libs\sqlite3-0.dll" />
+            </Component>
+            <Component Id="I66557c742c6d4ac98c437802df35d3c1" Guid="c46a89c1-6be8-4d60-9e38-e6923f55106b" Win64="$(var.Win64)" KeyPath="yes">
+                <File Id="PathFile_I66557c742c6d4ac98c437802df35d3c1" Source="..\..\..\..\libs\z-1.dll" />
+            </Component>
+            <Component Id="CMP_UninstallShortcut" Guid="*">
+
+                <Shortcut Id="UninstallShortcut" Name="Uninstall SmovBook" Description="Uninstalls SmovBook" Target="[System64Folder]msiexec.exe" Arguments="/x [ProductCode]" />
+
+                <RemoveFolder Id="INSTALLDIR" On="uninstall" />
+
+                <RegistryValue Root="HKCU" Key="Software\leri\SmovBook" Name="Uninstaller Shortcut" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="*">
+                <Shortcut Id="ApplicationStartMenuShortcut" Name="SmovBook" Description="Runs SmovBook" Target="[!Path]" Icon="ProductIcon" WorkingDirectory="INSTALLDIR">
+                    <ShortcutProperty Key="System.AppUserModel.ID" Value="com.leri.smovbook"/>
+                </Shortcut>
+                <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\leri\SmovBook" Name="Start Menu Shortcut" Type="integer" Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
+
+        <Feature Id="MainProgram" Title="Application" Description="!(loc.InstallAppFeature)" Level="1" ConfigurableDirectory="INSTALLDIR" AllowAdvertise="no" Display="expand" Absent="disallow">
+
+            <ComponentRef Id="RegistryEntries"/>
+
+            <ComponentRef Id="I378d6d5e22464e1296192558b4f89262"/>
+            <ComponentRef Id="I44485834e46945148ab3899d8595de41"/>
+            <ComponentRef Id="I9327fc92ff4f42a293fc9c20fa47c22e"/>
+            <ComponentRef Id="I7963b88bf6b34606ae0cf1a1f90a3d3d"/>
+            <ComponentRef Id="I372dafcea71d4e2a907c6e012e3bd0cd"/>
+            <ComponentRef Id="I97f7a50553bc4a808e0ac652ab077694"/>
+            <ComponentRef Id="I64a94ad79f4f4cd3918df0bd66e6dafc"/>
+            <ComponentRef Id="Id302dbbc10e14cf981346c14248de861"/>
+            <ComponentRef Id="I0b0a31cc5c294b7b9326bbec9dafac6b"/>
+            <ComponentRef Id="I5c5e784bb79e4313a0cae08266fa418b"/>
+            <ComponentRef Id="Id77ad62029c64d94822fe56cc5256783"/>
+            <ComponentRef Id="I671c6f145a6a41d08a8eb324aeb7a203"/>
+            <ComponentRef Id="I6ca75ab16d8f4b7eaf51e6599dc5d823"/>
+            <ComponentRef Id="I93161a701a0745dfa08331ba827ce3bc"/>
+            <ComponentRef Id="I154a9ac20c74471995967dce8e35428c"/>
+            <ComponentRef Id="I77f86b91a966417ca325446c68c22d8c"/>
+            <ComponentRef Id="I012d1a4a69b8423aa7b5e6541ac2f9d2"/>
+            <ComponentRef Id="Ib15ef4a436d6415fb1407f4420a668b9"/>
+            <ComponentRef Id="Ib68c9e1ce1634c7499f4b95cf927fe65"/>
+            <ComponentRef Id="I56e6cd8c3cf443a3b768dc95b2da48ae"/>
+            <ComponentRef Id="I5b7b5a965acd4af8ad9d15020863a733"/>
+            <ComponentRef Id="I61d23a72fec54c408599b0d1d7980ae9"/>
+            <ComponentRef Id="Ibb61c5927fee47b3b4efa839bd1e0e98"/>
+            <ComponentRef Id="I19fd632731054241bdd126b0181e3567"/>
+            <ComponentRef Id="I84053fc4036c45dda7ef69594eb85a8c"/>
+            <ComponentRef Id="I34f6d72c503a496fab1e68c24d401b41"/>
+            <ComponentRef Id="I1b7d8358352b41a5a7d635eceb1f4cd1"/>
+            <ComponentRef Id="I180eb34f9e4b4d95a5a340e6d9cce1e7"/>
+            <ComponentRef Id="I5ab39050d8354e41b23aba4ebd656c07"/>
+            <ComponentRef Id="I66557c742c6d4ac98c437802df35d3c1"/>
+
+            <Feature Id="ShortcutsFeature" Title="Shortcuts" Level="1">
+                <ComponentRef Id="Path"/>
+                <ComponentRef Id="CMP_UninstallShortcut" />
+                <ComponentRef Id="ApplicationShortcut" />
+                <ComponentRef Id="ApplicationShortcutDesktop" />
+            </Feature>
+
+            <Feature Id="Environment" Title="PATH Environment Variable" Description="!(loc.PathEnvVarFeature)" Level="1" Absent="allow">
+                <ComponentRef Id="Path"/>
+            </Feature>
+        </Feature>
+
+        <Feature Id="External" AllowAdvertise="no" Absent="disallow">
+        </Feature>
+
+        <!-- WebView2 -->
+        <Property Id="WVRTINSTALLED">
+            <RegistrySearch Id="WVRTInstalledSystem" Root="HKLM" Key="SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" Name="pv" Type="raw" Win64="no" />
+            <RegistrySearch Id="WVRTInstalledUser" Root="HKCU" Key="SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" Name="pv" Type="raw"/>
+        </Property>
+        <CustomAction Id='DownloadAndInvokeBootstrapper' Directory="INSTALLDIR" Execute="deferred" ExeCommand='powershell.exe -NoProfile -windowstyle hidden Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "$env:TEMP\MicrosoftEdgeWebview2Setup.exe" ; &amp; $env:TEMP\MicrosoftEdgeWebview2Setup.exe /install' Return='check'/>
+        <InstallExecuteSequence>
+            <Custom Action='DownloadAndInvokeBootstrapper' Before='InstallFinalize'>
+                <![CDATA[NOT(REMOVE OR WVRTINSTALLED)]]>
+            </Custom>
+        </InstallExecuteSequence>
+
+
+        <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize"/>
+    </Product>
+</Wix>

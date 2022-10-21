@@ -5,13 +5,16 @@ use crate::model::folder::Folder;
 use crate::model::smov::{Smov, SmovFile};
 use anyhow::{anyhow, Result};
 use std::collections::HashSet;
+use std::ffi::OsStr;
 use std::fs;
 use std::hash::Hash;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[warn(non_upper_case_globals)]
-const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv","wmv"];
+const FILE_TYPE: &'static [&'static str] = &["mp4", "flv", "mkv", "wmv"];
+
+const SUB_TYPE: &'static [&'static str] = &["srt", "ass"];
 
 #[derive(Hash, Debug, Deserialize, Serialize)]
 pub struct SmovFileBack {
@@ -45,8 +48,6 @@ pub fn smov_file() -> Result<SmovFileBack> {
 
   MutexGuard::unlock_fair(tidy_folder); //这里必须对内存锁的部分锁定
 
-  println!("{:?}", folders);
-
   let db_smov: HashSet<SmovFile> = SmovFile::query_db_file_unid()
     .unwrap()
     .into_iter()
@@ -66,7 +67,6 @@ pub fn smov_file() -> Result<SmovFileBack> {
 
   let smov = file_smov.difference(&db_smov).collect::<Vec<&SmovFile>>();
 
-  // let smov_del = db_smov.difference(&file_smov).into_iter().map(|x| x.clone()).collect::<Vec<SmovFile>>();
   let smov_del = db_smov.difference(&file_smov).collect::<Vec<&SmovFile>>();
 
   let smov_del = match SmovFile::query_by_path_name(smov_del) {
@@ -101,6 +101,18 @@ fn is_mov_type(extension: &String) -> bool {
   let mut flag = false;
   for val in FILE_TYPE.iter() {
     if extension.eq(val) {
+      flag = true;
+      break;
+    }
+  }
+  flag
+}
+
+fn is_sub_type(extension: &OsStr) -> bool {
+  let mut flag = false;
+  let extension = &extension.to_str().unwrap_or_else(|| "").to_string();
+  for val in SUB_TYPE.iter() {
+    if val.eq(extension) {
       flag = true;
       break;
     }
@@ -198,17 +210,75 @@ impl Smov {
       let details = match path.read_dir() {
         Ok(res) => res,
         Err(err) => {
-          tracing::error!(message =format!("获取'{}'详情图片路径出现错误：'{}',请根据错误原因排查", self.name,err).as_str());
+          tracing::error!(
+            message = format!(
+              "获取'{}'详情图片路径出现错误：'{}',请根据错误原因排查",
+              self.name, err
+            )
+            .as_str()
+          );
           return Err(anyhow!("Missing attribute: {}", err));
         }
       };
-       for detail in details {
-          match detail{
-            Ok(res) => self.detail_img.insert(0, res.path().as_os_str().to_str().unwrap_or_else(||"").to_string()),
-            _ => {},
+      for detail in details {
+        match detail {
+          Ok(res) => self.detail_img.insert(
+            0,
+            res
+              .path()
+              .as_os_str()
+              .to_str()
+              .unwrap_or_else(|| "")
+              .to_string(),
+          ),
+          _ => {}
         }
-       }
+      }
     }
+    Ok(())
+  }
+
+  pub fn get_smov_sub_title(self: &mut Self) -> Result<()> {
+    let path = Path::new(&self.path);
+
+    let items = match path.read_dir() {
+      Ok(res) => res,
+      Err(err) => {
+        tracing::error!(
+          message = format!(
+            "获取'{}'详情根目录路径出现错误：'{}',请根据错误原因排查",
+            self.name, err
+          )
+          .as_str()
+        );
+        return Err(anyhow!("Missing attribute: {}", err));
+      }
+    };
+
+    for item in items {
+      match item {
+        Ok(res) => {
+          let extension = res.path();
+          let extension = extension.extension().unwrap_or_else(|| &OsStr::new(""));
+
+          if is_sub_type(extension) {
+            self.sub_title.insert(
+              0,
+              res
+                .file_name()
+                .as_os_str()
+                .to_str()
+                .unwrap_or_else(|| "")
+                .to_string(),
+            )
+          }
+          
+        }
+
+        _ => {}
+      }
+    }
+
     Ok(())
   }
 
@@ -218,7 +288,7 @@ impl Smov {
     if img.exists() {
       self.thumbs_img = img.to_str().unwrap_or_else(|| "").to_string();
     };
-    
+
     Ok(())
   }
 }

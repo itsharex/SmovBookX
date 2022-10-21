@@ -3,6 +3,8 @@
   windows_subsystem = "windows"
 )]
 
+use tauri::Manager;
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -10,25 +12,32 @@ mod app;
 mod cmd;
 mod crawler;
 mod hfs;
+mod media;
 mod model;
 mod response;
 mod serve;
+mod task;
 mod util;
+mod window;
 
 #[tokio::main]
 async fn main() {
   app::lock_single();
-
-  let _app = tauri::Builder::default()
-    .setup(|_app| {
+  let app = tauri::Builder::default()
+    .setup(|app| {
+      app::listen_single_app(app.handle());
+      task::task_init_app(app.handle());
+      app.manage(std::sync::Arc::new(parking_lot::Mutex::new(
+        task::pool::TaskPool::new(app.app_handle()).unwrap(),
+      )));
       if cfg!(target_os = "windows") {
-        app::webview2_is_installed(_app);
+        app::webview2_is_installed(app);
       }
       if !app::init_app_dir() {
         tracing::error!("工作目录初始化失败！");
         panic!("工作目录初始化失败！");
       }
-      if !app::init_app_log(_app) {
+      if !app::init_app_log(app) {
         tracing::error!("日志系统初始化失败！");
         panic!("日志系统初始化失败！");
       }
@@ -36,7 +45,7 @@ async fn main() {
         tracing::error!("文件服务器配置初始化错误！");
         panic!("文件服务器配置初始化错误！");
       }
-      app::init_app_shadows(_app);
+      app::init_app_shadows(app);
       model::smov::SMOVBOOK::init().expect("数据库初始化出现错误");
       Ok(())
     })
@@ -64,6 +73,7 @@ async fn main() {
       cmd::cmd::get_smov_by_id,
       cmd::cmd::get_setting_data,
       cmd::cmd::delete_folder,
+      cmd::cmd::convert_smov2hls,
       cmd::tauri_cmd::open_folder_select,
       cmd::tauri_cmd::test,
       cmd::tauri_cmd::open_in_explorer,
@@ -77,10 +87,15 @@ async fn main() {
       cmd::tauri_cmd::change_seek_suspended,
       cmd::tauri_cmd::change_seek_shadow,
       hfs::axum_hfs::run_hfs,
-      crawler::crawler::smov_crawler
+      crawler::crawler::smov_crawler,
+      task::pool::add_task_convert,
+      task::pool::add_task_crawler,
+      task::pool::pause_pool
     ])
     .build(tauri::generate_context!())
     .expect("error while running tauri application"); //这里要做错误处理 当出现错误时 用windows自带的弹窗 弹出错误信息
 
-  _app.run(app::handle_app_event);
+  //pool.lock().unwrap().join_app_handle(app.handle());
+
+  app.run(app::handle_app_event);
 }

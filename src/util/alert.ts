@@ -1,5 +1,5 @@
 import { ElMessage } from 'element-plus';
-import { BuildPropType } from 'element-plus/es/utils';
+import { BuildPropType } from 'element-plus/es/utils/';
 
 const _alert = (t: BuildPropType<StringConstructor, "info" | "success" | "warning" | "error", unknown> | undefined, msg: any) => {
     ElMessage.closeAll()
